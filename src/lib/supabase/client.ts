@@ -20,6 +20,10 @@ export function getSupabase(): SupabaseClient {
   const anonKey = readEnv("NEXT_PUBLIC_SUPABASE_ANON_KEY");
   cached = createClient(url, anonKey, {
     auth: { persistSession: false },
+    global: {
+      // Next.js のデータキャッシュを回避（管理画面が古い SELECT 結果を返すのを防ぐ）
+      fetch: (input, init) => fetch(input as RequestInfo, { ...init, cache: "no-store" }),
+    },
   });
   return cached;
 }

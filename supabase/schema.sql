@@ -38,3 +38,10 @@ create index if not exists idx_sb_shop_dt on public.salonboard_bookings (shop_id
 -- 本番化時は RLS を有効にし、認証ロール別のポリシーを設定すること。
 alter table public.reservations disable row level security;
 alter table public.salonboard_bookings disable row level security;
+
+-- anon / authenticated ロールへ権限を付与（RLS 無効でも GRANT は別途必要）
+grant select, insert, update, delete on public.reservations to anon, authenticated;
+grant select, insert, update, delete on public.salonboard_bookings to anon, authenticated;
+
+-- PostgREST のスキーマキャッシュをリロード
+notify pgrst, 'reload schema';
