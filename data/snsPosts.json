@@ -1,0 +1,42 @@
+[
+  { "id": "p-01-1", "stylistId": "st-01", "platform": "instagram", "imageUrl": "https://picsum.photos/seed/p-01-1/600/600", "caption": "髪質改善ストレート×艶カラー。広がりやすい髪も内側からまとまる仕上がりに。", "postedAt": "2026-05-07T10:00" },
+  { "id": "p-01-2", "stylistId": "st-01", "platform": "instagram", "imageUrl": "https://picsum.photos/seed/p-01-2/600/600", "caption": "ダメージレス縮毛矯正で「自然な毛流れ」をデザイン。3ヶ月後もまとまります。", "postedAt": "2026-05-04T18:30" },
+  { "id": "p-01-3", "stylistId": "st-01", "platform": "tiktok", "imageUrl": "https://picsum.photos/seed/p-01-3/600/600", "caption": "before / after 動画。うねり髪→ツヤ髪のリアル比較。", "postedAt": "2026-05-01T12:00" },
+  { "id": "p-01-4", "stylistId": "st-01", "platform": "instagram", "imageUrl": "https://picsum.photos/seed/p-01-4/600/600", "caption": "梅雨に向けて。広がる髪をどうにかしたい方へおすすめのメニュー。", "postedAt": "2026-04-26T09:00" },
+
+  { "id": "p-02-1", "stylistId": "st-02", "platform": "instagram", "imageUrl": "https://picsum.photos/seed/p-02-1/600/600", "caption": "ビジネス対応のセンターパート×ブルーアッシュ。", "postedAt": "2026-05-08T20:00" },
+  { "id": "p-02-2", "stylistId": "st-02", "platform": "x", "imageUrl": "https://picsum.photos/seed/p-02-2/600/600", "caption": "メンズデザインカラーの相談、DMで受け付けています。", "postedAt": "2026-05-05T11:00" },
+  { "id": "p-02-3", "stylistId": "st-02", "platform": "instagram", "imageUrl": "https://picsum.photos/seed/p-02-3/600/600", "caption": "ストリート系のマッシュ×ハイライト。色落ちしてもおしゃれに。", "postedAt": "2026-05-02T19:00" },
+  { "id": "p-02-4", "stylistId": "st-02", "platform": "instagram", "imageUrl": "https://picsum.photos/seed/p-02-4/600/600", "caption": "似合うパーマ、選び方ガイド。骨格別の提案。", "postedAt": "2026-04-28T16:00" },
+
+  { "id": "p-03-1", "stylistId": "st-03", "platform": "instagram", "imageUrl": "https://picsum.photos/seed/p-03-1/600/600", "caption": "似合わせカラー診断×ボブ。30代の方におすすめ。", "postedAt": "2026-05-09T09:00" },
+  { "id": "p-03-2", "stylistId": "st-03", "platform": "instagram", "imageUrl": "https://picsum.photos/seed/p-03-2/600/600", "caption": "イエベ春さん向けの艶カラー作例。", "postedAt": "2026-05-06T13:00" },
+  { "id": "p-03-3", "stylistId": "st-03", "platform": "instagram", "imageUrl": "https://picsum.photos/seed/p-03-3/600/600", "caption": "顔まわりレイヤーで小顔見せ。お悩み別に提案します。", "postedAt": "2026-05-03T10:00" },
+  { "id": "p-03-4", "stylistId": "st-03", "platform": "instagram", "imageUrl": "https://picsum.photos/seed/p-03-4/600/600", "caption": "5月のおすすめメニュー一覧。", "postedAt": "2026-04-30T20:00" },
+
+  { "id": "p-04-1", "stylistId": "st-04", "platform": "instagram", "imageUrl": "https://picsum.photos/seed/p-04-1/600/600", "caption": "ツイストスパイラルパーマ。動きのある毛流れを。", "postedAt": "2026-05-08T14:00" },
+  { "id": "p-04-2", "stylistId": "st-04", "platform": "tiktok", "imageUrl": "https://picsum.photos/seed/p-04-2/600/600", "caption": "朝のセット時短ハック。スタイリング動画。", "postedAt": "2026-05-04T20:00" },
+  { "id": "p-04-3", "stylistId": "st-04", "platform": "instagram", "imageUrl": "https://picsum.photos/seed/p-04-3/600/600", "caption": "韓国マッシュ×波打ちパーマ。", "postedAt": "2026-04-29T18:00" },
+
+  { "id": "p-06-1", "stylistId": "st-06", "platform": "instagram", "imageUrl": "https://picsum.photos/seed/p-06-1/600/600", "caption": "小顔ボブ×白髪ぼかしハイライト。", "postedAt": "2026-05-07T11:00" },
+  { "id": "p-06-2", "stylistId": "st-06", "platform": "instagram", "imageUrl": "https://picsum.photos/seed/p-06-2/600/600", "caption": "ショートが似合わないと思っていた方へ。", "postedAt": "2026-05-04T12:30" },
+  { "id": "p-06-3", "stylistId": "st-06", "platform": "instagram", "imageUrl": "https://picsum.photos/seed/p-06-3/600/600", "caption": "40代から始めるボブ。骨格補正カットで美シルエット。", "postedAt": "2026-04-30T15:00" },
+
+  { "id": "p-07-1", "stylistId": "st-07", "platform": "instagram", "imageUrl": "https://picsum.photos/seed/p-07-1/600/600", "caption": "ブライダル前撮りヘアセット。クラシカルな編み込み。", "postedAt": "2026-05-08T08:00" },
+  { "id": "p-07-2", "stylistId": "st-07", "platform": "tiktok", "imageUrl": "https://picsum.photos/seed/p-07-2/600/600", "caption": "アップスタイルのプロセス動画。後ろ姿まで美しく。", "postedAt": "2026-05-05T17:00" },
+  { "id": "p-07-3", "stylistId": "st-07", "platform": "instagram", "imageUrl": "https://picsum.photos/seed/p-07-3/600/600", "caption": "結婚式お呼ばれヘアの当日予約も受付中。", "postedAt": "2026-05-02T10:00" },
+  { "id": "p-07-4", "stylistId": "st-07", "platform": "instagram", "imageUrl": "https://picsum.photos/seed/p-07-4/600/600", "caption": "二次会向け、ハーフアップアレンジ。", "postedAt": "2026-04-27T11:00" },
+
+  { "id": "p-08-1", "stylistId": "st-08", "platform": "instagram", "imageUrl": "https://picsum.photos/seed/p-08-1/600/600", "caption": "髪質改善トリートメント。指通りで実感する変化。", "postedAt": "2026-05-08T19:00" },
+  { "id": "p-08-2", "stylistId": "st-08", "platform": "instagram", "imageUrl": "https://picsum.photos/seed/p-08-2/600/600", "caption": "ヘッドスパ×トリートメントで頭皮から艶髪に。", "postedAt": "2026-05-04T14:00" },
+  { "id": "p-08-3", "stylistId": "st-08", "platform": "instagram", "imageUrl": "https://picsum.photos/seed/p-08-3/600/600", "caption": "髪のお悩み別、おすすめホームケア紹介。", "postedAt": "2026-04-29T20:00" },
+
+  { "id": "p-10-1", "stylistId": "st-10", "platform": "instagram", "imageUrl": "https://picsum.photos/seed/p-10-1/600/600", "caption": "ブリーチオンカラー×バレイヤージュ。透明感マックス。", "postedAt": "2026-05-08T16:00" },
+  { "id": "p-10-2", "stylistId": "st-10", "platform": "instagram", "imageUrl": "https://picsum.photos/seed/p-10-2/600/600", "caption": "ハイライト初挑戦の方向けデザイン。", "postedAt": "2026-05-05T13:00" },
+  { "id": "p-10-3", "stylistId": "st-10", "platform": "x", "imageUrl": "https://picsum.photos/seed/p-10-3/600/600", "caption": "今月のカラー予約状況のお知らせ。", "postedAt": "2026-05-02T09:00" },
+  { "id": "p-10-4", "stylistId": "st-10", "platform": "instagram", "imageUrl": "https://picsum.photos/seed/p-10-4/600/600", "caption": "ブリーチなしハイライトで上品なツヤ感。", "postedAt": "2026-04-28T18:00" },
+
+  { "id": "p-11-1", "stylistId": "st-11", "platform": "instagram", "imageUrl": "https://picsum.photos/seed/p-11-1/600/600", "caption": "デジタルパーマ×ロング。ふわっとボリュームのある毛先。", "postedAt": "2026-05-07T20:00" },
+  { "id": "p-11-2", "stylistId": "st-11", "platform": "instagram", "imageUrl": "https://picsum.photos/seed/p-11-2/600/600", "caption": "コテ巻き風パーマで毎朝のセット時短。", "postedAt": "2026-05-04T17:00" },
+  { "id": "p-11-3", "stylistId": "st-11", "platform": "instagram", "imageUrl": "https://picsum.photos/seed/p-11-3/600/600", "caption": "ロングヘアの方向けカット相談、随時受付中。", "postedAt": "2026-04-30T13:00" }
+]

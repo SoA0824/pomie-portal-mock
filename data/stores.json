@@ -1,0 +1,18 @@
+[
+  {
+    "id": "s1",
+    "name": "ポミエ 表参道",
+    "address": "東京都渋谷区神宮前4-12-10 表参道ヒルズ西館B1",
+    "area": "表参道",
+    "salonboardShopId": "sb_omotesando",
+    "salonboardCapacityPerSlot": 4
+  },
+  {
+    "id": "s2",
+    "name": "ポミエ 恵比寿",
+    "address": "東京都渋谷区恵比寿西1-8-3 ガーデンプレイス2F",
+    "area": "恵比寿",
+    "salonboardShopId": "sb_ebisu",
+    "salonboardCapacityPerSlot": 4
+  }
+]
