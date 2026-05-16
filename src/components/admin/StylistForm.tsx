@@ -32,15 +32,28 @@ type MenuRow = { name: string; duration: number };
 
 const MENU_SUGGESTIONS = Object.keys(DEFAULT_MENU_DURATIONS);
 
+export type LockedStylistField =
+  | "storeId"
+  | "contractStatus"
+  | "featuredFlag";
+
 export function StylistForm({
   stores,
   mode = "create",
   initialValues,
+  lockedFields = [],
+  cancelHref = "/admin/stylists",
+  successHref = "/admin/stylists",
 }: {
   stores: Store[];
   mode?: "create" | "edit";
   initialValues?: Stylist;
+  /** 美容師本人の編集など、特定フィールドをロックしたい場合 */
+  lockedFields?: LockedStylistField[];
+  cancelHref?: string;
+  successHref?: string;
 }) {
+  const isLocked = (f: LockedStylistField) => lockedFields.includes(f);
   const router = useRouter();
   const [pending, startTransition] = useTransition();
   const [error, setError] = useState<string | null>(null);
@@ -149,7 +162,7 @@ export function StylistForm({
           : await createStylist(payload);
 
       if (result.ok) {
-        router.push(`/admin/stylists`);
+        router.push(successHref);
         router.refresh();
       } else {
         setError(REASON_LABELS[result.reason] ?? `保存に失敗しました (${result.reason})`);
@@ -192,17 +205,31 @@ export function StylistForm({
       </div>
 
       <Field label="所属店舗" required>
-        <select
-          value={form.storeId}
-          onChange={(e) => update("storeId", e.target.value)}
-          className="input"
-        >
-          {stores.map((s) => (
-            <option key={s.id} value={s.id}>
-              {s.name}（{s.area}）
-            </option>
-          ))}
-        </select>
+        {isLocked("storeId") ? (
+          <div className="flex items-center gap-2 rounded-lg border border-ink-100 bg-ink-100/40 px-3 py-2 text-sm">
+            <span>
+              {stores.find((s) => s.id === form.storeId)?.name ?? "-"}
+              <span className="ml-1 text-ink-500">
+                （{stores.find((s) => s.id === form.storeId)?.area ?? ""}）
+              </span>
+            </span>
+            <span className="ml-auto text-[10px] text-ink-500">
+              変更は POMiE 担当者まで
+            </span>
+          </div>
+        ) : (
+          <select
+            value={form.storeId}
+            onChange={(e) => update("storeId", e.target.value)}
+            className="input"
+          >
+            {stores.map((s) => (
+              <option key={s.id} value={s.id}>
+                {s.name}（{s.area}）
+              </option>
+            ))}
+          </select>
+        )}
       </Field>
 
       <Field label="プロフィール" required>
@@ -390,37 +417,55 @@ export function StylistForm({
       </Field>
 
       <div className="flex flex-wrap items-center gap-6">
-        <fieldset>
-          <legend className="text-xs font-semibold text-ink-700">契約状態</legend>
-          <div className="mt-1 flex gap-3 text-sm">
-            <label className="inline-flex items-center gap-1.5">
-              <input
-                type="radio"
-                name="contractStatus"
-                checked={form.contractStatus === "active"}
-                onChange={() => update("contractStatus", "active")}
-              />
-              掲載中（公開）
-            </label>
-            <label className="inline-flex items-center gap-1.5">
-              <input
-                type="radio"
-                name="contractStatus"
-                checked={form.contractStatus === "inactive"}
-                onChange={() => update("contractStatus", "inactive")}
-              />
-              停止中（非公開）
-            </label>
+        {isLocked("contractStatus") ? (
+          <div className="flex items-center gap-2 text-xs text-ink-500">
+            <span className="font-semibold text-ink-700">契約状態:</span>
+            <span
+              className={`rounded-full px-2 py-0.5 font-semibold ${
+                form.contractStatus === "active"
+                  ? "bg-green-100 text-green-800"
+                  : "bg-ink-100 text-ink-500"
+              }`}
+            >
+              {form.contractStatus === "active" ? "掲載中" : "停止中"}
+            </span>
+            <span>（POMiE 担当者のみ変更可）</span>
           </div>
-        </fieldset>
-        <label className="inline-flex items-center gap-1.5 text-sm">
-          <input
-            type="checkbox"
-            checked={form.featuredFlag}
-            onChange={(e) => update("featuredFlag", e.target.checked)}
-          />
-          注目美容師として表示
-        </label>
+        ) : (
+          <fieldset>
+            <legend className="text-xs font-semibold text-ink-700">契約状態</legend>
+            <div className="mt-1 flex gap-3 text-sm">
+              <label className="inline-flex items-center gap-1.5">
+                <input
+                  type="radio"
+                  name="contractStatus"
+                  checked={form.contractStatus === "active"}
+                  onChange={() => update("contractStatus", "active")}
+                />
+                掲載中（公開）
+              </label>
+              <label className="inline-flex items-center gap-1.5">
+                <input
+                  type="radio"
+                  name="contractStatus"
+                  checked={form.contractStatus === "inactive"}
+                  onChange={() => update("contractStatus", "inactive")}
+                />
+                停止中（非公開）
+              </label>
+            </div>
+          </fieldset>
+        )}
+        {!isLocked("featuredFlag") && (
+          <label className="inline-flex items-center gap-1.5 text-sm">
+            <input
+              type="checkbox"
+              checked={form.featuredFlag}
+              onChange={(e) => update("featuredFlag", e.target.checked)}
+            />
+            注目美容師として表示
+          </label>
+        )}
       </div>
 
       {error && <p className="rounded-lg bg-red-50 p-3 text-sm text-red-700">{error}</p>}
@@ -431,7 +476,7 @@ export function StylistForm({
         </button>
         <button
           type="button"
-          onClick={() => router.push("/admin/stylists")}
+          onClick={() => router.push(cancelHref)}
           disabled={pending}
           className="btn-secondary"
         >

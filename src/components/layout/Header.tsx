@@ -22,6 +22,9 @@ export function Header() {
           <Link href="/line-bot" className="text-ink-700 hover:text-pomie-600">
             LINE で予約
           </Link>
+          <Link href="/stylist" className="text-ink-500 hover:text-pomie-600">
+            美容師ログイン
+          </Link>
           <Link href="/admin" className="text-ink-500 hover:text-pomie-600">
             管理
           </Link>
