@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { ReservationForm } from "@/components/reservation/ReservationForm";
+import { StylistAvatar } from "@/components/common/StylistAvatar";
 import { getStylistById } from "@/lib/data/stylists";
 import { getStoreById } from "@/lib/data/stores";
 
@@ -38,8 +39,11 @@ export default async function NewReservationPage({
         <aside>
           <div className="card overflow-hidden">
             <div className="aspect-square overflow-hidden bg-ink-100">
-              {/* eslint-disable-next-line @next/next/no-img-element */}
-              <img src={stylist.avatar} alt={stylist.name} className="h-full w-full object-cover" />
+              <StylistAvatar
+                src={stylist.avatar}
+                name={stylist.name}
+                className="h-full w-full"
+              />
             </div>
             <div className="p-4">
               <p className="text-sm font-bold">{stylist.name}</p>

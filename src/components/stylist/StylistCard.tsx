@@ -2,6 +2,7 @@ import Link from "next/link";
 import type { Stylist } from "@/lib/types";
 import { formatPriceRange } from "@/lib/format";
 import { getStoreById } from "@/lib/data/stores";
+import { StylistAvatar } from "@/components/common/StylistAvatar";
 
 export function StylistCard({ stylist }: { stylist: Stylist }) {
   const store = getStoreById(stylist.storeId);
@@ -9,11 +10,10 @@ export function StylistCard({ stylist }: { stylist: Stylist }) {
   return (
     <Link href={`/stylists/${stylist.id}`} className="card group block overflow-hidden transition hover:-translate-y-0.5 hover:shadow-md">
       <div className="aspect-[4/5] overflow-hidden bg-ink-100">
-        {/* eslint-disable-next-line @next/next/no-img-element */}
-        <img
+        <StylistAvatar
           src={stylist.avatar}
-          alt={stylist.name}
-          className="h-full w-full object-cover transition group-hover:scale-105"
+          name={stylist.name}
+          className="h-full w-full transition group-hover:scale-105"
         />
       </div>
       <div className="p-4">

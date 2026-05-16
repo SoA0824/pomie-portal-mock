@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { SnsFeed } from "@/components/stylist/SnsFeed";
+import { StylistAvatar } from "@/components/common/StylistAvatar";
 import { getStylistById } from "@/lib/data/stylists";
 import { getStoreById } from "@/lib/data/stores";
 import { getSnsPostsByStylistId } from "@/lib/data/snsPosts";
@@ -24,8 +25,11 @@ export default async function StylistDetailPage({ params }: { params: { id: stri
         <div>
           <div className="card overflow-hidden">
             <div className="aspect-square overflow-hidden bg-ink-100">
-              {/* eslint-disable-next-line @next/next/no-img-element */}
-              <img src={stylist.avatar} alt={stylist.name} className="h-full w-full object-cover" />
+              <StylistAvatar
+                src={stylist.avatar}
+                name={stylist.name}
+                className="h-full w-full"
+              />
             </div>
           </div>
           <dl className="mt-4 space-y-2 text-sm">

@@ -2,6 +2,17 @@ import type { Config } from "tailwindcss";
 
 const config: Config = {
   content: ["./src/app/**/*.{ts,tsx}", "./src/components/**/*.{ts,tsx}"],
+  // StylistAvatar が動的に選択する背景色を Tailwind の purge から守る
+  safelist: [
+    "bg-pomie-400",
+    "bg-pomie-500",
+    "bg-emerald-500",
+    "bg-blue-500",
+    "bg-rose-400",
+    "bg-amber-500",
+    "bg-purple-500",
+    "bg-teal-500",
+  ],
   theme: {
     extend: {
       colors: {

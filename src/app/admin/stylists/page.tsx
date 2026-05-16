@@ -2,6 +2,7 @@ import Link from "next/link";
 import { getAllStylistsIncludingInactive } from "@/lib/data/stylists";
 import { getStoreById } from "@/lib/data/stores";
 import { SyncInstagramButton } from "@/components/admin/SyncInstagramButton";
+import { StylistAvatar } from "@/components/common/StylistAvatar";
 import { formatDateTime } from "@/lib/format";
 
 export const dynamic = "force-dynamic";
@@ -32,14 +33,12 @@ export default async function AdminStylistsPage() {
           return (
             <article key={s.id} className="card p-4 md:p-5">
               <div className="flex flex-wrap items-start gap-4">
-                {s.avatar && (
-                  // eslint-disable-next-line @next/next/no-img-element
-                  <img
-                    src={s.avatar}
-                    alt={s.name}
-                    className="h-16 w-16 flex-shrink-0 rounded-full object-cover"
-                  />
-                )}
+                <StylistAvatar
+                  src={s.avatar}
+                  name={s.name}
+                  rounded
+                  className="h-16 w-16 flex-shrink-0"
+                />
                 <div className="min-w-0 flex-1">
                   <div className="flex flex-wrap items-baseline gap-2">
                     <h2 className="text-lg font-bold">{s.name}</h2>
