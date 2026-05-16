@@ -25,11 +25,26 @@ export type Stylist = {
   menus: string[];
   priceRange: { min: number; max: number };
   availableTimeSlots: string[];
+  instagramHandle?: string | null;
   snsLinks: Partial<Record<SnsPlatform, string>>;
   contractStatus: "active" | "inactive";
   featuredFlag: boolean;
   rating: number;
   worksCount: number;
+  instagramSyncedAt?: string | null;
+};
+
+export type CreateStylistInput = {
+  name: string;
+  nameKana?: string;
+  avatar?: string;
+  profile: string;
+  storeId: string;
+  menus: string[];
+  priceRange: { min: number; max: number };
+  instagramHandle?: string;
+  contractStatus: "active" | "inactive";
+  featuredFlag: boolean;
 };
 
 export type SnsPost = {

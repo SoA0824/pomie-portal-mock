@@ -18,7 +18,7 @@ export default async function ReservationCompletePage({
 }) {
   const reservation = await getReservationById(params.id);
   if (!reservation) notFound();
-  const stylist = getStylistByIdIncludingInactive(reservation.stylistId);
+  const stylist = await getStylistByIdIncludingInactive(reservation.stylistId);
   const store = getStoreById(reservation.storeId);
 
   const isConfirmed = reservation.status === "confirmed";

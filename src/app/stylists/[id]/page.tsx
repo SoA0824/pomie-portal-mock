@@ -1,23 +1,18 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { SnsFeed } from "@/components/stylist/SnsFeed";
-import {
-  getAllPublishedStylists,
-  getStylistById,
-} from "@/lib/data/stylists";
+import { getStylistById } from "@/lib/data/stylists";
 import { getStoreById } from "@/lib/data/stores";
 import { getSnsPostsByStylistId } from "@/lib/data/snsPosts";
 import { formatDateTime, formatPriceRange } from "@/lib/format";
 
-export function generateStaticParams() {
-  return getAllPublishedStylists().map((s) => ({ id: s.id }));
-}
+export const dynamic = "force-dynamic";
 
-export default function StylistDetailPage({ params }: { params: { id: string } }) {
-  const stylist = getStylistById(params.id);
+export default async function StylistDetailPage({ params }: { params: { id: string } }) {
+  const stylist = await getStylistById(params.id);
   if (!stylist) notFound();
   const store = getStoreById(stylist.storeId);
-  const posts = getSnsPostsByStylistId(stylist.id);
+  const posts = await getSnsPostsByStylistId(stylist.id);
 
   return (
     <div className="container-page py-10">

@@ -4,19 +4,23 @@ import ReactMarkdown from "react-markdown";
 import { StylistCard } from "@/components/stylist/StylistCard";
 import { getAllArticles, getArticleBySlug } from "@/lib/data/articles";
 import { getStylistById } from "@/lib/data/stylists";
+import type { Stylist } from "@/lib/types";
 import { formatDate } from "@/lib/format";
+
+export const dynamic = "force-dynamic";
 
 export function generateStaticParams() {
   return getAllArticles().map((a) => ({ slug: a.slug }));
 }
 
-export default function ArticleDetailPage({ params }: { params: { slug: string } }) {
+export default async function ArticleDetailPage({ params }: { params: { slug: string } }) {
   const article = getArticleBySlug(params.slug);
   if (!article) notFound();
 
-  const related = article.relatedStylistIds
-    .map((id) => getStylistById(id))
-    .filter((s): s is NonNullable<ReturnType<typeof getStylistById>> => Boolean(s));
+  const relatedResults = await Promise.all(
+    article.relatedStylistIds.map((id) => getStylistById(id))
+  );
+  const related = relatedResults.filter((s): s is Stylist => Boolean(s));
 
   return (
     <article>

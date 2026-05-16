@@ -56,3 +56,37 @@ export type SalonboardBookingRow = {
   menu: string;
   created_at: string;
 };
+
+export type StylistRow = {
+  id: string;
+  name: string;
+  name_kana: string | null;
+  avatar: string | null;
+  profile: string;
+  store_id: string;
+  area: string | null;
+  menus: string[];
+  price_range: { min: number; max: number };
+  available_time_slots: string[];
+  instagram_handle: string | null;
+  sns_links: Record<string, string>;
+  contract_status: "active" | "inactive";
+  featured_flag: boolean;
+  rating: number;
+  works_count: number;
+  instagram_synced_at: string | null;
+  created_at: string;
+  updated_at: string;
+};
+
+export type SnsPostRow = {
+  id: string;
+  stylist_id: string;
+  platform: string;
+  image_url: string;
+  caption: string;
+  posted_at: string;
+  source_url: string | null;
+  external_id: string | null;
+  fetched_at: string;
+};

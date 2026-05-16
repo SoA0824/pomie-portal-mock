@@ -7,7 +7,9 @@ export const metadata = {
   title: "美容師を探す | POMiE Portal",
 };
 
-export default function StylistsPage({
+export const dynamic = "force-dynamic";
+
+export default async function StylistsPage({
   searchParams,
 }: {
   searchParams: {
@@ -22,7 +24,7 @@ export default function StylistsPage({
   const sort = (searchParams.sort as StylistSort | undefined) ?? "recommended";
   const minRating = searchParams.minRating ? Number(searchParams.minRating) : undefined;
 
-  const stylists = searchStylists(
+  const stylists = await searchStylists(
     {
       keyword: searchParams.keyword,
       menu: searchParams.menu,
@@ -32,7 +34,7 @@ export default function StylistsPage({
     },
     sort
   );
-  const menus = listAllMenus();
+  const menus = await listAllMenus();
   const stores = getAllStores();
 
   return (

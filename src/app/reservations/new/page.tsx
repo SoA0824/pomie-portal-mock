@@ -8,13 +8,13 @@ export const metadata = {
   title: "予約 | POMiE Portal",
 };
 
-export default function NewReservationPage({
+export default async function NewReservationPage({
   searchParams,
 }: {
   searchParams: { stylistId?: string };
 }) {
   if (!searchParams.stylistId) notFound();
-  const stylist = getStylistById(searchParams.stylistId);
+  const stylist = await getStylistById(searchParams.stylistId);
   if (!stylist) notFound();
   const store = getStoreById(stylist.storeId);
   if (!store) notFound();

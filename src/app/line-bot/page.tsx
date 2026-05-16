@@ -2,16 +2,18 @@ import { ChatWindow } from "@/components/linebot/ChatWindow";
 import { getAllPublishedStylists } from "@/lib/data/stylists";
 import { getAllStores } from "@/lib/data/stores";
 
+export const dynamic = "force-dynamic";
+
 export const metadata = {
   title: "LINE Bot 予約 (モック) | POMiE Portal",
 };
 
-export default function LineBotPage({
+export default async function LineBotPage({
   searchParams,
 }: {
   searchParams: { stylistId?: string };
 }) {
-  const stylists = getAllPublishedStylists();
+  const stylists = await getAllPublishedStylists();
   const stores = getAllStores();
 
   return (

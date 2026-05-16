@@ -1,7 +1,27 @@
-import stylistsJson from "../../../data/stylists.json";
-import type { Stylist } from "../types";
+import type { Stylist, SnsPlatform } from "../types";
+import { getSupabase, type StylistRow } from "@/lib/supabase/client";
 
-const stylists = stylistsJson as Stylist[];
+function rowToStylist(row: StylistRow): Stylist {
+  return {
+    id: row.id,
+    name: row.name,
+    nameKana: row.name_kana ?? "",
+    avatar: row.avatar ?? "",
+    profile: row.profile,
+    storeId: row.store_id,
+    area: row.area ?? "",
+    menus: row.menus ?? [],
+    priceRange: row.price_range,
+    availableTimeSlots: row.available_time_slots ?? [],
+    instagramHandle: row.instagram_handle,
+    snsLinks: (row.sns_links ?? {}) as Partial<Record<SnsPlatform, string>>,
+    contractStatus: row.contract_status,
+    featuredFlag: row.featured_flag,
+    rating: Number(row.rating),
+    worksCount: row.works_count,
+    instagramSyncedAt: row.instagram_synced_at,
+  };
+}
 
 export type StylistFilter = {
   menu?: string;
@@ -13,28 +33,48 @@ export type StylistFilter = {
 
 export type StylistSort = "recommended" | "rating" | "works";
 
-export function getAllPublishedStylists(): Stylist[] {
-  return stylists.filter((s) => s.contractStatus === "active");
+async function fetchAll(): Promise<Stylist[]> {
+  const sb = getSupabase();
+  const { data, error } = await sb.from("stylists").select("*");
+  if (error) throw new Error(`Failed to fetch stylists: ${error.message}`);
+  return (data ?? []).map(rowToStylist);
 }
 
-export function getStylistById(id: string): Stylist | undefined {
-  const s = stylists.find((s) => s.id === id);
-  if (!s || s.contractStatus !== "active") return undefined;
-  return s;
+export async function getAllStylistsIncludingInactive(): Promise<Stylist[]> {
+  return fetchAll();
 }
 
-export function getStylistByIdIncludingInactive(id: string): Stylist | undefined {
-  return stylists.find((s) => s.id === id);
+export async function getAllPublishedStylists(): Promise<Stylist[]> {
+  const list = await fetchAll();
+  return list.filter((s) => s.contractStatus === "active");
 }
 
-export function getFeaturedStylists(limit = 4): Stylist[] {
-  return getAllPublishedStylists()
-    .filter((s) => s.featuredFlag)
-    .slice(0, limit);
+export async function getStylistById(id: string): Promise<Stylist | undefined> {
+  const sb = getSupabase();
+  const { data, error } = await sb.from("stylists").select("*").eq("id", id).maybeSingle();
+  if (error) throw new Error(`Failed to fetch stylist: ${error.message}`);
+  if (!data) return undefined;
+  const stylist = rowToStylist(data);
+  return stylist.contractStatus === "active" ? stylist : undefined;
 }
 
-export function searchStylists(filter: StylistFilter, sort: StylistSort = "recommended"): Stylist[] {
-  let list = getAllPublishedStylists();
+export async function getStylistByIdIncludingInactive(id: string): Promise<Stylist | undefined> {
+  const sb = getSupabase();
+  const { data, error } = await sb.from("stylists").select("*").eq("id", id).maybeSingle();
+  if (error) throw new Error(`Failed to fetch stylist: ${error.message}`);
+  return data ? rowToStylist(data) : undefined;
+}
+
+export async function getFeaturedStylists(limit = 4): Promise<Stylist[]> {
+  const list = await getAllPublishedStylists();
+  return list.filter((s) => s.featuredFlag).slice(0, limit);
+}
+
+export async function searchStylists(
+  filter: StylistFilter,
+  sort: StylistSort = "recommended"
+): Promise<Stylist[]> {
+  let list = await getAllPublishedStylists();
 
   if (filter.menu) {
     list = list.filter((s) => s.menus.includes(filter.menu!));
@@ -43,7 +83,7 @@ export function searchStylists(filter: StylistFilter, sort: StylistSort = "recom
     list = list.filter((s) => s.storeId === filter.storeId);
   }
   if (filter.hasSns) {
-    list = list.filter((s) => Object.keys(s.snsLinks).length > 0);
+    list = list.filter((s) => Object.keys(s.snsLinks ?? {}).length > 0);
   }
   if (typeof filter.minRating === "number") {
     list = list.filter((s) => s.rating >= filter.minRating!);
@@ -77,8 +117,9 @@ export function searchStylists(filter: StylistFilter, sort: StylistSort = "recom
   return list;
 }
 
-export function listAllMenus(): string[] {
+export async function listAllMenus(): Promise<string[]> {
+  const list = await getAllPublishedStylists();
   const set = new Set<string>();
-  for (const s of getAllPublishedStylists()) for (const m of s.menus) set.add(m);
+  for (const s of list) for (const m of s.menus) set.add(m);
   return Array.from(set).sort();
 }

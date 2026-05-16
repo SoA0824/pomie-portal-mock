@@ -14,7 +14,7 @@ import type {
 export async function createReservation(
   input: CreateReservationInput
 ): Promise<CreateReservationResult> {
-  const stylist = getStylistById(input.stylistId);
+  const stylist = await getStylistById(input.stylistId);
   if (!stylist) {
     return { ok: false, reason: "stylist_not_available" };
   }

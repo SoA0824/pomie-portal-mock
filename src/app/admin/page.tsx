@@ -8,8 +8,10 @@ export const dynamic = "force-dynamic";
 export const metadata = { title: "管理ダッシュボード | POMiE Portal" };
 
 export default async function AdminDashboard() {
-  const reservations = await listReservations();
-  const stylists = getAllPublishedStylists();
+  const [reservations, stylists] = await Promise.all([
+    listReservations(),
+    getAllPublishedStylists(),
+  ]);
   const articles = getAllArticles();
   const stores = getAllStores();
   const today = new Date().toISOString().slice(0, 10);

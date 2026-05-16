@@ -23,7 +23,9 @@
 1. https://supabase.com でサインイン → New project
 2. プロジェクト名: 任意（例: `pomie-portal-mock`）。リージョンは `Northeast Asia (Tokyo)` 推奨
 3. データベースパスワードは控えておく（ローカル開発では基本不要）
-4. プロジェクトが立ち上がったら、**SQL Editor** を開き [supabase/schema.sql](./supabase/schema.sql) の中身を貼り付けて実行
+4. プロジェクトが立ち上がったら、**SQL Editor** を開き、次の順で実行:
+   1. [supabase/schema.sql](./supabase/schema.sql) を貼り付けて Run（テーブル作成 + GRANT）
+   2. [supabase/seed.sql](./supabase/seed.sql) を貼り付けて Run（既存 12 名 + 34 投稿の初期データ）
 5. **Project Settings → API** から `Project URL` と `anon public` キーをコピー
 
 ### 2. ローカルセットアップ
@@ -162,6 +164,43 @@ POMiEポータル/
 現実装は `lib/integrations/salonboard.mock.ts`（Supabase に書き込むモック）。本番化では `getSalonboardClient()` ファクトリ（`lib/integrations/salonboard.ts`）の `SALONBOARD_DRIVER` 分岐に実装を追加します。
 
 サロンボードに公式 REST API はないため、本番手段は `mock | csv | rpa | api` のいずれか。詳細は [計画書](../../../../.claude/plans/line-precious-pine.md) §12 参照。
+
+## 美容師の登録と Instagram 連携
+
+### 美容師を新規登録する
+
+1. `https://<デプロイ URL>/admin/stylists` を開く
+2. 右上の **「+ 新規登録」** ボタン
+3. 必須項目を入力:
+   - 名前
+   - 所属店舗（プルダウン）
+   - プロフィール
+   - 得意メニュー（カンマ区切り）
+   - 料金（最低・最高）
+   - 契約状態（既定: 掲載中）
+4. 任意項目:
+   - Instagram ハンドル（`@` 不要、例: `jima211`）
+   - アバター画像 URL（空欄なら IG ハンドルから自動取得 / unavatar.io 経由）
+5. **「登録する」** → 一覧と公開サイト `/stylists` に即時反映
+
+### Instagram 投稿取得（モック / Apify）
+
+既定では **モック投稿**（placeholder 画像 + ダミーキャプション）が登録されます。実際の Instagram 投稿を表示したい場合は **Apify** をセットアップ:
+
+1. https://apify.com でサインアップ（$5/月クレジット同梱の Personal プランで十分）
+2. Console → Settings → Integrations → **API tokens** → Create new token
+3. Vercel の Environment Variables に `APIFY_API_TOKEN=...` を追加 → Redeploy
+4. `/admin/stylists` で各美容師の **「Instagram 更新」** ボタン押下 → 実際の最新 8 投稿に置き換わる
+
+> **注意**: Vercel Hobby プランは Server Action のタイムアウトが 10s。Apify の同期実行は通常 5〜30s かかるため、トークン設定時はタイムアウトする場合があります。Vercel Pro (60s) もしくは「非同期 + ポーリング化」（後続タスク）で対応予定。
+
+### 切り替え（明示指定）
+
+`INSTAGRAM_FETCHER` を環境変数で設定すれば、ドライバを明示指定できます:
+
+- `INSTAGRAM_FETCHER=mock`: モック固定
+- `INSTAGRAM_FETCHER=apify`: Apify 固定（トークン必須）
+- 未指定: トークンがあれば apify、無ければ mock（自動）
 
 ## 既知の制限（MVP スコープ外）
 

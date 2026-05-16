@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { listReservations } from "@/lib/data/reservations";
-import { getStylistByIdIncludingInactive } from "@/lib/data/stylists";
+import { getAllStylistsIncludingInactive } from "@/lib/data/stylists";
 import { getStoreById } from "@/lib/data/stores";
 import { formatDateTime } from "@/lib/format";
 
@@ -12,7 +12,12 @@ export default async function AdminReservationsPage({
 }: {
   searchParams: { channel?: "web" | "line" };
 }) {
-  const all = (await listReservations()).slice().reverse();
+  const [allReservations, stylists] = await Promise.all([
+    listReservations(),
+    getAllStylistsIncludingInactive(),
+  ]);
+  const stylistMap = new Map(stylists.map((s) => [s.id, s]));
+  const all = allReservations.slice().reverse();
   const cf = searchParams.channel;
   const reservations = cf ? all.filter((r) => r.channel === cf) : all;
   const webCount = all.filter((r) => r.channel === "web").length;
@@ -48,7 +53,7 @@ export default async function AdminReservationsPage({
 
       <section className="mt-6 space-y-3">
         {reservations.map((r) => {
-          const stylist = getStylistByIdIncludingInactive(r.stylistId);
+          const stylist = stylistMap.get(r.stylistId);
           const store = getStoreById(r.storeId);
           return (
             <article key={r.id} className="card p-4 md:p-5">

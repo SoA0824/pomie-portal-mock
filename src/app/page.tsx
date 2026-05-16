@@ -4,9 +4,11 @@ import { StylistCard } from "@/components/stylist/StylistCard";
 import { getFeaturedArticles } from "@/lib/data/articles";
 import { getFeaturedStylists } from "@/lib/data/stylists";
 
-export default function Home() {
+export const dynamic = "force-dynamic";
+
+export default async function Home() {
   const articles = getFeaturedArticles(3);
-  const stylists = getFeaturedStylists(4);
+  const stylists = await getFeaturedStylists(4);
   return (
     <>
       <section className="bg-gradient-to-br from-pomie-100 via-pomie-50 to-white">
