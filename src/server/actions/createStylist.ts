@@ -86,6 +86,8 @@ export async function createStylist(
       profile: input.profile.trim(),
       store_id: input.storeId,
       area,
+      strengths: (input.strengths ?? []).map((s) => s.trim()).filter(Boolean),
+      specialty_menus: (input.specialtyMenus ?? []).map((s) => s.trim()).filter(Boolean),
       menus: input.menus.map((m) => ({ name: m.name.trim(), duration: m.duration })),
       price_range: input.priceRange,
       available_time_slots:
@@ -114,6 +116,8 @@ export async function createStylist(
     profile: data.profile,
     storeId: data.store_id,
     area: data.area ?? "",
+    strengths: data.strengths ?? [],
+    specialtyMenus: data.specialty_menus ?? [],
     menus: data.menus ?? [],
     priceRange: data.price_range,
     availableTimeSlots: [],

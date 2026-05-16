@@ -27,6 +27,11 @@ export type Stylist = {
   profile: string;
   storeId: string;
   area: string;
+  /** 強み（表示用キャッチフレーズ） */
+  strengths: string[];
+  /** 得意メニュー（表示用タグ・予約とは独立） */
+  specialtyMenus: string[];
+  /** 予約可能メニュー（施術時間つき） */
   menus: StylistMenu[];
   priceRange: { min: number; max: number };
   availableTimeSlots: string[];
@@ -45,6 +50,8 @@ export type CreateStylistInput = {
   avatar?: string;
   profile: string;
   storeId: string;
+  strengths?: string[];
+  specialtyMenus?: string[];
   menus: StylistMenu[];
   priceRange: { min: number; max: number };
   /** 省略時は自動でダミー枠を生成 */

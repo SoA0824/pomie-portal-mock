@@ -104,7 +104,10 @@ export function ChatWindow({
         stylistName: s.name,
         storeName: store?.name ?? "",
         rating: s.rating,
-        menus: s.menus.slice(0, 3).map((m) => m.name),
+        menus: (s.specialtyMenus.length > 0
+          ? s.specialtyMenus
+          : s.menus.map((m) => m.name)
+        ).slice(0, 3),
       },
     ]);
   }

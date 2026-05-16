@@ -44,16 +44,33 @@ export default async function StylistDetailPage({ params }: { params: { id: stri
           <header>
             <p className="text-sm text-ink-500">{stylist.nameKana}</p>
             <h1 className="mt-1 text-3xl font-bold">{stylist.name}</h1>
-            <div className="mt-2 flex flex-wrap gap-1.5">
-              {stylist.menus.map((m) => (
-                <span key={m.name} className="chip">
-                  {m.name}
-                  <span className="ml-1 text-[10px] text-pomie-700/70">
-                    {m.duration}分
+            {stylist.strengths.length > 0 && (
+              <div className="mt-3 flex flex-wrap gap-1.5">
+                {stylist.strengths.map((s) => (
+                  <span
+                    key={s}
+                    className="inline-flex items-center gap-1 rounded-full bg-pomie-500 px-3 py-1 text-xs font-semibold text-white shadow-sm"
+                  >
+                    ✦ {s}
                   </span>
-                </span>
-              ))}
-            </div>
+                ))}
+              </div>
+            )}
+            {(stylist.specialtyMenus.length > 0
+              ? stylist.specialtyMenus
+              : stylist.menus.map((m) => m.name)
+            ).length > 0 && (
+              <div className="mt-2 flex flex-wrap gap-1.5">
+                {(stylist.specialtyMenus.length > 0
+                  ? stylist.specialtyMenus
+                  : stylist.menus.map((m) => m.name)
+                ).map((m) => (
+                  <span key={m} className="chip">
+                    {m}
+                  </span>
+                ))}
+              </div>
+            )}
           </header>
 
           <p className="mt-5 leading-relaxed text-ink-700">{stylist.profile}</p>
@@ -89,6 +106,26 @@ export default async function StylistDetailPage({ params }: { params: { id: stri
           </div>
         </div>
       </section>
+
+      {stylist.menus.length > 0 && (
+        <section className="mt-12">
+          <h2 className="text-xl font-bold">予約可能なメニュー</h2>
+          <p className="mt-1 text-sm text-ink-500">
+            それぞれの施術時間を確認して、予約フォームで複数選択できます。
+          </p>
+          <ul className="mt-4 grid gap-2 md:grid-cols-2">
+            {stylist.menus.map((m) => (
+              <li
+                key={m.name}
+                className="flex items-center justify-between rounded-xl bg-white px-4 py-3 ring-1 ring-ink-100"
+              >
+                <span className="font-medium text-ink-900">{m.name}</span>
+                <span className="text-sm text-ink-500">{m.duration} 分</span>
+              </li>
+            ))}
+          </ul>
+        </section>
+      )}
 
       <section className="mt-12">
         <h2 className="text-xl font-bold">予約可能な時間</h2>

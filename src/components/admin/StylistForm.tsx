@@ -12,6 +12,11 @@ import {
 } from "@/lib/menuDurations";
 import { generateDummyAvailableSlots } from "@/lib/generateDummySlots";
 import { ScheduleEditor } from "@/components/admin/ScheduleEditor";
+import { TagInput } from "@/components/admin/TagInput";
+import {
+  STRENGTH_SUGGESTIONS,
+  SPECIALTY_MENU_SUGGESTIONS,
+} from "@/lib/stylistSuggestions";
 
 const REASON_LABELS: Record<string, string> = {
   missing_name: "名前を入力してください",
@@ -58,6 +63,10 @@ export function StylistForm({
     featuredFlag: initialValues?.featuredFlag ?? false,
   });
   const [menus, setMenus] = useState<MenuRow[]>(initialMenus);
+  const [strengths, setStrengths] = useState<string[]>(initialValues?.strengths ?? []);
+  const [specialtyMenus, setSpecialtyMenus] = useState<string[]>(
+    initialValues?.specialtyMenus ?? []
+  );
   const [availableTimeSlots, setAvailableTimeSlots] = useState<string[]>(
     initialValues?.availableTimeSlots ??
       generateDummyAvailableSlots("draft", 8)
@@ -123,6 +132,8 @@ export function StylistForm({
       avatar: form.avatar,
       storeId: form.storeId,
       profile: form.profile,
+      strengths,
+      specialtyMenus,
       menus: cleanedMenus,
       priceRange: { min: priceMin, max: priceMax },
       availableTimeSlots,
@@ -204,12 +215,48 @@ export function StylistForm({
         />
       </Field>
 
-      {/* メニュー入力（テーブル状） */}
+      {/* 強み（表示用キャッチフレーズ） */}
       <fieldset className="space-y-2">
         <legend className="text-xs font-semibold text-ink-700">
-          得意メニュー <span className="text-pomie-600">*</span>
+          強み
+          <span className="ml-2 font-normal text-ink-500">
+            ({strengths.length} 件) — 美容師詳細・カードに表示
+          </span>
+        </legend>
+        <TagInput
+          value={strengths}
+          onChange={setStrengths}
+          suggestions={STRENGTH_SUGGESTIONS}
+          placeholder="例: 髪質改善のプロ"
+        />
+      </fieldset>
+
+      {/* 得意メニュー（表示用タグ） */}
+      <fieldset className="space-y-2">
+        <legend className="text-xs font-semibold text-ink-700">
+          得意メニュー（表示用）
+          <span className="ml-2 font-normal text-ink-500">
+            ({specialtyMenus.length} 件) — 一覧・詳細のタグ表示用
+          </span>
+        </legend>
+        <TagInput
+          value={specialtyMenus}
+          onChange={setSpecialtyMenus}
+          suggestions={SPECIALTY_MENU_SUGGESTIONS}
+          placeholder="例: ハイライト"
+        />
+        <p className="text-[11px] text-ink-500">
+          ※ 実際に予約できるメニューと施術時間は、下の「予約可能メニュー」で管理します。
+        </p>
+      </fieldset>
+
+      {/* 予約可能メニュー入力（テーブル状） */}
+      <fieldset className="space-y-2">
+        <legend className="text-xs font-semibold text-ink-700">
+          予約可能メニュー <span className="text-pomie-600">*</span>
           <span className="ml-2 font-normal text-ink-500">
             ({menus.filter((m) => m.name.trim()).length} 件 / 合計 {formatDuration(totalDuration)})
+            — 予約フォームの選択肢になる
           </span>
         </legend>
         <div className="overflow-hidden rounded-lg border border-ink-100">

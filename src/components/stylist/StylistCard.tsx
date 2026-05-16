@@ -27,12 +27,22 @@ export function StylistCard({ stylist }: { stylist: Stylist }) {
         <p className="mt-1 text-xs text-ink-500">
           {store?.name} ・ {stylist.area}
         </p>
+        {stylist.strengths.length > 0 && (
+          <p className="mt-1 line-clamp-1 text-xs text-pomie-700">
+            ✦ {stylist.strengths.slice(0, 2).join(" / ")}
+          </p>
+        )}
         <div className="mt-2 flex flex-wrap gap-1">
-          {stylist.menus.slice(0, 3).map((m) => (
-            <span key={m.name} className="chip">
-              {m.name}
-            </span>
-          ))}
+          {(stylist.specialtyMenus.length > 0
+            ? stylist.specialtyMenus
+            : stylist.menus.map((m) => m.name)
+          )
+            .slice(0, 3)
+            .map((m) => (
+              <span key={m} className="chip">
+                {m}
+              </span>
+            ))}
         </div>
         <div className="mt-3 flex items-center justify-between text-xs text-ink-700">
           <span>{formatPriceRange(stylist.priceRange.min, stylist.priceRange.max)}</span>

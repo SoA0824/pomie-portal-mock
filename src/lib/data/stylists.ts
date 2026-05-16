@@ -18,6 +18,8 @@ function rowToStylist(row: StylistRow): Stylist {
     profile: row.profile,
     storeId: row.store_id,
     area: row.area ?? "",
+    strengths: row.strengths ?? [],
+    specialtyMenus: row.specialty_menus ?? [],
     menus,
     priceRange: row.price_range,
     availableTimeSlots: row.available_time_slots ?? [],
@@ -103,6 +105,8 @@ export async function searchStylists(
         s.name.toLowerCase().includes(k) ||
         s.nameKana.toLowerCase().includes(k) ||
         s.profile.toLowerCase().includes(k) ||
+        s.strengths.some((x) => x.toLowerCase().includes(k)) ||
+        s.specialtyMenus.some((x) => x.toLowerCase().includes(k)) ||
         s.menus.some((m) => m.name.toLowerCase().includes(k))
     );
   }
