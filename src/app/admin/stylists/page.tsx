@@ -82,6 +82,29 @@ export default async function AdminStylistsPage() {
                   )}
                 </div>
               </div>
+
+              {/* フッタ: 操作リンク */}
+              <div className="mt-4 flex flex-wrap items-center gap-2 border-t border-ink-100/70 pt-3 text-xs">
+                <Link
+                  href={`/admin/stylists/${s.id}/edit`}
+                  className="rounded-full bg-pomie-500 px-3 py-1 font-semibold text-white transition hover:bg-pomie-600"
+                >
+                  編集
+                </Link>
+                <Link
+                  href={`/stylists/${s.id}`}
+                  target="_blank"
+                  rel="noreferrer noopener"
+                  className="rounded-full border border-ink-100 bg-white px-3 py-1 font-semibold text-ink-700 transition hover:bg-pomie-100"
+                >
+                  詳細を見る ↗
+                </Link>
+                {s.contractStatus === "inactive" && (
+                  <span className="text-ink-500">
+                    （停止中のため公開ページは表示されません）
+                  </span>
+                )}
+              </div>
             </article>
           );
         })}

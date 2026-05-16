@@ -47,6 +47,10 @@ export type CreateStylistInput = {
   featuredFlag: boolean;
 };
 
+export type UpdateStylistInput = CreateStylistInput & {
+  id: string;
+};
+
 export type SnsPost = {
   id: string;
   stylistId: string;

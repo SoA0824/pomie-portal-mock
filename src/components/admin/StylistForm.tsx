@@ -2,8 +2,9 @@
 
 import { useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
-import type { Store } from "@/lib/types";
+import type { Store, Stylist } from "@/lib/types";
 import { createStylist } from "@/server/actions/createStylist";
+import { updateStylist } from "@/server/actions/updateStylist";
 
 const REASON_LABELS: Record<string, string> = {
   missing_name: "名前を入力してください",
@@ -11,24 +12,33 @@ const REASON_LABELS: Record<string, string> = {
   missing_profile: "プロフィールを入力してください",
   missing_menus: "得意メニューを 1 つ以上入力してください",
   invalid_price_range: "料金（最低・最高）を正しく入力してください",
+  stylist_not_found: "対象の美容師が見つかりません",
 };
 
-export function StylistForm({ stores }: { stores: Store[] }) {
+export function StylistForm({
+  stores,
+  mode = "create",
+  initialValues,
+}: {
+  stores: Store[];
+  mode?: "create" | "edit";
+  initialValues?: Stylist;
+}) {
   const router = useRouter();
   const [pending, startTransition] = useTransition();
   const [error, setError] = useState<string | null>(null);
   const [form, setForm] = useState({
-    name: "",
-    nameKana: "",
-    avatar: "",
-    storeId: stores[0]?.id ?? "",
-    profile: "",
-    menus: "",
-    priceMin: "7000",
-    priceMax: "20000",
-    instagramHandle: "",
-    contractStatus: "active" as "active" | "inactive",
-    featuredFlag: false,
+    name: initialValues?.name ?? "",
+    nameKana: initialValues?.nameKana ?? "",
+    avatar: initialValues?.avatar ?? "",
+    storeId: initialValues?.storeId ?? stores[0]?.id ?? "",
+    profile: initialValues?.profile ?? "",
+    menus: initialValues?.menus.join(", ") ?? "",
+    priceMin: initialValues?.priceRange.min.toString() ?? "7000",
+    priceMax: initialValues?.priceRange.max.toString() ?? "20000",
+    instagramHandle: initialValues?.instagramHandle ?? "",
+    contractStatus: (initialValues?.contractStatus ?? "active") as "active" | "inactive",
+    featuredFlag: initialValues?.featuredFlag ?? false,
   });
 
   const update = <K extends keyof typeof form>(key: K, value: (typeof form)[K]) => {
@@ -55,28 +65,42 @@ export function StylistForm({ stores }: { stores: Store[] }) {
       return;
     }
 
+    const payload = {
+      name: form.name,
+      nameKana: form.nameKana,
+      avatar: form.avatar,
+      storeId: form.storeId,
+      profile: form.profile,
+      menus,
+      priceRange: { min: priceMin, max: priceMax },
+      instagramHandle: form.instagramHandle,
+      contractStatus: form.contractStatus,
+      featuredFlag: form.featuredFlag,
+    };
+
     startTransition(async () => {
-      const result = await createStylist({
-        name: form.name,
-        nameKana: form.nameKana,
-        avatar: form.avatar,
-        storeId: form.storeId,
-        profile: form.profile,
-        menus,
-        priceRange: { min: priceMin, max: priceMax },
-        instagramHandle: form.instagramHandle,
-        contractStatus: form.contractStatus,
-        featuredFlag: form.featuredFlag,
-      });
+      const result =
+        mode === "edit" && initialValues
+          ? await updateStylist({ ...payload, id: initialValues.id })
+          : await createStylist(payload);
 
       if (result.ok) {
         router.push(`/admin/stylists`);
         router.refresh();
       } else {
-        setError(REASON_LABELS[result.reason] ?? `登録に失敗しました (${result.reason})`);
+        setError(REASON_LABELS[result.reason] ?? `保存に失敗しました (${result.reason})`);
       }
     });
   };
+
+  const ctaLabel =
+    mode === "edit"
+      ? pending
+        ? "保存中..."
+        : "変更を保存"
+      : pending
+        ? "登録中..."
+        : "登録する";
 
   return (
     <form onSubmit={submit} className="card space-y-5 p-6">
@@ -162,7 +186,9 @@ export function StylistForm({ stores }: { stores: Store[] }) {
           className="input"
         />
         <p className="mt-1 text-xs text-ink-500">
-          登録後、自動で最新 8 投稿の取得を試みます。トークン未設定時はモック投稿が入ります。
+          {mode === "edit"
+            ? "ハンドルを変更すると保存時に最新 8 投稿を自動で再取得します。"
+            : "登録後、自動で最新 8 投稿の取得を試みます。トークン未設定時はモック投稿が入ります。"}
         </p>
       </Field>
 
@@ -213,7 +239,15 @@ export function StylistForm({ stores }: { stores: Store[] }) {
 
       <div className="flex gap-3">
         <button type="submit" disabled={pending} className="btn-primary disabled:opacity-60">
-          {pending ? "登録中..." : "登録する"}
+          {ctaLabel}
+        </button>
+        <button
+          type="button"
+          onClick={() => router.push("/admin/stylists")}
+          disabled={pending}
+          className="btn-secondary"
+        >
+          キャンセル
         </button>
       </div>
 
