@@ -6,6 +6,7 @@ import { useRouter } from "next/navigation";
 import type { Store, Stylist } from "@/lib/types";
 import { StylistAvatar } from "@/components/common/StylistAvatar";
 import { SyncInstagramButton } from "@/components/admin/SyncInstagramButton";
+import { RegenerateSlotsButton } from "@/components/admin/RegenerateSlotsButton";
 import { formatDateTime } from "@/lib/format";
 import {
   applyStylistEdits,
@@ -325,6 +326,13 @@ export function AdminStylistList({
                   >
                     詳細を見る ↗
                   </Link>
+                  <span className="ml-auto inline-flex items-center gap-2 text-ink-500">
+                    予約可能枠:{" "}
+                    <strong className={s.availableTimeSlots.length === 0 ? "text-red-600" : "text-ink-900"}>
+                      {s.availableTimeSlots.length} 件
+                    </strong>
+                    <RegenerateSlotsButton stylistId={s.id} />
+                  </span>
                   {s.contractStatus === "inactive" && (
                     <span className="text-ink-500">
                       （停止中のため公開ページは表示されません）

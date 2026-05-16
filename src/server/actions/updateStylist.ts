@@ -3,6 +3,7 @@
 import { revalidatePath } from "next/cache";
 import { getSupabase } from "@/lib/supabase/client";
 import { getStoreById } from "@/lib/data/stores";
+import { generateDummyAvailableSlots } from "@/lib/generateDummySlots";
 import type { UpdateStylistInput, Stylist } from "@/lib/types";
 import { syncInstagramPosts } from "./syncInstagramPosts";
 
@@ -76,6 +77,14 @@ export async function updateStylist(
     delete snsLinks.instagram;
   }
 
+  // ===== スロット補完: 既存が空 / 全部過去のものなら自動再生成 =====
+  const currentSlots: string[] = existing.available_time_slots ?? [];
+  const todayIso = new Date().toISOString().slice(0, 10);
+  const hasFutureSlot = currentSlots.some((s) => s.slice(0, 10) >= todayIso);
+  const refreshedSlots = hasFutureSlot
+    ? currentSlots
+    : generateDummyAvailableSlots(input.id, 8);
+
   // ===== UPDATE =====
   const { data, error: updateError } = await sb
     .from("stylists")
@@ -88,6 +97,7 @@ export async function updateStylist(
       area,
       menus: input.menus,
       price_range: input.priceRange,
+      available_time_slots: refreshedSlots,
       instagram_handle: handle,
       sns_links: snsLinks,
       contract_status: input.contractStatus,

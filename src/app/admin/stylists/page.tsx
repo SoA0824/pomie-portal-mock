@@ -2,6 +2,7 @@ import Link from "next/link";
 import { getAllStylistsIncludingInactive } from "@/lib/data/stylists";
 import { getAllStores } from "@/lib/data/stores";
 import { AdminStylistList, type SortKey } from "@/components/admin/AdminStylistList";
+import { RegenerateSlotsButton } from "@/components/admin/RegenerateSlotsButton";
 
 export const dynamic = "force-dynamic";
 export const metadata = { title: "美容師一覧 | 管理 | POMiE Portal" };
@@ -29,9 +30,12 @@ export default async function AdminStylistsPage({
             <strong> active のみ</strong>がポータル側で公開対象です。
           </p>
         </div>
-        <Link href="/admin/stylists/new" className="btn-primary self-start text-sm">
-          + 新規登録
-        </Link>
+        <div className="flex flex-wrap gap-2 self-start">
+          <RegenerateSlotsButton size="large" />
+          <Link href="/admin/stylists/new" className="btn-primary text-sm">
+            + 新規登録
+          </Link>
+        </div>
       </header>
 
       {stylists.length === 0 ? (

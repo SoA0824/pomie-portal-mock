@@ -3,6 +3,7 @@
 import { revalidatePath } from "next/cache";
 import { getSupabase } from "@/lib/supabase/client";
 import { getStoreById } from "@/lib/data/stores";
+import { generateDummyAvailableSlots } from "@/lib/generateDummySlots";
 import type { CreateStylistInput, Stylist } from "@/lib/types";
 import { syncInstagramPosts } from "./syncInstagramPosts";
 
@@ -84,7 +85,7 @@ export async function createStylist(
       area,
       menus: input.menus,
       price_range: input.priceRange,
-      available_time_slots: [],
+      available_time_slots: generateDummyAvailableSlots(id, 8),
       instagram_handle: handle,
       sns_links: snsLinks,
       contract_status: input.contractStatus,
