@@ -2,6 +2,7 @@
 
 import { revalidatePath } from "next/cache";
 import { getSupabase } from "@/lib/supabase/client";
+import { getStoreById } from "@/lib/data/stores";
 import type { CreateStylistInput, Stylist } from "@/lib/types";
 import { syncInstagramPosts } from "./syncInstagramPosts";
 
@@ -50,6 +51,11 @@ export async function createStylist(
 
   const handle = normalizeHandle(input.instagramHandle);
 
+  // ===== エリアは店舗から自動派生 =====
+  const store = getStoreById(input.storeId);
+  if (!store) return { ok: false, reason: "invalid_store", field: "storeId" };
+  const area = store.area;
+
   // ===== アバター補完 =====
   let avatar = input.avatar?.trim() || "";
   if (!avatar && handle) {
@@ -75,7 +81,7 @@ export async function createStylist(
       avatar,
       profile: input.profile.trim(),
       store_id: input.storeId,
-      area: null,
+      area,
       menus: input.menus,
       price_range: input.priceRange,
       available_time_slots: [],

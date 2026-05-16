@@ -2,6 +2,7 @@
 
 import { revalidatePath } from "next/cache";
 import { getSupabase } from "@/lib/supabase/client";
+import { getStoreById } from "@/lib/data/stores";
 import type { UpdateStylistInput, Stylist } from "@/lib/types";
 import { syncInstagramPosts } from "./syncInstagramPosts";
 
@@ -44,6 +45,11 @@ export async function updateStylist(
 
   const handle = normalizeHandle(input.instagramHandle);
 
+  // ===== エリアは店舗から自動派生 =====
+  const store = getStoreById(input.storeId);
+  if (!store) return { ok: false, reason: "invalid_store", field: "storeId" };
+  const area = store.area;
+
   // ===== 既存レコード取得（前後比較に使用）=====
   const sb = getSupabase();
   const { data: existing, error: fetchError } = await sb
@@ -79,6 +85,7 @@ export async function updateStylist(
       avatar,
       profile: input.profile.trim(),
       store_id: input.storeId,
+      area,
       menus: input.menus,
       price_range: input.priceRange,
       instagram_handle: handle,

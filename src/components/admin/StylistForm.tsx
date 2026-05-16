@@ -196,9 +196,15 @@ export function StylistForm({
         <input
           value={form.avatar}
           onChange={(e) => update("avatar", e.target.value)}
-          placeholder="例: https://... (空欄なら IG プロフィール画像 or ランダム画像)"
+          placeholder="例: https://... (空欄なら自動補完)"
           className="input"
         />
+        <p className="mt-1 text-xs text-ink-500">
+          空欄なら IG ハンドルから自動取得（unavatar.io）→ それも失敗時はイニシャル表示。<br />
+          <strong className="text-red-600">Instagram の画像 URL（cdninstagram.com）を直接貼ると表示できません</strong>
+          （ホットリンク防止＆有効期限トークンのため）。
+          実際の画像を出したい場合は Imgur / Cloudinary 等の画像ホスト URL を貼ってください。
+        </p>
       </Field>
 
       <div className="flex flex-wrap items-center gap-6">
