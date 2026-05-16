@@ -9,8 +9,9 @@ import {
   DEFAULT_MENU_DURATIONS,
   DURATION_OPTIONS,
   formatDuration,
-  getDefaultDuration,
 } from "@/lib/menuDurations";
+import { generateDummyAvailableSlots } from "@/lib/generateDummySlots";
+import { ScheduleEditor } from "@/components/admin/ScheduleEditor";
 
 const REASON_LABELS: Record<string, string> = {
   missing_name: "名前を入力してください",
@@ -57,6 +58,10 @@ export function StylistForm({
     featuredFlag: initialValues?.featuredFlag ?? false,
   });
   const [menus, setMenus] = useState<MenuRow[]>(initialMenus);
+  const [availableTimeSlots, setAvailableTimeSlots] = useState<string[]>(
+    initialValues?.availableTimeSlots ??
+      generateDummyAvailableSlots("draft", 8)
+  );
 
   const update = <K extends keyof typeof form>(key: K, value: (typeof form)[K]) => {
     setForm((s) => ({ ...s, [key]: value }));
@@ -120,6 +125,7 @@ export function StylistForm({
       profile: form.profile,
       menus: cleanedMenus,
       priceRange: { min: priceMin, max: priceMax },
+      availableTimeSlots,
       instagramHandle: form.instagramHandle,
       contractStatus: form.contractStatus,
       featuredFlag: form.featuredFlag,
@@ -274,6 +280,16 @@ export function StylistForm({
         <p className="text-xs text-ink-500">
           名前を入力すると施術時間が自動補完される場合があります（既定 60 分）。後でいつでも調整可能。
         </p>
+      </fieldset>
+
+      {/* スケジュール */}
+      <fieldset className="space-y-2">
+        <legend className="text-xs font-semibold text-ink-700">スケジュール</legend>
+        <ScheduleEditor
+          value={availableTimeSlots}
+          onChange={setAvailableTimeSlots}
+          seedId={initialValues?.id ?? "draft"}
+        />
       </fieldset>
 
       <div className="grid gap-5 md:grid-cols-2">

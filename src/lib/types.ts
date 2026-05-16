@@ -47,6 +47,8 @@ export type CreateStylistInput = {
   storeId: string;
   menus: StylistMenu[];
   priceRange: { min: number; max: number };
+  /** 省略時は自動でダミー枠を生成 */
+  availableTimeSlots?: string[];
   instagramHandle?: string;
   contractStatus: "active" | "inactive";
   featuredFlag: boolean;

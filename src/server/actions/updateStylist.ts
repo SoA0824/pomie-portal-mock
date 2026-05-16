@@ -80,13 +80,20 @@ export async function updateStylist(
     delete snsLinks.instagram;
   }
 
-  // ===== スロット補完: 既存が空 / 全部過去のものなら自動再生成 =====
-  const currentSlots: string[] = existing.available_time_slots ?? [];
-  const todayIso = new Date().toISOString().slice(0, 10);
-  const hasFutureSlot = currentSlots.some((s) => s.slice(0, 10) >= todayIso);
-  const refreshedSlots = hasFutureSlot
-    ? currentSlots
-    : generateDummyAvailableSlots(input.id, 8);
+  // ===== スロット解決 =====
+  // 1) 入力で明示的に指定されたら必ず使う（空配列なら空のまま）
+  // 2) 未指定（undefined）なら、未来枠が無い場合のみ自動補完
+  let refreshedSlots: string[];
+  if (Array.isArray(input.availableTimeSlots)) {
+    refreshedSlots = input.availableTimeSlots;
+  } else {
+    const currentSlots: string[] = existing.available_time_slots ?? [];
+    const todayIso = new Date().toISOString().slice(0, 10);
+    const hasFutureSlot = currentSlots.some((s) => s.slice(0, 10) >= todayIso);
+    refreshedSlots = hasFutureSlot
+      ? currentSlots
+      : generateDummyAvailableSlots(input.id, 8);
+  }
 
   // ===== UPDATE =====
   const { data, error: updateError } = await sb

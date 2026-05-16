@@ -88,7 +88,10 @@ export async function createStylist(
       area,
       menus: input.menus.map((m) => ({ name: m.name.trim(), duration: m.duration })),
       price_range: input.priceRange,
-      available_time_slots: generateDummyAvailableSlots(id, 8),
+      available_time_slots:
+        input.availableTimeSlots && input.availableTimeSlots.length > 0
+          ? input.availableTimeSlots
+          : generateDummyAvailableSlots(id, 8),
       instagram_handle: handle,
       sns_links: snsLinks,
       contract_status: input.contractStatus,
