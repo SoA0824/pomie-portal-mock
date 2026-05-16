@@ -1,5 +1,6 @@
 import type { SnsPost } from "@/lib/types";
 import { formatDate } from "@/lib/format";
+import { proxyIfInstagram } from "@/lib/image-proxy";
 
 const platformLabel: Record<SnsPost["platform"], string> = {
   instagram: "Instagram",
@@ -21,7 +22,13 @@ export function SnsFeed({ posts }: { posts: SnsPost[] }) {
         <article key={p.id} className="card overflow-hidden">
           <div className="aspect-square overflow-hidden bg-ink-100">
             {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img src={p.imageUrl} alt={p.caption} className="h-full w-full object-cover" />
+            <img
+              src={proxyIfInstagram(p.imageUrl)}
+              alt={p.caption}
+              className="h-full w-full object-cover"
+              loading="lazy"
+              referrerPolicy="no-referrer"
+            />
           </div>
           <div className="p-3">
             <div className="flex items-center justify-between text-xs text-ink-500">
