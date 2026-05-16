@@ -30,3 +30,18 @@ export function formatTime(iso: string): string {
 export function formatPriceRange(min: number, max: number): string {
   return `¥${min.toLocaleString()}〜¥${max.toLocaleString()}`;
 }
+
+export function addMinutes(iso: string, minutes: number): Date {
+  const d = new Date(iso);
+  d.setMinutes(d.getMinutes() + minutes);
+  return d;
+}
+
+/** "10:00 〜 13:00" 形式で時間帯を返す */
+export function formatTimeRange(startIso: string, durationMin: number): string {
+  const start = new Date(startIso);
+  if (Number.isNaN(start.getTime())) return startIso;
+  const end = addMinutes(startIso, durationMin);
+  const pad = (n: number) => `${n}`.padStart(2, "0");
+  return `${pad(start.getHours())}:${pad(start.getMinutes())} 〜 ${pad(end.getHours())}:${pad(end.getMinutes())}`;
+}

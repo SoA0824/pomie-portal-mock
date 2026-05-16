@@ -2,7 +2,8 @@
 
 import { useEffect, useMemo, useRef, useState, useTransition } from "react";
 import type { Stylist, Store } from "@/lib/types";
-import { formatDateTime } from "@/lib/format";
+import { formatDateTime, formatTimeRange } from "@/lib/format";
+import { formatDuration } from "@/lib/menuDurations";
 import { createReservation } from "@/server/actions/createReservation";
 
 type Message =
@@ -13,15 +14,29 @@ type Message =
 type Step =
   | { name: "greet" }
   | { name: "selectStylist" }
-  | { name: "selectDateTime"; stylistId: string }
-  | { name: "selectMenu"; stylistId: string; desiredDateTime: string }
-  | { name: "askName"; stylistId: string; desiredDateTime: string; menu: string }
-  | { name: "askContact"; stylistId: string; desiredDateTime: string; menu: string; customerName: string }
+  | { name: "selectMenus"; stylistId: string; selected: string[] }
+  | { name: "selectDateTime"; stylistId: string; menus: string[]; totalDuration: number }
+  | {
+      name: "askName";
+      stylistId: string;
+      menus: string[];
+      totalDuration: number;
+      desiredDateTime: string;
+    }
+  | {
+      name: "askContact";
+      stylistId: string;
+      menus: string[];
+      totalDuration: number;
+      desiredDateTime: string;
+      customerName: string;
+    }
   | {
       name: "confirm";
       stylistId: string;
+      menus: string[];
+      totalDuration: number;
       desiredDateTime: string;
-      menu: string;
       customerName: string;
       customerContact: string;
     }
@@ -102,8 +117,8 @@ export function ChatWindow({
       setStep({ name: "selectStylist" });
       return;
     }
-    appendBot("ご希望の日時をお選びください。");
-    setStep({ name: "selectDateTime", stylistId: s.id });
+    appendBot("ご希望のメニューを選んでください（複数選択可）。");
+    setStep({ name: "selectMenus", stylistId: s.id, selected: [] });
   }
 
   function startBooking() {
@@ -112,22 +127,44 @@ export function ChatWindow({
     setStep({ name: "selectStylist" });
   }
 
-  function pickDateTime(slot: string) {
-    if (step.name !== "selectDateTime") return;
-    appendUser(formatDateTime(slot));
-    appendBot("メニューをお選びください。");
-    setStep({ name: "selectMenu", stylistId: step.stylistId, desiredDateTime: slot });
+  function toggleMenu(name: string) {
+    if (step.name !== "selectMenus") return;
+    setStep({
+      ...step,
+      selected: step.selected.includes(name)
+        ? step.selected.filter((m) => m !== name)
+        : [...step.selected, name],
+    });
   }
 
-  function pickMenu(menu: string) {
-    if (step.name !== "selectMenu") return;
-    appendUser(menu);
+  function confirmMenus() {
+    if (step.name !== "selectMenus") return;
+    if (step.selected.length === 0) return;
+    const stylist = stylistById[step.stylistId];
+    const totalDuration = step.selected.reduce((sum, name) => {
+      const m = stylist.menus.find((sm) => sm.name === name);
+      return sum + (m?.duration ?? 0);
+    }, 0);
+    appendUser(`${step.selected.join(" + ")} (${formatDuration(totalDuration)})`);
+    appendBot("ご希望の日時をお選びください。");
+    setStep({
+      name: "selectDateTime",
+      stylistId: step.stylistId,
+      menus: step.selected,
+      totalDuration,
+    });
+  }
+
+  function pickDateTime(slot: string) {
+    if (step.name !== "selectDateTime") return;
+    appendUser(`${formatDateTime(slot)} (${formatTimeRange(slot, step.totalDuration)})`);
     appendBot("お名前を入力してください。");
     setStep({
       name: "askName",
       stylistId: step.stylistId,
-      desiredDateTime: step.desiredDateTime,
-      menu,
+      menus: step.menus,
+      totalDuration: step.totalDuration,
+      desiredDateTime: slot,
     });
   }
 
@@ -140,8 +177,9 @@ export function ChatWindow({
     setStep({
       name: "askContact",
       stylistId: step.stylistId,
+      menus: step.menus,
+      totalDuration: step.totalDuration,
       desiredDateTime: step.desiredDateTime,
-      menu: step.menu,
       customerName: name,
     });
     setTextInput("");
@@ -158,8 +196,9 @@ export function ChatWindow({
     appendBot(
       `内容を確認します。\n` +
         `美容師: ${stylist.name}\n` +
-        `日時: ${formatDateTime(step.desiredDateTime)}\n` +
-        `メニュー: ${step.menu}\n` +
+        `メニュー: ${step.menus.join(" + ")}\n` +
+        `施術時間: ${formatDuration(step.totalDuration)}\n` +
+        `日時: ${formatDateTime(step.desiredDateTime)} (${formatTimeRange(step.desiredDateTime, step.totalDuration)})\n` +
         `お名前: ${step.customerName}\n` +
         `連絡先: ${contact}\n\n` +
         `この内容で予約してよろしいですか？`
@@ -167,8 +206,9 @@ export function ChatWindow({
     setStep({
       name: "confirm",
       stylistId: step.stylistId,
+      menus: step.menus,
+      totalDuration: step.totalDuration,
       desiredDateTime: step.desiredDateTime,
-      menu: step.menu,
       customerName: step.customerName,
       customerContact: contact,
     });
@@ -182,7 +222,7 @@ export function ChatWindow({
         stylistId: step.stylistId,
         channel: "line",
         desiredDateTime: step.desiredDateTime,
-        menu: step.menu,
+        menus: step.menus,
         customerName: step.customerName,
         customerContact: step.customerContact,
       });
@@ -250,29 +290,60 @@ export function ChatWindow({
           </div>
         )}
 
-        {step.name === "selectDateTime" && (
-          <div className="grid grid-cols-2 gap-2 max-h-44 overflow-y-auto">
-            {stylistById[step.stylistId]?.availableTimeSlots.map((slot) => (
-              <Quick
-                key={slot}
-                label={formatDateTime(slot)}
-                onClick={() => pickDateTime(slot)}
-                disabled={pending}
-              />
-            ))}
+        {step.name === "selectMenus" && (
+          <div className="space-y-2">
+            <p className="text-[11px] text-ink-500">
+              タップで選択切替（複数可）
+              {step.selected.length > 0 && (
+                <span className="ml-2 font-semibold text-pomie-700">
+                  {step.selected.length} 件 / 合計 {formatDuration(menuTotalDuration(stylistById[step.stylistId], step.selected))}
+                </span>
+              )}
+            </p>
+            <div className="grid grid-cols-2 gap-2 max-h-44 overflow-y-auto">
+              {stylistById[step.stylistId]?.menus.map((m) => {
+                const active = step.selected.includes(m.name);
+                return (
+                  <button
+                    key={m.name}
+                    type="button"
+                    onClick={() => toggleMenu(m.name)}
+                    disabled={pending}
+                    className={`rounded-full text-xs font-semibold transition px-3 py-2 ${
+                      active
+                        ? "bg-pomie-500 text-white shadow-sm"
+                        : "bg-white text-ink-700 ring-1 ring-pomie-200 hover:bg-pomie-100"
+                    } disabled:opacity-60`}
+                  >
+                    {active ? "✓ " : ""}
+                    {m.name} ({m.duration}分)
+                  </button>
+                );
+              })}
+            </div>
+            <Quick
+              label={step.selected.length === 0 ? "メニューを選んでください" : "決定"}
+              onClick={confirmMenus}
+              disabled={pending || step.selected.length === 0}
+            />
           </div>
         )}
 
-        {step.name === "selectMenu" && (
-          <div className="grid grid-cols-2 gap-2">
-            {stylistById[step.stylistId]?.menus.map((m) => (
-              <Quick
-                key={m.name}
-                label={`${m.name} (${m.duration}分)`}
-                onClick={() => pickMenu(m.name)}
-                disabled={pending}
-              />
-            ))}
+        {step.name === "selectDateTime" && (
+          <div className="space-y-2">
+            <p className="text-[11px] text-ink-500">
+              施術時間 {formatDuration(step.totalDuration)} に対する開始日時を選んでください
+            </p>
+            <div className="grid grid-cols-2 gap-2 max-h-44 overflow-y-auto">
+              {stylistById[step.stylistId]?.availableTimeSlots.map((slot) => (
+                <Quick
+                  key={slot}
+                  label={`${formatDateTime(slot)}\n→ ${formatTimeRange(slot, step.totalDuration).split(" ")[2] ?? ""}`}
+                  onClick={() => pickDateTime(slot)}
+                  disabled={pending}
+                />
+              ))}
+            </div>
           </div>
         )}
 
@@ -321,6 +392,14 @@ export function ChatWindow({
       </div>
     </div>
   );
+}
+
+function menuTotalDuration(stylist: Stylist | undefined, selectedNames: string[]): number {
+  if (!stylist) return 0;
+  return selectedNames.reduce((sum, n) => {
+    const m = stylist.menus.find((sm) => sm.name === n);
+    return sum + (m?.duration ?? 0);
+  }, 0);
 }
 
 function BubbleView({ message }: { message: Message }) {

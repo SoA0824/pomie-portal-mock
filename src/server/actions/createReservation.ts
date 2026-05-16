@@ -27,6 +27,20 @@ export async function createReservation(
     return { ok: false, reason: "stylist_slot_unavailable" };
   }
 
+  // ===== メニュー検証 + 施術時間合計 =====
+  if (!input.menus || input.menus.length === 0) {
+    return { ok: false, reason: "no_menus_selected" };
+  }
+  let totalDuration = 0;
+  for (const menuName of input.menus) {
+    const m = stylist.menus.find((sm) => sm.name === menuName);
+    if (!m) {
+      return { ok: false, reason: `unknown_menu:${menuName}` };
+    }
+    totalDuration += m.duration;
+  }
+  const menusLabel = input.menus.join(" + ");
+
   const sb = getSalonboardClient();
 
   const avail = await sb.checkAvailability({
@@ -43,7 +57,7 @@ export async function createReservation(
     stylistName: stylist.name,
     customerName: input.customerName,
     customerContact: input.customerContact,
-    menu: input.menu,
+    menu: menusLabel,
   });
 
   const now = new Date().toISOString();
@@ -55,7 +69,8 @@ export async function createReservation(
       customerContact: input.customerContact,
       stylistId: stylist.id,
       storeId: store.id,
-      menu: input.menu,
+      menus: input.menus,
+      durationMinutes: totalDuration,
       desiredDateTime: input.desiredDateTime,
       channel: input.channel,
       status: "pending",
@@ -76,7 +91,8 @@ export async function createReservation(
     customerContact: input.customerContact,
     stylistId: stylist.id,
     storeId: store.id,
-    menu: input.menu,
+    menus: input.menus,
+    durationMinutes: totalDuration,
     desiredDateTime: input.desiredDateTime,
     channel: input.channel,
     status: "confirmed",

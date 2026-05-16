@@ -34,7 +34,8 @@ export type ReservationRow = {
   customer_contact: string;
   stylist_id: string;
   store_id: string;
-  menu: string;
+  menus: string[];
+  duration_minutes: number;
   desired_date_time: string;
   channel: "web" | "line";
   status: "confirmed" | "pending" | "rejected";

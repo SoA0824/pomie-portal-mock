@@ -2,7 +2,8 @@ import Link from "next/link";
 import { listReservations } from "@/lib/data/reservations";
 import { getAllStylistsIncludingInactive } from "@/lib/data/stylists";
 import { getStoreById } from "@/lib/data/stores";
-import { formatDateTime } from "@/lib/format";
+import { formatDateTime, formatTimeRange } from "@/lib/format";
+import { formatDuration } from "@/lib/menuDurations";
 
 export const dynamic = "force-dynamic";
 export const metadata = { title: "予約一覧 | 管理 | POMiE Portal" };
@@ -63,6 +64,10 @@ export default async function AdminReservationsPage({
                   <p className="text-xl font-bold leading-tight md:text-2xl">
                     {formatDateTime(r.desiredDateTime)}
                   </p>
+                  <p className="mt-0.5 text-xs text-ink-500">
+                    {formatTimeRange(r.desiredDateTime, r.durationMinutes)} ・
+                    施術 {formatDuration(r.durationMinutes)}
+                  </p>
                   <p className="mt-1 font-mono text-xs text-ink-500">{r.id}</p>
                 </div>
                 <div className="flex flex-wrap gap-1.5">
@@ -77,9 +82,16 @@ export default async function AdminReservationsPage({
                 <Field label="美容師・店舗・メニュー">
                   <div className="font-semibold">{stylist?.name ?? r.stylistId}</div>
                   <div className="text-xs text-ink-500">{store?.name ?? "-"}</div>
-                  <span className="mt-1.5 inline-flex rounded-full bg-pomie-100 px-2.5 py-0.5 text-xs text-pomie-700">
-                    {r.menu}
-                  </span>
+                  <div className="mt-1.5 flex flex-wrap gap-1">
+                    {r.menus.map((m) => (
+                      <span
+                        key={m}
+                        className="inline-flex rounded-full bg-pomie-100 px-2.5 py-0.5 text-xs text-pomie-700"
+                      >
+                        {m}
+                      </span>
+                    ))}
+                  </div>
                 </Field>
                 <Field label="お客様">
                   <div className="font-semibold">{r.customerName}</div>

@@ -3,7 +3,8 @@ import { notFound } from "next/navigation";
 import { getReservationById } from "@/lib/data/reservations";
 import { getStylistByIdIncludingInactive } from "@/lib/data/stylists";
 import { getStoreById } from "@/lib/data/stores";
-import { formatDateTime } from "@/lib/format";
+import { formatDateTime, formatTimeRange } from "@/lib/format";
+import { formatDuration } from "@/lib/menuDurations";
 
 export const dynamic = "force-dynamic";
 
@@ -43,8 +44,12 @@ export default async function ReservationCompletePage({
         <dl className="mt-6 space-y-2 text-sm">
           <Row k="美容師" v={stylist?.name ?? "-"} />
           <Row k="店舗" v={store?.name ?? "-"} />
-          <Row k="日時" v={formatDateTime(reservation.desiredDateTime)} />
-          <Row k="メニュー" v={reservation.menu} />
+          <Row
+            k="日時"
+            v={`${formatDateTime(reservation.desiredDateTime)}（${formatTimeRange(reservation.desiredDateTime, reservation.durationMinutes)}）`}
+          />
+          <Row k="メニュー" v={reservation.menus.join(" + ")} />
+          <Row k="施術時間" v={formatDuration(reservation.durationMinutes)} />
           <Row k="お名前" v={reservation.customerName} />
           <Row k="ご連絡先" v={reservation.customerContact} />
           <Row k="チャネル" v={reservation.channel === "web" ? "Web" : "LINE Bot (モック)"} />

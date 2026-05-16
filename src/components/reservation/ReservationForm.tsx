@@ -1,22 +1,28 @@
 "use client";
 
-import { useState, useTransition } from "react";
+import { useMemo, useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import type { Stylist, Store } from "@/lib/types";
-import { formatDateTime } from "@/lib/format";
+import { formatDateTime, formatTimeRange } from "@/lib/format";
+import { formatDuration } from "@/lib/menuDurations";
 import { createReservation } from "@/server/actions/createReservation";
 
 const REASON_LABELS: Record<string, string> = {
   stylist_not_available: "選択された美容師は現在予約を受け付けていません。",
   store_not_found: "店舗情報が取得できませんでした。",
   stylist_slot_unavailable: "選択された日時は予約できません。",
+  no_menus_selected: "メニューを 1 つ以上選んでください。",
   salonboard_unavailable: "サロンボード側で席が満席のため予約できません。別の日時をお選びください。",
   salonboard_forced_failure: "サロンボード連携に失敗しました（強制失敗フラグ）。",
   unknown_shop: "店舗情報がサロンボードに登録されていません。",
 };
 
 function reasonToLabel(reason: string): string {
-  return REASON_LABELS[reason] ?? `予約に失敗しました (${reason})`;
+  if (REASON_LABELS[reason]) return REASON_LABELS[reason];
+  if (reason.startsWith("unknown_menu:")) {
+    return `メニュー「${reason.slice("unknown_menu:".length)}」が見つかりませんでした。`;
+  }
+  return `予約に失敗しました (${reason})`;
 }
 
 export function ReservationForm({ stylist, store }: { stylist: Stylist; store: Store }) {
@@ -25,14 +31,35 @@ export function ReservationForm({ stylist, store }: { stylist: Stylist; store: S
   const [error, setError] = useState<string | null>(null);
   const [step, setStep] = useState<"input" | "confirm">("input");
   const [form, setForm] = useState({
+    selectedMenus: [] as string[],
     desiredDateTime: stylist.availableTimeSlots[0] ?? "",
-    menu: stylist.menus[0]?.name ?? "",
     customerName: "",
     customerContact: "",
   });
 
+  const totalDuration = useMemo(
+    () =>
+      form.selectedMenus.reduce((sum, name) => {
+        const m = stylist.menus.find((sm) => sm.name === name);
+        return sum + (m?.duration ?? 0);
+      }, 0),
+    [form.selectedMenus, stylist.menus]
+  );
+
   const update = <K extends keyof typeof form>(key: K, value: (typeof form)[K]) => {
     setForm((s) => ({ ...s, [key]: value }));
+  };
+
+  const toggleMenu = (name: string) => {
+    setForm((s) => {
+      const has = s.selectedMenus.includes(name);
+      return {
+        ...s,
+        selectedMenus: has
+          ? s.selectedMenus.filter((n) => n !== name)
+          : [...s.selectedMenus, name],
+      };
+    });
   };
 
   const submit = () => {
@@ -41,7 +68,10 @@ export function ReservationForm({ stylist, store }: { stylist: Stylist; store: S
       const result = await createReservation({
         stylistId: stylist.id,
         channel: "web",
-        ...form,
+        menus: form.selectedMenus,
+        desiredDateTime: form.desiredDateTime,
+        customerName: form.customerName,
+        customerContact: form.customerContact,
       });
       if (result.ok) {
         router.push(`/reservations/${result.reservation.id}/complete`);
@@ -65,8 +95,12 @@ export function ReservationForm({ stylist, store }: { stylist: Stylist; store: S
         <h2 className="text-lg font-bold">予約内容の確認</h2>
         <dl className="space-y-2 text-sm">
           <Row k="美容師" v={`${stylist.name}（${store.name}）`} />
-          <Row k="日時" v={formatDateTime(form.desiredDateTime)} />
-          <Row k="メニュー" v={form.menu} />
+          <Row
+            k="日時"
+            v={`${formatDateTime(form.desiredDateTime)}（${formatTimeRange(form.desiredDateTime, totalDuration)}）`}
+          />
+          <Row k="メニュー" v={form.selectedMenus.join(" + ")} />
+          <Row k="施術時間" v={formatDuration(totalDuration)} />
           <Row k="お名前" v={form.customerName} />
           <Row k="ご連絡先" v={form.customerContact} />
         </dl>
@@ -100,7 +134,11 @@ export function ReservationForm({ stylist, store }: { stylist: Stylist; store: S
     <form
       onSubmit={(e) => {
         e.preventDefault();
-        if (!form.desiredDateTime || !form.menu || !form.customerName || !form.customerContact) {
+        if (form.selectedMenus.length === 0) {
+          setError("メニューを 1 つ以上選んでください。");
+          return;
+        }
+        if (!form.desiredDateTime || !form.customerName || !form.customerContact) {
           setError("すべての項目を入力してください。");
           return;
         }
@@ -109,6 +147,40 @@ export function ReservationForm({ stylist, store }: { stylist: Stylist; store: S
       }}
       className="card space-y-5 p-6"
     >
+      {/* ① メニュー選択（複数可） */}
+      <Field label="メニューを選ぶ（複数可）">
+        <div className="flex flex-wrap gap-2">
+          {stylist.menus.map((m) => {
+            const active = form.selectedMenus.includes(m.name);
+            return (
+              <button
+                key={m.name}
+                type="button"
+                onClick={() => toggleMenu(m.name)}
+                className={`rounded-full px-3 py-1.5 text-sm transition ${
+                  active
+                    ? "bg-pomie-500 text-white shadow-sm"
+                    : "bg-white text-ink-700 ring-1 ring-pomie-200 hover:bg-pomie-100"
+                }`}
+              >
+                {active && <span className="mr-1">✓</span>}
+                {m.name}
+                <span className={`ml-1 text-[11px] ${active ? "text-white/80" : "text-ink-500"}`}>
+                  {m.duration}分
+                </span>
+              </button>
+            );
+          })}
+        </div>
+        {form.selectedMenus.length > 0 && (
+          <p className="mt-2 text-xs text-ink-700">
+            選択中: <strong>{form.selectedMenus.join(" + ")}</strong>
+            合計施術時間: <strong>{formatDuration(totalDuration)}</strong>
+          </p>
+        )}
+      </Field>
+
+      {/* ② 日時 */}
       <Field label="希望日時">
         <select
           value={form.desiredDateTime}
@@ -121,20 +193,14 @@ export function ReservationForm({ stylist, store }: { stylist: Stylist; store: S
             </option>
           ))}
         </select>
+        {form.desiredDateTime && totalDuration > 0 && (
+          <p className="mt-2 text-xs text-ink-700">
+            開始 〜 終了: <strong>{formatTimeRange(form.desiredDateTime, totalDuration)}</strong>
+          </p>
+        )}
       </Field>
-      <Field label="メニュー">
-        <select
-          value={form.menu}
-          onChange={(e) => update("menu", e.target.value)}
-          className="input"
-        >
-          {stylist.menus.map((m) => (
-            <option key={m.name} value={m.name}>
-              {m.name} ({m.duration}分)
-            </option>
-          ))}
-        </select>
-      </Field>
+
+      {/* ③ お客様情報 */}
       <Field label="お名前">
         <input
           value={form.customerName}
@@ -157,7 +223,11 @@ export function ReservationForm({ stylist, store }: { stylist: Stylist; store: S
 
       {error && <p className="rounded-lg bg-red-50 p-3 text-sm text-red-700">{error}</p>}
 
-      <button type="submit" className="btn-primary w-full md:w-auto">
+      <button
+        type="submit"
+        className="btn-primary w-full md:w-auto disabled:opacity-60"
+        disabled={form.selectedMenus.length === 0}
+      >
         確認へ進む
       </button>
 

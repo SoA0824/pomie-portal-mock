@@ -82,7 +82,8 @@ export type Reservation = {
   customerContact: string;
   stylistId: string;
   storeId: string;
-  menu: string;
+  menus: string[];
+  durationMinutes: number;
   desiredDateTime: string;
   channel: "web" | "line";
   status: "confirmed" | "pending" | "rejected";
@@ -100,7 +101,7 @@ export type CreateReservationInput = {
   customerName: string;
   customerContact: string;
   stylistId: string;
-  menu: string;
+  menus: string[];
   desiredDateTime: string;
   channel: "web" | "line";
 };
