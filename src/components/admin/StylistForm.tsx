@@ -2,18 +2,29 @@
 
 import { useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
-import type { Store, Stylist } from "@/lib/types";
+import type { Store, Stylist, StylistMenu } from "@/lib/types";
 import { createStylist } from "@/server/actions/createStylist";
 import { updateStylist } from "@/server/actions/updateStylist";
+import {
+  DEFAULT_MENU_DURATIONS,
+  DURATION_OPTIONS,
+  formatDuration,
+  getDefaultDuration,
+} from "@/lib/menuDurations";
 
 const REASON_LABELS: Record<string, string> = {
   missing_name: "名前を入力してください",
   missing_store: "店舗を選んでください",
   missing_profile: "プロフィールを入力してください",
   missing_menus: "得意メニューを 1 つ以上入力してください",
+  invalid_menus: "メニュー名と施術時間を正しく入力してください",
   invalid_price_range: "料金（最低・最高）を正しく入力してください",
   stylist_not_found: "対象の美容師が見つかりません",
 };
+
+type MenuRow = { name: string; duration: number };
+
+const MENU_SUGGESTIONS = Object.keys(DEFAULT_MENU_DURATIONS);
 
 export function StylistForm({
   stores,
@@ -27,40 +38,76 @@ export function StylistForm({
   const router = useRouter();
   const [pending, startTransition] = useTransition();
   const [error, setError] = useState<string | null>(null);
+
+  const initialMenus: MenuRow[] =
+    initialValues?.menus.map((m) => ({ name: m.name, duration: m.duration })) ?? [
+      { name: "", duration: 60 },
+    ];
+
   const [form, setForm] = useState({
     name: initialValues?.name ?? "",
     nameKana: initialValues?.nameKana ?? "",
     avatar: initialValues?.avatar ?? "",
     storeId: initialValues?.storeId ?? stores[0]?.id ?? "",
     profile: initialValues?.profile ?? "",
-    menus: initialValues?.menus.join(", ") ?? "",
     priceMin: initialValues?.priceRange.min.toString() ?? "7000",
     priceMax: initialValues?.priceRange.max.toString() ?? "20000",
     instagramHandle: initialValues?.instagramHandle ?? "",
     contractStatus: (initialValues?.contractStatus ?? "active") as "active" | "inactive",
     featuredFlag: initialValues?.featuredFlag ?? false,
   });
+  const [menus, setMenus] = useState<MenuRow[]>(initialMenus);
 
   const update = <K extends keyof typeof form>(key: K, value: (typeof form)[K]) => {
     setForm((s) => ({ ...s, [key]: value }));
+  };
+
+  const updateMenu = (i: number, patch: Partial<MenuRow>) => {
+    setMenus((prev) =>
+      prev.map((m, idx) => (idx === i ? { ...m, ...patch } : m))
+    );
+  };
+  const removeMenu = (i: number) => {
+    setMenus((prev) => prev.filter((_, idx) => idx !== i));
+  };
+  const addMenu = () => {
+    setMenus((prev) => [...prev, { name: "", duration: 60 }]);
+  };
+  const onMenuNameBlur = (i: number, name: string) => {
+    // 既定マップに名前が一致したら、自動で時間を補完（既存の値は尊重）
+    const trimmed = name.trim();
+    if (!trimmed) return;
+    const def = DEFAULT_MENU_DURATIONS[trimmed];
+    if (def && menus[i].duration === 60) {
+      updateMenu(i, { duration: def });
+    }
   };
 
   const submit = (e: React.FormEvent) => {
     e.preventDefault();
     setError(null);
 
-    const menus = form.menus
-      .split(/[,、\n]/)
-      .map((m) => m.trim())
-      .filter(Boolean);
+    const cleanedMenus: StylistMenu[] = menus
+      .map((m) => ({ name: m.name.trim(), duration: Number(m.duration) }))
+      .filter((m) => m.name.length > 0);
 
-    if (menus.length === 0) {
+    if (cleanedMenus.length === 0) {
       setError(REASON_LABELS.missing_menus);
       return;
     }
+    if (cleanedMenus.some((m) => !m.duration || m.duration <= 0)) {
+      setError(REASON_LABELS.invalid_menus);
+      return;
+    }
+
     const priceMin = parseInt(form.priceMin, 10);
     const priceMax = parseInt(form.priceMax, 10);
-    if (Number.isNaN(priceMin) || Number.isNaN(priceMax) || priceMin < 0 || priceMax < priceMin) {
+    if (
+      Number.isNaN(priceMin) ||
+      Number.isNaN(priceMax) ||
+      priceMin < 0 ||
+      priceMax < priceMin
+    ) {
       setError(REASON_LABELS.invalid_price_range);
       return;
     }
@@ -71,7 +118,7 @@ export function StylistForm({
       avatar: form.avatar,
       storeId: form.storeId,
       profile: form.profile,
-      menus,
+      menus: cleanedMenus,
       priceRange: { min: priceMin, max: priceMax },
       instagramHandle: form.instagramHandle,
       contractStatus: form.contractStatus,
@@ -101,6 +148,10 @@ export function StylistForm({
       : pending
         ? "登録中..."
         : "登録する";
+
+  const totalDuration = menus
+    .filter((m) => m.name.trim())
+    .reduce((sum, m) => sum + (Number(m.duration) || 0), 0);
 
   return (
     <form onSubmit={submit} className="card space-y-5 p-6">
@@ -147,15 +198,83 @@ export function StylistForm({
         />
       </Field>
 
-      <Field label="得意メニュー（カンマ区切り）" required>
-        <input
-          value={form.menus}
-          onChange={(e) => update("menus", e.target.value)}
-          placeholder="例: 髪質改善, カラー, ハイライト"
-          className="input"
-        />
-        <p className="mt-1 text-xs text-ink-500">複数入れる場合は「,」または改行で区切ってください。</p>
-      </Field>
+      {/* メニュー入力（テーブル状） */}
+      <fieldset className="space-y-2">
+        <legend className="text-xs font-semibold text-ink-700">
+          得意メニュー <span className="text-pomie-600">*</span>
+          <span className="ml-2 font-normal text-ink-500">
+            ({menus.filter((m) => m.name.trim()).length} 件 / 合計 {formatDuration(totalDuration)})
+          </span>
+        </legend>
+        <div className="overflow-hidden rounded-lg border border-ink-100">
+          <table className="w-full text-sm">
+            <thead className="bg-pomie-50 text-xs text-ink-700">
+              <tr>
+                <th className="px-3 py-2 text-left font-semibold">メニュー名</th>
+                <th className="px-3 py-2 text-left font-semibold">施術時間</th>
+                <th className="w-10"></th>
+              </tr>
+            </thead>
+            <tbody>
+              {menus.map((m, i) => (
+                <tr key={i} className="border-t border-ink-100/70">
+                  <td className="px-3 py-2">
+                    <input
+                      value={m.name}
+                      onChange={(e) => updateMenu(i, { name: e.target.value })}
+                      onBlur={(e) => onMenuNameBlur(i, e.target.value)}
+                      list="menu-suggestions"
+                      placeholder="例: カット / 髪質改善"
+                      className="input"
+                    />
+                  </td>
+                  <td className="px-3 py-2">
+                    <select
+                      value={m.duration}
+                      onChange={(e) =>
+                        updateMenu(i, { duration: Number(e.target.value) })
+                      }
+                      className="input"
+                    >
+                      {DURATION_OPTIONS.map((d) => (
+                        <option key={d} value={d}>
+                          {formatDuration(d)}
+                        </option>
+                      ))}
+                    </select>
+                  </td>
+                  <td className="px-3 py-2 text-right">
+                    <button
+                      type="button"
+                      onClick={() => removeMenu(i)}
+                      disabled={menus.length === 1}
+                      title="この行を削除"
+                      className="text-ink-500 hover:text-red-600 disabled:opacity-30"
+                    >
+                      ✕
+                    </button>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+        <datalist id="menu-suggestions">
+          {MENU_SUGGESTIONS.map((n) => (
+            <option key={n} value={n} />
+          ))}
+        </datalist>
+        <button
+          type="button"
+          onClick={addMenu}
+          className="text-xs font-semibold text-pomie-600 hover:text-pomie-700"
+        >
+          + メニューを追加
+        </button>
+        <p className="text-xs text-ink-500">
+          名前を入力すると施術時間が自動補完される場合があります（既定 60 分）。後でいつでも調整可能。
+        </p>
+      </fieldset>
 
       <div className="grid gap-5 md:grid-cols-2">
         <Field label="料金 最低（円）" required>

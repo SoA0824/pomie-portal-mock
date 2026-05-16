@@ -44,10 +44,13 @@ export default async function StylistDetailPage({ params }: { params: { id: stri
           <header>
             <p className="text-sm text-ink-500">{stylist.nameKana}</p>
             <h1 className="mt-1 text-3xl font-bold">{stylist.name}</h1>
-            <div className="mt-2 flex flex-wrap gap-1">
+            <div className="mt-2 flex flex-wrap gap-1.5">
               {stylist.menus.map((m) => (
-                <span key={m} className="chip">
-                  {m}
+                <span key={m.name} className="chip">
+                  {m.name}
+                  <span className="ml-1 text-[10px] text-pomie-700/70">
+                    {m.duration}分
+                  </span>
                 </span>
               ))}
             </div>

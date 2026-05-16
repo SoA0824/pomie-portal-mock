@@ -65,7 +65,7 @@ export type StylistRow = {
   profile: string;
   store_id: string;
   area: string | null;
-  menus: string[];
+  menus: Array<{ name: string; duration: number }>;
   price_range: { min: number; max: number };
   available_time_slots: string[];
   instagram_handle: string | null;

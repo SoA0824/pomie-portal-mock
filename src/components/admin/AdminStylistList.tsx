@@ -254,7 +254,7 @@ export function AdminStylistList({
                       ★ {s.rating.toFixed(1)} / {s.worksCount} 件
                     </Field>
                     <Field label="得意メニュー">
-                      {s.menus.slice(0, 2).join(" / ") || "-"}
+                      {s.menus.slice(0, 2).map((m) => m.name).join(" / ") || "-"}
                     </Field>
                   </div>
 

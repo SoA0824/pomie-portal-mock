@@ -26,7 +26,7 @@ export function ReservationForm({ stylist, store }: { stylist: Stylist; store: S
   const [step, setStep] = useState<"input" | "confirm">("input");
   const [form, setForm] = useState({
     desiredDateTime: stylist.availableTimeSlots[0] ?? "",
-    menu: stylist.menus[0] ?? "",
+    menu: stylist.menus[0]?.name ?? "",
     customerName: "",
     customerContact: "",
   });
@@ -129,8 +129,8 @@ export function ReservationForm({ stylist, store }: { stylist: Stylist; store: S
           className="input"
         >
           {stylist.menus.map((m) => (
-            <option key={m} value={m}>
-              {m}
+            <option key={m.name} value={m.name}>
+              {m.name} ({m.duration}分)
             </option>
           ))}
         </select>

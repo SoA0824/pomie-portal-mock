@@ -1,7 +1,15 @@
-import type { Stylist, SnsPlatform } from "../types";
+import type { Stylist, SnsPlatform, StylistMenu } from "../types";
 import { getSupabase, type StylistRow } from "@/lib/supabase/client";
 
 function rowToStylist(row: StylistRow): Stylist {
+  const rawMenus = (row.menus ?? []) as unknown;
+  // 旧形式 (text[]) と新形式 (jsonb [{name,duration}]) の両方を吸収
+  let menus: StylistMenu[];
+  if (Array.isArray(rawMenus) && rawMenus.length > 0 && typeof rawMenus[0] === "string") {
+    menus = (rawMenus as string[]).map((name) => ({ name, duration: 60 }));
+  } else {
+    menus = (rawMenus as StylistMenu[]) ?? [];
+  }
   return {
     id: row.id,
     name: row.name,
@@ -10,7 +18,7 @@ function rowToStylist(row: StylistRow): Stylist {
     profile: row.profile,
     storeId: row.store_id,
     area: row.area ?? "",
-    menus: row.menus ?? [],
+    menus,
     priceRange: row.price_range,
     availableTimeSlots: row.available_time_slots ?? [],
     instagramHandle: row.instagram_handle,
@@ -77,7 +85,7 @@ export async function searchStylists(
   let list = await getAllPublishedStylists();
 
   if (filter.menu) {
-    list = list.filter((s) => s.menus.includes(filter.menu!));
+    list = list.filter((s) => s.menus.some((m) => m.name === filter.menu));
   }
   if (filter.storeId) {
     list = list.filter((s) => s.storeId === filter.storeId);
@@ -95,7 +103,7 @@ export async function searchStylists(
         s.name.toLowerCase().includes(k) ||
         s.nameKana.toLowerCase().includes(k) ||
         s.profile.toLowerCase().includes(k) ||
-        s.menus.some((m) => m.toLowerCase().includes(k))
+        s.menus.some((m) => m.name.toLowerCase().includes(k))
     );
   }
 
@@ -120,6 +128,6 @@ export async function searchStylists(
 export async function listAllMenus(): Promise<string[]> {
   const list = await getAllPublishedStylists();
   const set = new Set<string>();
-  for (const s of list) for (const m of s.menus) set.add(m);
+  for (const s of list) for (const m of s.menus) set.add(m.name);
   return Array.from(set).sort();
 }

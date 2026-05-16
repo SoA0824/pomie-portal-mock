@@ -14,6 +14,11 @@ export type Article = {
 
 export type SnsPlatform = "instagram" | "x" | "tiktok";
 
+export type StylistMenu = {
+  name: string;
+  duration: number; // 施術時間（分）
+};
+
 export type Stylist = {
   id: string;
   name: string;
@@ -22,7 +27,7 @@ export type Stylist = {
   profile: string;
   storeId: string;
   area: string;
-  menus: string[];
+  menus: StylistMenu[];
   priceRange: { min: number; max: number };
   availableTimeSlots: string[];
   instagramHandle?: string | null;
@@ -40,7 +45,7 @@ export type CreateStylistInput = {
   avatar?: string;
   profile: string;
   storeId: string;
-  menus: string[];
+  menus: StylistMenu[];
   priceRange: { min: number; max: number };
   instagramHandle?: string;
   contractStatus: "active" | "inactive";

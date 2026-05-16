@@ -89,7 +89,7 @@ export function ChatWindow({
         stylistName: s.name,
         storeName: store?.name ?? "",
         rating: s.rating,
-        menus: s.menus.slice(0, 3),
+        menus: s.menus.slice(0, 3).map((m) => m.name),
       },
     ]);
   }
@@ -266,7 +266,12 @@ export function ChatWindow({
         {step.name === "selectMenu" && (
           <div className="grid grid-cols-2 gap-2">
             {stylistById[step.stylistId]?.menus.map((m) => (
-              <Quick key={m} label={m} onClick={() => pickMenu(m)} disabled={pending} />
+              <Quick
+                key={m.name}
+                label={`${m.name} (${m.duration}分)`}
+                onClick={() => pickMenu(m.name)}
+                disabled={pending}
+              />
             ))}
           </div>
         )}

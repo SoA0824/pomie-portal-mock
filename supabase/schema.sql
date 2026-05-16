@@ -45,7 +45,7 @@ create table if not exists public.stylists (
   profile text not null,
   store_id text not null,
   area text,
-  menus text[] not null default '{}',
+  menus jsonb not null default '[]'::jsonb,
   price_range jsonb not null,
   available_time_slots text[] not null default '{}',
   instagram_handle text,

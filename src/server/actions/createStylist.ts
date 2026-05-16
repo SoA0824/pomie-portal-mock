@@ -40,6 +40,9 @@ export async function createStylist(
   if (!input.profile?.trim()) return { ok: false, reason: "missing_profile", field: "profile" };
   if (!input.menus || input.menus.length === 0)
     return { ok: false, reason: "missing_menus", field: "menus" };
+  if (input.menus.some((m) => !m.name?.trim() || !m.duration || m.duration <= 0)) {
+    return { ok: false, reason: "invalid_menus", field: "menus" };
+  }
   if (
     !input.priceRange ||
     typeof input.priceRange.min !== "number" ||
@@ -83,7 +86,7 @@ export async function createStylist(
       profile: input.profile.trim(),
       store_id: input.storeId,
       area,
-      menus: input.menus,
+      menus: input.menus.map((m) => ({ name: m.name.trim(), duration: m.duration })),
       price_range: input.priceRange,
       available_time_slots: generateDummyAvailableSlots(id, 8),
       instagram_handle: handle,

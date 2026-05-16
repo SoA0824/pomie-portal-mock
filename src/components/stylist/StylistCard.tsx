@@ -29,8 +29,8 @@ export function StylistCard({ stylist }: { stylist: Stylist }) {
         </p>
         <div className="mt-2 flex flex-wrap gap-1">
           {stylist.menus.slice(0, 3).map((m) => (
-            <span key={m} className="chip">
-              {m}
+            <span key={m.name} className="chip">
+              {m.name}
             </span>
           ))}
         </div>
