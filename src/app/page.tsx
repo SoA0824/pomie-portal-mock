@@ -53,6 +53,33 @@ export default async function Home() {
         </div>
       </section>
 
+      {/* マッチング診断 CTA */}
+      <section className="container-page pt-14">
+        <Link
+          href="/match"
+          className="group block overflow-hidden rounded-3xl bg-gradient-to-br from-pomie-500 to-pomie-700 p-8 text-white shadow-md transition hover:shadow-lg md:p-12"
+        >
+          <div className="flex flex-wrap items-center gap-6 md:gap-10">
+            <div className="flex-1 min-w-0">
+              <span className="inline-flex items-center rounded-full bg-white/20 px-3 py-1 text-xs font-semibold">
+                🔍 新機能 ・ 30 秒で診断
+              </span>
+              <h2 className="mt-3 text-2xl font-bold leading-snug md:text-3xl">
+                あなたにぴったりの美容師、<br />
+                4 つの質問で見つけませんか？
+              </h2>
+              <p className="mt-3 text-sm text-pomie-50 md:text-base">
+                髪のお悩み・希望スタイル・店舗エリア・予算を選ぶだけ。<br className="hidden md:block" />
+                ポミエ契約美容師から相性のいい 3 人を提案します。
+              </p>
+            </div>
+            <div className="rounded-full bg-white px-6 py-3 text-sm font-bold text-pomie-600 shadow-md transition group-hover:scale-105">
+              診断スタート →
+            </div>
+          </div>
+        </Link>
+      </section>
+
       <section className="container-page py-14">
         <SectionHeader
           title="髪・美容師選びのヒント"

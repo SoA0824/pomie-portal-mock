@@ -56,7 +56,7 @@ console.log("-- ===== stylists (12 名) =====");
 for (const s of stylists) {
   const handle = extractInstagramHandle(s.snsLinks);
   console.log(
-    `insert into public.stylists (id, name, name_kana, avatar, profile, store_id, area, menus, price_range, available_time_slots, instagram_handle, sns_links, contract_status, featured_flag, rating, works_count) values (\n  ${sql(s.id)},\n  ${sql(s.name)},\n  ${sql(s.nameKana)},\n  ${sql(s.avatar)},\n  ${sql(s.profile)},\n  ${sql(s.storeId)},\n  ${sql(s.area)},\n  ${menusToJsonb(s.menus)},\n  ${jsonb(s.priceRange)},\n  ${textArr(s.availableTimeSlots)},\n  ${handle ? sql(handle) : "null"},\n  ${jsonb(s.snsLinks ?? {})},\n  ${sql(s.contractStatus)},\n  ${s.featuredFlag},\n  ${s.rating},\n  ${s.worksCount}\n) on conflict (id) do nothing;`
+    `insert into public.stylists (id, name, name_kana, avatar, profile, store_id, area, strengths, specialty_menus, menus, price_range, available_time_slots, instagram_handle, sns_links, contract_status, featured_flag, rating, works_count) values (\n  ${sql(s.id)},\n  ${sql(s.name)},\n  ${sql(s.nameKana)},\n  ${sql(s.avatar)},\n  ${sql(s.profile)},\n  ${sql(s.storeId)},\n  ${sql(s.area)},\n  ${textArr(s.strengths ?? [])},\n  ${textArr(s.menus)},\n  ${menusToJsonb(s.menus)},\n  ${jsonb(s.priceRange)},\n  ${textArr(s.availableTimeSlots)},\n  ${handle ? sql(handle) : "null"},\n  ${jsonb(s.snsLinks ?? {})},\n  ${sql(s.contractStatus)},\n  ${s.featuredFlag},\n  ${s.rating},\n  ${s.worksCount}\n) on conflict (id) do nothing;`
   );
 }
 

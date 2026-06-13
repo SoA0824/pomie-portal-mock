@@ -7,8 +7,16 @@
     "profile": "髪質改善ストレート歴12年。ダメージレスな艶髪づくりが得意です。お客様一人ひとりの毛流れに合わせた施術で、扱いやすく長持ちする仕上がりをお届けします。",
     "storeId": "s1",
     "area": "表参道",
-    "menus": ["髪質改善", "縮毛矯正", "カラー", "トリートメント"],
-    "priceRange": { "min": 9000, "max": 28000 },
+    "menus": [
+      "髪質改善",
+      "縮毛矯正",
+      "カラー",
+      "トリートメント"
+    ],
+    "priceRange": {
+      "min": 9000,
+      "max": 28000
+    },
     "availableTimeSlots": [
       "2026-05-10T10:00",
       "2026-05-10T14:00",
@@ -19,11 +27,19 @@
       "2026-05-14T10:00",
       "2026-05-15T15:00"
     ],
-    "snsLinks": { "instagram": "https://instagram.com/misaki_kitagawa", "tiktok": "https://tiktok.com/@misaki_pomie" },
+    "snsLinks": {
+      "instagram": "https://instagram.com/misaki_kitagawa",
+      "tiktok": "https://tiktok.com/@misaki_pomie"
+    },
     "contractStatus": "active",
     "featuredFlag": true,
     "rating": 4.9,
-    "worksCount": 482
+    "worksCount": 482,
+    "strengths": [
+      "髪質改善のプロ",
+      "ダメージレス施術",
+      "扱いやすい仕上がり"
+    ]
   },
   {
     "id": "st-02",
@@ -33,8 +49,16 @@
     "profile": "メンズカット・デザインカラー専門。ビジネスからストリートまで幅広いスタイルに対応。骨格と髪質を見極めた立体カットで「再現性の高い」ヘアを提供します。",
     "storeId": "s1",
     "area": "表参道",
-    "menus": ["メンズカット", "デザインカラー", "ハイライト", "パーマ"],
-    "priceRange": { "min": 6500, "max": 18000 },
+    "menus": [
+      "メンズカット",
+      "デザインカラー",
+      "ハイライト",
+      "パーマ"
+    ],
+    "priceRange": {
+      "min": 6500,
+      "max": 18000
+    },
     "availableTimeSlots": [
       "2026-05-10T11:00",
       "2026-05-10T15:00",
@@ -45,11 +69,19 @@
       "2026-05-14T16:00",
       "2026-05-16T14:00"
     ],
-    "snsLinks": { "instagram": "https://instagram.com/ryota_pomie", "x": "https://x.com/ryota_pomie" },
+    "snsLinks": {
+      "instagram": "https://instagram.com/ryota_pomie",
+      "x": "https://x.com/ryota_pomie"
+    },
     "contractStatus": "active",
     "featuredFlag": true,
     "rating": 4.8,
-    "worksCount": 365
+    "worksCount": 365,
+    "strengths": [
+      "メンズスタイル専門",
+      "外国人風カラー",
+      "再現性重視"
+    ]
   },
   {
     "id": "st-03",
@@ -59,8 +91,16 @@
     "profile": "似合わせカット・パーソナルカラー診断。骨格 × 顔タイプ × 似合うカラーで「自分史上いちばん」のヘアに導きます。",
     "storeId": "s1",
     "area": "表参道",
-    "menus": ["カット", "似合わせカラー", "パーソナルカラー", "ボブ"],
-    "priceRange": { "min": 7500, "max": 22000 },
+    "menus": [
+      "カット",
+      "似合わせカラー",
+      "パーソナルカラー",
+      "ボブ"
+    ],
+    "priceRange": {
+      "min": 7500,
+      "max": 22000
+    },
     "availableTimeSlots": [
       "2026-05-10T13:00",
       "2026-05-11T14:00",
@@ -69,11 +109,18 @@
       "2026-05-14T13:00",
       "2026-05-15T11:00"
     ],
-    "snsLinks": { "instagram": "https://instagram.com/sakura_pomie" },
+    "snsLinks": {
+      "instagram": "https://instagram.com/sakura_pomie"
+    },
     "contractStatus": "active",
     "featuredFlag": true,
     "rating": 4.9,
-    "worksCount": 521
+    "worksCount": 521,
+    "strengths": [
+      "似合わせカット",
+      "顔タイプ診断対応",
+      "30〜40代女性に人気"
+    ]
   },
   {
     "id": "st-04",
@@ -83,8 +130,16 @@
     "profile": "メンズパーマ・ツイストスパイラルが得意。ライフスタイルに合わせて朝のセットが楽になるカットをご提案します。",
     "storeId": "s1",
     "area": "表参道",
-    "menus": ["メンズカット", "パーマ", "ツイストスパイラル", "ヘッドスパ"],
-    "priceRange": { "min": 6000, "max": 16000 },
+    "menus": [
+      "メンズカット",
+      "パーマ",
+      "ツイストスパイラル",
+      "ヘッドスパ"
+    ],
+    "priceRange": {
+      "min": 6000,
+      "max": 16000
+    },
     "availableTimeSlots": [
       "2026-05-10T16:00",
       "2026-05-11T13:00",
@@ -93,11 +148,19 @@
       "2026-05-14T11:00",
       "2026-05-16T13:00"
     ],
-    "snsLinks": { "instagram": "https://instagram.com/ren_pomie", "tiktok": "https://tiktok.com/@ren_pomie" },
+    "snsLinks": {
+      "instagram": "https://instagram.com/ren_pomie",
+      "tiktok": "https://tiktok.com/@ren_pomie"
+    },
     "contractStatus": "active",
     "featuredFlag": false,
     "rating": 4.7,
-    "worksCount": 248
+    "worksCount": 248,
+    "strengths": [
+      "メンズスタイル専門",
+      "韓国スタイル",
+      "20代男性に人気"
+    ]
   },
   {
     "id": "st-05",
@@ -107,14 +170,26 @@
     "profile": "ハイライト・バレイヤージュなど外国人風カラーを得意としていました。",
     "storeId": "s1",
     "area": "表参道",
-    "menus": ["カラー", "ハイライト", "バレイヤージュ"],
-    "priceRange": { "min": 8000, "max": 24000 },
+    "menus": [
+      "カラー",
+      "ハイライト",
+      "バレイヤージュ"
+    ],
+    "priceRange": {
+      "min": 8000,
+      "max": 24000
+    },
     "availableTimeSlots": [],
-    "snsLinks": { "instagram": "https://instagram.com/aoi_pomie" },
+    "snsLinks": {
+      "instagram": "https://instagram.com/aoi_pomie"
+    },
     "contractStatus": "inactive",
     "featuredFlag": false,
     "rating": 4.6,
-    "worksCount": 198
+    "worksCount": 198,
+    "strengths": [
+      "ハイトーンカラー得意"
+    ]
   },
   {
     "id": "st-06",
@@ -124,8 +199,16 @@
     "profile": "ボブ・ショートでお顔まわりを綺麗に魅せる小顔ヘアが得意です。30〜40代女性のお客様に多くご支持いただいています。",
     "storeId": "s1",
     "area": "表参道",
-    "menus": ["カット", "ボブ", "ショート", "白髪ぼかし"],
-    "priceRange": { "min": 7000, "max": 20000 },
+    "menus": [
+      "カット",
+      "ボブ",
+      "ショート",
+      "白髪ぼかし"
+    ],
+    "priceRange": {
+      "min": 7000,
+      "max": 20000
+    },
     "availableTimeSlots": [
       "2026-05-10T12:00",
       "2026-05-11T15:00",
@@ -135,11 +218,18 @@
       "2026-05-15T13:00",
       "2026-05-16T11:00"
     ],
-    "snsLinks": { "instagram": "https://instagram.com/yuina_pomie" },
+    "snsLinks": {
+      "instagram": "https://instagram.com/yuina_pomie"
+    },
     "contractStatus": "active",
     "featuredFlag": false,
     "rating": 4.8,
-    "worksCount": 312
+    "worksCount": 312,
+    "strengths": [
+      "ショート・ボブ専門",
+      "30〜40代女性に人気",
+      "白髪ぼかし"
+    ]
   },
   {
     "id": "st-07",
@@ -149,8 +239,16 @@
     "profile": "ブライダル・パーティーヘアセットの専門。お客様の挙式や記念日を「最高の一日」にする一手を担います。",
     "storeId": "s2",
     "area": "恵比寿",
-    "menus": ["ヘアセット", "アップスタイル", "ブライダル", "編み込み"],
-    "priceRange": { "min": 8000, "max": 32000 },
+    "menus": [
+      "ヘアセット",
+      "アップスタイル",
+      "ブライダル",
+      "編み込み"
+    ],
+    "priceRange": {
+      "min": 8000,
+      "max": 32000
+    },
     "availableTimeSlots": [
       "2026-05-10T09:00",
       "2026-05-11T09:00",
@@ -159,11 +257,19 @@
       "2026-05-14T09:00",
       "2026-05-15T09:00"
     ],
-    "snsLinks": { "instagram": "https://instagram.com/hibiki_pomie", "tiktok": "https://tiktok.com/@hibiki_pomie" },
+    "snsLinks": {
+      "instagram": "https://instagram.com/hibiki_pomie",
+      "tiktok": "https://tiktok.com/@hibiki_pomie"
+    },
     "contractStatus": "active",
     "featuredFlag": true,
     "rating": 4.9,
-    "worksCount": 612
+    "worksCount": 612,
+    "strengths": [
+      "ブライダル特化",
+      "顔タイプ診断対応",
+      "ナチュラル系"
+    ]
   },
   {
     "id": "st-08",
@@ -173,8 +279,15 @@
     "profile": "髪質改善トリートメント専門。生まれ持った髪を最大限に活かす施術と、再現性ある提案でリピート率No.1。",
     "storeId": "s2",
     "area": "恵比寿",
-    "menus": ["トリートメント", "髪質改善", "ヘッドスパ"],
-    "priceRange": { "min": 7500, "max": 22000 },
+    "menus": [
+      "トリートメント",
+      "髪質改善",
+      "ヘッドスパ"
+    ],
+    "priceRange": {
+      "min": 7500,
+      "max": 22000
+    },
     "availableTimeSlots": [
       "2026-05-10T10:30",
       "2026-05-11T12:00",
@@ -183,11 +296,18 @@
       "2026-05-14T17:00",
       "2026-05-16T10:00"
     ],
-    "snsLinks": { "instagram": "https://instagram.com/mizuki_pomie" },
+    "snsLinks": {
+      "instagram": "https://instagram.com/mizuki_pomie"
+    },
     "contractStatus": "active",
     "featuredFlag": false,
     "rating": 4.8,
-    "worksCount": 287
+    "worksCount": 287,
+    "strengths": [
+      "髪質改善のプロ",
+      "頭皮ケア・スパ",
+      "再現性重視"
+    ]
   },
   {
     "id": "st-09",
@@ -197,14 +317,23 @@
     "profile": "メンズカット中心に活動していました。",
     "storeId": "s2",
     "area": "恵比寿",
-    "menus": ["メンズカット", "カラー"],
-    "priceRange": { "min": 6500, "max": 14000 },
+    "menus": [
+      "メンズカット",
+      "カラー"
+    ],
+    "priceRange": {
+      "min": 6500,
+      "max": 14000
+    },
     "availableTimeSlots": [],
     "snsLinks": {},
     "contractStatus": "inactive",
     "featuredFlag": false,
     "rating": 4.4,
-    "worksCount": 102
+    "worksCount": 102,
+    "strengths": [
+      "メンズスタイル専門"
+    ]
   },
   {
     "id": "st-10",
@@ -214,8 +343,16 @@
     "profile": "ハイライト・バレイヤージュなど立体カラーが得意。ブリーチありもなしも、髪のコンディションを見ながら最適解を提案します。",
     "storeId": "s2",
     "area": "恵比寿",
-    "menus": ["カラー", "ハイライト", "バレイヤージュ", "デザインカラー"],
-    "priceRange": { "min": 9000, "max": 26000 },
+    "menus": [
+      "カラー",
+      "ハイライト",
+      "バレイヤージュ",
+      "デザインカラー"
+    ],
+    "priceRange": {
+      "min": 9000,
+      "max": 26000
+    },
     "availableTimeSlots": [
       "2026-05-10T11:30",
       "2026-05-11T16:00",
@@ -225,11 +362,19 @@
       "2026-05-15T16:00",
       "2026-05-16T15:00"
     ],
-    "snsLinks": { "instagram": "https://instagram.com/rina_pomie", "x": "https://x.com/rina_pomie" },
+    "snsLinks": {
+      "instagram": "https://instagram.com/rina_pomie",
+      "x": "https://x.com/rina_pomie"
+    },
     "contractStatus": "active",
     "featuredFlag": true,
     "rating": 4.8,
-    "worksCount": 398
+    "worksCount": 398,
+    "strengths": [
+      "ハイトーンカラー得意",
+      "外国人風カラー",
+      "デザインカット"
+    ]
   },
   {
     "id": "st-11",
@@ -239,8 +384,16 @@
     "profile": "ロングヘア・デジタルパーマ専門。柔らかく動きのあるカールで、扱いやすいスタイルに仕上げます。",
     "storeId": "s2",
     "area": "恵比寿",
-    "menus": ["ロング", "デジタルパーマ", "カット", "コテ巻き風パーマ"],
-    "priceRange": { "min": 7000, "max": 20000 },
+    "menus": [
+      "ロング",
+      "デジタルパーマ",
+      "カット",
+      "コテ巻き風パーマ"
+    ],
+    "priceRange": {
+      "min": 7000,
+      "max": 20000
+    },
     "availableTimeSlots": [
       "2026-05-10T17:00",
       "2026-05-11T11:00",
@@ -249,11 +402,18 @@
       "2026-05-14T14:00",
       "2026-05-15T17:00"
     ],
-    "snsLinks": { "instagram": "https://instagram.com/hayate_pomie" },
+    "snsLinks": {
+      "instagram": "https://instagram.com/hayate_pomie"
+    },
     "contractStatus": "active",
     "featuredFlag": false,
     "rating": 4.7,
-    "worksCount": 256
+    "worksCount": 256,
+    "strengths": [
+      "ロングヘア専門",
+      "扱いやすい仕上がり",
+      "再現性重視"
+    ]
   },
   {
     "id": "st-12",
@@ -263,13 +423,22 @@
     "profile": "カット・カラー全般を担当していました。",
     "storeId": "s2",
     "area": "恵比寿",
-    "menus": ["カット", "カラー"],
-    "priceRange": { "min": 6000, "max": 14000 },
+    "menus": [
+      "カット",
+      "カラー"
+    ],
+    "priceRange": {
+      "min": 6000,
+      "max": 14000
+    },
     "availableTimeSlots": [],
     "snsLinks": {},
     "contractStatus": "inactive",
     "featuredFlag": false,
     "rating": 4.5,
-    "worksCount": 145
+    "worksCount": 145,
+    "strengths": [
+      "扱いやすい仕上がり"
+    ]
   }
 ]

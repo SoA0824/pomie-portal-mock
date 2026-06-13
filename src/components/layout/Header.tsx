@@ -19,6 +19,9 @@ export function Header() {
           <Link href="/stylists" className="text-ink-700 hover:text-pomie-600">
             美容師を探す
           </Link>
+          <Link href="/match" className="text-pomie-600 hover:text-pomie-700 font-semibold">
+            🔍 おすすめ診断
+          </Link>
           <Link href="/line-bot" className="text-ink-700 hover:text-pomie-600">
             LINE で予約
           </Link>

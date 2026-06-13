@@ -2,7 +2,7 @@
 -- 適用方法: Supabase Studio の SQL Editor でこのファイル全文を Run
 
 -- ===== stylists (12 名) =====
-insert into public.stylists (id, name, name_kana, avatar, profile, store_id, area, menus, price_range, available_time_slots, instagram_handle, sns_links, contract_status, featured_flag, rating, works_count) values (
+insert into public.stylists (id, name, name_kana, avatar, profile, store_id, area, strengths, specialty_menus, menus, price_range, available_time_slots, instagram_handle, sns_links, contract_status, featured_flag, rating, works_count) values (
   'st-01',
   '北川 美咲',
   'キタガワ ミサキ',
@@ -10,6 +10,8 @@ insert into public.stylists (id, name, name_kana, avatar, profile, store_id, are
   '髪質改善ストレート歴12年。ダメージレスな艶髪づくりが得意です。お客様一人ひとりの毛流れに合わせた施術で、扱いやすく長持ちする仕上がりをお届けします。',
   's1',
   '表参道',
+  ARRAY['髪質改善のプロ','ダメージレス施術','扱いやすい仕上がり']::text[],
+  ARRAY['髪質改善','縮毛矯正','カラー','トリートメント']::text[],
   '[{"name":"髪質改善","duration":120},{"name":"縮毛矯正","duration":180},{"name":"カラー","duration":90},{"name":"トリートメント","duration":60}]'::jsonb,
   '{"min":9000,"max":28000}'::jsonb,
   ARRAY['2026-05-10T10:00','2026-05-10T14:00','2026-05-11T11:00','2026-05-12T10:00','2026-05-12T16:00','2026-05-13T13:00','2026-05-14T10:00','2026-05-15T15:00']::text[],
@@ -20,7 +22,7 @@ insert into public.stylists (id, name, name_kana, avatar, profile, store_id, are
   4.9,
   482
 ) on conflict (id) do nothing;
-insert into public.stylists (id, name, name_kana, avatar, profile, store_id, area, menus, price_range, available_time_slots, instagram_handle, sns_links, contract_status, featured_flag, rating, works_count) values (
+insert into public.stylists (id, name, name_kana, avatar, profile, store_id, area, strengths, specialty_menus, menus, price_range, available_time_slots, instagram_handle, sns_links, contract_status, featured_flag, rating, works_count) values (
   'st-02',
   '大野 涼太',
   'オオノ リョウタ',
@@ -28,6 +30,8 @@ insert into public.stylists (id, name, name_kana, avatar, profile, store_id, are
   'メンズカット・デザインカラー専門。ビジネスからストリートまで幅広いスタイルに対応。骨格と髪質を見極めた立体カットで「再現性の高い」ヘアを提供します。',
   's1',
   '表参道',
+  ARRAY['メンズスタイル専門','外国人風カラー','再現性重視']::text[],
+  ARRAY['メンズカット','デザインカラー','ハイライト','パーマ']::text[],
   '[{"name":"メンズカット","duration":60},{"name":"デザインカラー","duration":90},{"name":"ハイライト","duration":150},{"name":"パーマ","duration":120}]'::jsonb,
   '{"min":6500,"max":18000}'::jsonb,
   ARRAY['2026-05-10T11:00','2026-05-10T15:00','2026-05-11T10:00','2026-05-11T17:00','2026-05-12T13:00','2026-05-13T11:00','2026-05-14T16:00','2026-05-16T14:00']::text[],
@@ -38,7 +42,7 @@ insert into public.stylists (id, name, name_kana, avatar, profile, store_id, are
   4.8,
   365
 ) on conflict (id) do nothing;
-insert into public.stylists (id, name, name_kana, avatar, profile, store_id, area, menus, price_range, available_time_slots, instagram_handle, sns_links, contract_status, featured_flag, rating, works_count) values (
+insert into public.stylists (id, name, name_kana, avatar, profile, store_id, area, strengths, specialty_menus, menus, price_range, available_time_slots, instagram_handle, sns_links, contract_status, featured_flag, rating, works_count) values (
   'st-03',
   '吉田 さくら',
   'ヨシダ サクラ',
@@ -46,6 +50,8 @@ insert into public.stylists (id, name, name_kana, avatar, profile, store_id, are
   '似合わせカット・パーソナルカラー診断。骨格 × 顔タイプ × 似合うカラーで「自分史上いちばん」のヘアに導きます。',
   's1',
   '表参道',
+  ARRAY['似合わせカット','顔タイプ診断対応','30〜40代女性に人気']::text[],
+  ARRAY['カット','似合わせカラー','パーソナルカラー','ボブ']::text[],
   '[{"name":"カット","duration":60},{"name":"似合わせカラー","duration":90},{"name":"パーソナルカラー","duration":90},{"name":"ボブ","duration":75}]'::jsonb,
   '{"min":7500,"max":22000}'::jsonb,
   ARRAY['2026-05-10T13:00','2026-05-11T14:00','2026-05-12T11:00','2026-05-13T10:00','2026-05-14T13:00','2026-05-15T11:00']::text[],
@@ -56,7 +62,7 @@ insert into public.stylists (id, name, name_kana, avatar, profile, store_id, are
   4.9,
   521
 ) on conflict (id) do nothing;
-insert into public.stylists (id, name, name_kana, avatar, profile, store_id, area, menus, price_range, available_time_slots, instagram_handle, sns_links, contract_status, featured_flag, rating, works_count) values (
+insert into public.stylists (id, name, name_kana, avatar, profile, store_id, area, strengths, specialty_menus, menus, price_range, available_time_slots, instagram_handle, sns_links, contract_status, featured_flag, rating, works_count) values (
   'st-04',
   '高橋 蓮',
   'タカハシ レン',
@@ -64,6 +70,8 @@ insert into public.stylists (id, name, name_kana, avatar, profile, store_id, are
   'メンズパーマ・ツイストスパイラルが得意。ライフスタイルに合わせて朝のセットが楽になるカットをご提案します。',
   's1',
   '表参道',
+  ARRAY['メンズスタイル専門','韓国スタイル','20代男性に人気']::text[],
+  ARRAY['メンズカット','パーマ','ツイストスパイラル','ヘッドスパ']::text[],
   '[{"name":"メンズカット","duration":60},{"name":"パーマ","duration":120},{"name":"ツイストスパイラル","duration":120},{"name":"ヘッドスパ","duration":60}]'::jsonb,
   '{"min":6000,"max":16000}'::jsonb,
   ARRAY['2026-05-10T16:00','2026-05-11T13:00','2026-05-12T15:00','2026-05-13T17:00','2026-05-14T11:00','2026-05-16T13:00']::text[],
@@ -74,7 +82,7 @@ insert into public.stylists (id, name, name_kana, avatar, profile, store_id, are
   4.7,
   248
 ) on conflict (id) do nothing;
-insert into public.stylists (id, name, name_kana, avatar, profile, store_id, area, menus, price_range, available_time_slots, instagram_handle, sns_links, contract_status, featured_flag, rating, works_count) values (
+insert into public.stylists (id, name, name_kana, avatar, profile, store_id, area, strengths, specialty_menus, menus, price_range, available_time_slots, instagram_handle, sns_links, contract_status, featured_flag, rating, works_count) values (
   'st-05',
   '山本 葵',
   'ヤマモト アオイ',
@@ -82,6 +90,8 @@ insert into public.stylists (id, name, name_kana, avatar, profile, store_id, are
   'ハイライト・バレイヤージュなど外国人風カラーを得意としていました。',
   's1',
   '表参道',
+  ARRAY['ハイトーンカラー得意']::text[],
+  ARRAY['カラー','ハイライト','バレイヤージュ']::text[],
   '[{"name":"カラー","duration":90},{"name":"ハイライト","duration":150},{"name":"バレイヤージュ","duration":180}]'::jsonb,
   '{"min":8000,"max":24000}'::jsonb,
   ARRAY[]::text[],
@@ -92,7 +102,7 @@ insert into public.stylists (id, name, name_kana, avatar, profile, store_id, are
   4.6,
   198
 ) on conflict (id) do nothing;
-insert into public.stylists (id, name, name_kana, avatar, profile, store_id, area, menus, price_range, available_time_slots, instagram_handle, sns_links, contract_status, featured_flag, rating, works_count) values (
+insert into public.stylists (id, name, name_kana, avatar, profile, store_id, area, strengths, specialty_menus, menus, price_range, available_time_slots, instagram_handle, sns_links, contract_status, featured_flag, rating, works_count) values (
   'st-06',
   '渡辺 結菜',
   'ワタナベ ユイナ',
@@ -100,6 +110,8 @@ insert into public.stylists (id, name, name_kana, avatar, profile, store_id, are
   'ボブ・ショートでお顔まわりを綺麗に魅せる小顔ヘアが得意です。30〜40代女性のお客様に多くご支持いただいています。',
   's1',
   '表参道',
+  ARRAY['ショート・ボブ専門','30〜40代女性に人気','白髪ぼかし']::text[],
+  ARRAY['カット','ボブ','ショート','白髪ぼかし']::text[],
   '[{"name":"カット","duration":60},{"name":"ボブ","duration":75},{"name":"ショート","duration":75},{"name":"白髪ぼかし","duration":90}]'::jsonb,
   '{"min":7000,"max":20000}'::jsonb,
   ARRAY['2026-05-10T12:00','2026-05-11T15:00','2026-05-12T14:00','2026-05-13T16:00','2026-05-14T15:00','2026-05-15T13:00','2026-05-16T11:00']::text[],
@@ -110,7 +122,7 @@ insert into public.stylists (id, name, name_kana, avatar, profile, store_id, are
   4.8,
   312
 ) on conflict (id) do nothing;
-insert into public.stylists (id, name, name_kana, avatar, profile, store_id, area, menus, price_range, available_time_slots, instagram_handle, sns_links, contract_status, featured_flag, rating, works_count) values (
+insert into public.stylists (id, name, name_kana, avatar, profile, store_id, area, strengths, specialty_menus, menus, price_range, available_time_slots, instagram_handle, sns_links, contract_status, featured_flag, rating, works_count) values (
   'st-07',
   '藤井 響',
   'フジイ ヒビキ',
@@ -118,6 +130,8 @@ insert into public.stylists (id, name, name_kana, avatar, profile, store_id, are
   'ブライダル・パーティーヘアセットの専門。お客様の挙式や記念日を「最高の一日」にする一手を担います。',
   's2',
   '恵比寿',
+  ARRAY['ブライダル特化','顔タイプ診断対応','ナチュラル系']::text[],
+  ARRAY['ヘアセット','アップスタイル','ブライダル','編み込み']::text[],
   '[{"name":"ヘアセット","duration":60},{"name":"アップスタイル","duration":60},{"name":"ブライダル","duration":120},{"name":"編み込み","duration":60}]'::jsonb,
   '{"min":8000,"max":32000}'::jsonb,
   ARRAY['2026-05-10T09:00','2026-05-11T09:00','2026-05-12T09:00','2026-05-13T09:00','2026-05-14T09:00','2026-05-15T09:00']::text[],
@@ -128,7 +142,7 @@ insert into public.stylists (id, name, name_kana, avatar, profile, store_id, are
   4.9,
   612
 ) on conflict (id) do nothing;
-insert into public.stylists (id, name, name_kana, avatar, profile, store_id, area, menus, price_range, available_time_slots, instagram_handle, sns_links, contract_status, featured_flag, rating, works_count) values (
+insert into public.stylists (id, name, name_kana, avatar, profile, store_id, area, strengths, specialty_menus, menus, price_range, available_time_slots, instagram_handle, sns_links, contract_status, featured_flag, rating, works_count) values (
   'st-08',
   '小川 美月',
   'オガワ ミヅキ',
@@ -136,6 +150,8 @@ insert into public.stylists (id, name, name_kana, avatar, profile, store_id, are
   '髪質改善トリートメント専門。生まれ持った髪を最大限に活かす施術と、再現性ある提案でリピート率No.1。',
   's2',
   '恵比寿',
+  ARRAY['髪質改善のプロ','頭皮ケア・スパ','再現性重視']::text[],
+  ARRAY['トリートメント','髪質改善','ヘッドスパ']::text[],
   '[{"name":"トリートメント","duration":60},{"name":"髪質改善","duration":120},{"name":"ヘッドスパ","duration":60}]'::jsonb,
   '{"min":7500,"max":22000}'::jsonb,
   ARRAY['2026-05-10T10:30','2026-05-11T12:00','2026-05-12T17:00','2026-05-13T14:00','2026-05-14T17:00','2026-05-16T10:00']::text[],
@@ -146,7 +162,7 @@ insert into public.stylists (id, name, name_kana, avatar, profile, store_id, are
   4.8,
   287
 ) on conflict (id) do nothing;
-insert into public.stylists (id, name, name_kana, avatar, profile, store_id, area, menus, price_range, available_time_slots, instagram_handle, sns_links, contract_status, featured_flag, rating, works_count) values (
+insert into public.stylists (id, name, name_kana, avatar, profile, store_id, area, strengths, specialty_menus, menus, price_range, available_time_slots, instagram_handle, sns_links, contract_status, featured_flag, rating, works_count) values (
   'st-09',
   '佐藤 駿',
   'サトウ シュン',
@@ -154,6 +170,8 @@ insert into public.stylists (id, name, name_kana, avatar, profile, store_id, are
   'メンズカット中心に活動していました。',
   's2',
   '恵比寿',
+  ARRAY['メンズスタイル専門']::text[],
+  ARRAY['メンズカット','カラー']::text[],
   '[{"name":"メンズカット","duration":60},{"name":"カラー","duration":90}]'::jsonb,
   '{"min":6500,"max":14000}'::jsonb,
   ARRAY[]::text[],
@@ -164,7 +182,7 @@ insert into public.stylists (id, name, name_kana, avatar, profile, store_id, are
   4.4,
   102
 ) on conflict (id) do nothing;
-insert into public.stylists (id, name, name_kana, avatar, profile, store_id, area, menus, price_range, available_time_slots, instagram_handle, sns_links, contract_status, featured_flag, rating, works_count) values (
+insert into public.stylists (id, name, name_kana, avatar, profile, store_id, area, strengths, specialty_menus, menus, price_range, available_time_slots, instagram_handle, sns_links, contract_status, featured_flag, rating, works_count) values (
   'st-10',
   '鈴木 里奈',
   'スズキ リナ',
@@ -172,6 +190,8 @@ insert into public.stylists (id, name, name_kana, avatar, profile, store_id, are
   'ハイライト・バレイヤージュなど立体カラーが得意。ブリーチありもなしも、髪のコンディションを見ながら最適解を提案します。',
   's2',
   '恵比寿',
+  ARRAY['ハイトーンカラー得意','外国人風カラー','デザインカット']::text[],
+  ARRAY['カラー','ハイライト','バレイヤージュ','デザインカラー']::text[],
   '[{"name":"カラー","duration":90},{"name":"ハイライト","duration":150},{"name":"バレイヤージュ","duration":180},{"name":"デザインカラー","duration":90}]'::jsonb,
   '{"min":9000,"max":26000}'::jsonb,
   ARRAY['2026-05-10T11:30','2026-05-11T16:00','2026-05-12T12:00','2026-05-13T15:00','2026-05-14T12:00','2026-05-15T16:00','2026-05-16T15:00']::text[],
@@ -182,7 +202,7 @@ insert into public.stylists (id, name, name_kana, avatar, profile, store_id, are
   4.8,
   398
 ) on conflict (id) do nothing;
-insert into public.stylists (id, name, name_kana, avatar, profile, store_id, area, menus, price_range, available_time_slots, instagram_handle, sns_links, contract_status, featured_flag, rating, works_count) values (
+insert into public.stylists (id, name, name_kana, avatar, profile, store_id, area, strengths, specialty_menus, menus, price_range, available_time_slots, instagram_handle, sns_links, contract_status, featured_flag, rating, works_count) values (
   'st-11',
   '中村 颯',
   'ナカムラ ハヤテ',
@@ -190,6 +210,8 @@ insert into public.stylists (id, name, name_kana, avatar, profile, store_id, are
   'ロングヘア・デジタルパーマ専門。柔らかく動きのあるカールで、扱いやすいスタイルに仕上げます。',
   's2',
   '恵比寿',
+  ARRAY['ロングヘア専門','扱いやすい仕上がり','再現性重視']::text[],
+  ARRAY['ロング','デジタルパーマ','カット','コテ巻き風パーマ']::text[],
   '[{"name":"ロング","duration":75},{"name":"デジタルパーマ","duration":120},{"name":"カット","duration":60},{"name":"コテ巻き風パーマ","duration":120}]'::jsonb,
   '{"min":7000,"max":20000}'::jsonb,
   ARRAY['2026-05-10T17:00','2026-05-11T11:00','2026-05-12T16:00','2026-05-13T11:30','2026-05-14T14:00','2026-05-15T17:00']::text[],
@@ -200,7 +222,7 @@ insert into public.stylists (id, name, name_kana, avatar, profile, store_id, are
   4.7,
   256
 ) on conflict (id) do nothing;
-insert into public.stylists (id, name, name_kana, avatar, profile, store_id, area, menus, price_range, available_time_slots, instagram_handle, sns_links, contract_status, featured_flag, rating, works_count) values (
+insert into public.stylists (id, name, name_kana, avatar, profile, store_id, area, strengths, specialty_menus, menus, price_range, available_time_slots, instagram_handle, sns_links, contract_status, featured_flag, rating, works_count) values (
   'st-12',
   '林 千夏',
   'ハヤシ チナツ',
@@ -208,6 +230,8 @@ insert into public.stylists (id, name, name_kana, avatar, profile, store_id, are
   'カット・カラー全般を担当していました。',
   's2',
   '恵比寿',
+  ARRAY['扱いやすい仕上がり']::text[],
+  ARRAY['カット','カラー']::text[],
   '[{"name":"カット","duration":60},{"name":"カラー","duration":90}]'::jsonb,
   '{"min":6000,"max":14000}'::jsonb,
   ARRAY[]::text[],
