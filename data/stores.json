@@ -5,6 +5,11 @@
     "address": "東京都渋谷区神宮前4-12-10 表参道ヒルズ西館B1",
     "area": "表参道",
     "image": "/images/stores/s1.jpg",
+    "gallery": [
+      "/images/stores/s1.jpg",
+      "/images/stores/pomie_omotesando2.jpeg",
+      "/images/stores/pomie_omotesando3.jpeg"
+    ],
     "catchphrase": "トレンドの発信地・表参道で叶える、洗練の艶髪体験。",
     "salonboardShopId": "sb_omotesando",
     "salonboardCapacityPerSlot": 4
@@ -15,6 +20,12 @@
     "address": "東京都渋谷区恵比寿西1-8-3 ガーデンプレイス2F",
     "area": "恵比寿",
     "image": "/images/stores/s2.jpg",
+    "gallery": [
+      "/images/stores/s2.jpg",
+      "/images/stores/pomie_ebisu2.png",
+      "/images/stores/pomie_ebisu3.png",
+      "/images/stores/pomie_ebisu4.png"
+    ],
     "catchphrase": "大人が落ち着いて通える、恵比寿のプライベートサロン。",
     "salonboardShopId": "sb_ebisu",
     "salonboardCapacityPerSlot": 4

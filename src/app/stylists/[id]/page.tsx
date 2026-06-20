@@ -164,6 +164,18 @@ export default async function StylistDetailPage({ params }: { params: { id: stri
           <div className="mt-5 max-w-xl">
             <StoreCard store={store} />
           </div>
+          {store.gallery && store.gallery.length > 1 && (
+            <div className="mt-3 grid max-w-xl grid-cols-3 gap-2">
+              {store.gallery.slice(1).map((img) => (
+                <div
+                  key={img}
+                  className="aspect-square rounded-lg bg-cover bg-center ring-1 ring-ink-100"
+                  style={{ backgroundImage: `url('${img}')` }}
+                  aria-hidden
+                />
+              ))}
+            </div>
+          )}
         </section>
       )}
     </div>

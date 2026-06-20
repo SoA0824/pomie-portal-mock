@@ -79,8 +79,10 @@ export type Store = {
   name: string;
   address: string;
   area: string;
-  /** 店舗写真のパス（public 配下）。画像が無い場合は表示側でフォールバック */
+  /** 店舗のメイン写真のパス（public 配下）。画像が無い場合は表示側でフォールバック */
   image?: string;
+  /** 店舗の追加写真（ギャラリー表示用。先頭はメイン写真と同じで可） */
+  gallery?: string[];
   /** 店舗の魅力を伝える 1 行コピー */
   catchphrase?: string;
   salonboardShopId: string;
