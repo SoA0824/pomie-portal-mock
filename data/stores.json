@@ -4,6 +4,8 @@
     "name": "ポミエ 表参道",
     "address": "東京都渋谷区神宮前4-12-10 表参道ヒルズ西館B1",
     "area": "表参道",
+    "image": "/images/stores/s1.jpg",
+    "catchphrase": "トレンドの発信地・表参道で叶える、洗練の艶髪体験。",
     "salonboardShopId": "sb_omotesando",
     "salonboardCapacityPerSlot": 4
   },
@@ -12,6 +14,8 @@
     "name": "ポミエ 恵比寿",
     "address": "東京都渋谷区恵比寿西1-8-3 ガーデンプレイス2F",
     "area": "恵比寿",
+    "image": "/images/stores/s2.jpg",
+    "catchphrase": "大人が落ち着いて通える、恵比寿のプライベートサロン。",
     "salonboardShopId": "sb_ebisu",
     "salonboardCapacityPerSlot": 4
   }

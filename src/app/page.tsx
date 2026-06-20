@@ -1,25 +1,42 @@
 import Link from "next/link";
 import { ArticleCard } from "@/components/article/ArticleCard";
 import { StylistCard } from "@/components/stylist/StylistCard";
+import { StoreCard } from "@/components/store/StoreCard";
 import { getFeaturedArticles } from "@/lib/data/articles";
 import { getFeaturedStylists } from "@/lib/data/stylists";
+import { getAllStores } from "@/lib/data/stores";
 
 export const dynamic = "force-dynamic";
 
 export default async function Home() {
   const articles = getFeaturedArticles(3);
   const stylists = await getFeaturedStylists(4);
+  const stores = getAllStores();
   return (
     <>
-      <section className="bg-gradient-to-br from-pomie-100 via-pomie-50 to-white">
-        <div className="container-page py-16 md:py-24">
+      {/* メインビジュアル */}
+      <section className="relative overflow-hidden bg-gradient-to-br from-pomie-600 to-pomie-900">
+        {/* 背景写真（public/images/hero/hero.jpg を置くと表示。無ければブランドグラデ） */}
+        <div
+          className="absolute inset-0 bg-cover bg-center"
+          style={{ backgroundImage: "url('/images/hero/hero.jpg')" }}
+          aria-hidden
+        />
+        {/* 可読性オーバーレイ */}
+        <div
+          className="absolute inset-0 bg-gradient-to-t from-black/75 via-black/45 to-black/30"
+          aria-hidden
+        />
+        <div className="container-page relative py-20 md:py-32">
           <div className="max-w-2xl">
-            <span className="chip">POMiE 集客ポータル（モック）</span>
-            <h1 className="mt-4 text-3xl font-bold leading-tight tracking-tight md:text-5xl">
+            <span className="inline-flex items-center rounded-full bg-white/20 px-3 py-1 text-xs font-semibold text-white backdrop-blur">
+              POMiE 集客ポータル
+            </span>
+            <h1 className="mt-4 text-3xl font-bold leading-tight tracking-tight text-white drop-shadow-lg md:text-5xl">
               あなたの髪を任せられる、<br />
               ポミエの専属美容師に出会う。
             </h1>
-            <p className="mt-5 text-base text-ink-700 md:text-lg">
+            <p className="mt-5 text-base text-white/90 drop-shadow md:text-lg">
               気になるテーマの記事から、ポミエ契約美容師を見つけて、
               Web または LINE でそのまま予約。<br />
               ポミエの席もあわせて自動で確保します。
@@ -29,20 +46,20 @@ export default async function Home() {
                 type="text"
                 name="keyword"
                 placeholder="得意メニュー・お名前で検索 (例: 髪質改善)"
-                className="w-full rounded-full border border-pomie-200 bg-white px-5 py-3 text-sm shadow-sm focus:border-pomie-400 focus:outline-none focus:ring-2 focus:ring-pomie-200"
+                className="w-full rounded-full border border-white/30 bg-white px-5 py-3 text-sm shadow-sm focus:border-pomie-400 focus:outline-none focus:ring-2 focus:ring-pomie-300"
               />
               <button type="submit" className="btn-primary whitespace-nowrap">
                 美容師を探す
               </button>
             </form>
-            <div className="mt-4 flex flex-wrap items-center gap-3 text-xs text-ink-500">
+            <div className="mt-4 flex flex-wrap items-center gap-3 text-xs text-white/80">
               <span>人気のメニュー:</span>
               {["髪質改善", "メンズカット", "似合わせカラー", "ハイライト", "ヘアセット"].map(
                 (m) => (
                   <Link
                     key={m}
                     href={`/stylists?menu=${encodeURIComponent(m)}`}
-                    className="rounded-full bg-white px-3 py-1 ring-1 ring-pomie-200 hover:bg-pomie-100"
+                    className="rounded-full bg-white/90 px-3 py-1 text-ink-700 ring-1 ring-white/40 backdrop-blur hover:bg-white"
                   >
                     {m}
                   </Link>
@@ -102,6 +119,19 @@ export default async function Home() {
         <div className="mt-6 grid gap-6 sm:grid-cols-2 lg:grid-cols-4">
           {stylists.map((s) => (
             <StylistCard key={s.id} stylist={s} />
+          ))}
+        </div>
+      </section>
+
+      {/* サロン紹介 */}
+      <section className="container-page py-14">
+        <SectionHeader
+          title="サロン紹介"
+          subtitle="表参道・恵比寿の 2 店舗。通いやすい店舗からも美容師を探せます。"
+        />
+        <div className="mt-6 grid gap-6 md:grid-cols-2">
+          {stores.map((s) => (
+            <StoreCard key={s.id} store={s} />
           ))}
         </div>
       </section>

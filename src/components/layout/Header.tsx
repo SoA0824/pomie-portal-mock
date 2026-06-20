@@ -1,16 +1,12 @@
 import Link from "next/link";
+import { Logo } from "./Logo";
 
 export function Header() {
   return (
     <header className="sticky top-0 z-30 w-full border-b border-pomie-100/80 bg-white/90 backdrop-blur">
       <div className="container-page flex h-16 items-center justify-between">
         <Link href="/" className="flex items-center gap-2">
-          <span className="inline-flex h-8 w-8 items-center justify-center rounded-full bg-pomie-500 text-sm font-bold text-white">
-            P
-          </span>
-          <span className="text-base font-bold tracking-tight text-ink-900">
-            POMiE Portal
-          </span>
+          <Logo className="h-9 w-auto" />
         </Link>
         <nav className="hidden items-center gap-6 text-sm font-medium md:flex">
           <Link href="/articles" className="text-ink-700 hover:text-pomie-600">

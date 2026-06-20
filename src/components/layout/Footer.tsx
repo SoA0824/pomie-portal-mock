@@ -1,16 +1,12 @@
 import Link from "next/link";
+import { Logo } from "./Logo";
 
 export function Footer() {
   return (
     <footer className="mt-16 border-t border-pomie-100 bg-white">
       <div className="container-page grid gap-8 py-10 md:grid-cols-3">
         <div>
-          <div className="flex items-center gap-2">
-            <span className="inline-flex h-7 w-7 items-center justify-center rounded-full bg-pomie-500 text-xs font-bold text-white">
-              P
-            </span>
-            <span className="font-bold">POMiE Portal</span>
-          </div>
+          <Logo className="h-8 w-auto" />
           <p className="mt-3 text-xs text-ink-500">
             ポミエ契約美容師に出会えるポータル。<br />
             これは MVP モックです。

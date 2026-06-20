@@ -2,6 +2,7 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { SnsFeed } from "@/components/stylist/SnsFeed";
 import { StylistAvatar } from "@/components/common/StylistAvatar";
+import { StoreCard } from "@/components/store/StoreCard";
 import { getStylistById } from "@/lib/data/stylists";
 import { getStoreById } from "@/lib/data/stores";
 import { getSnsPostsByStylistId } from "@/lib/data/snsPosts";
@@ -153,6 +154,18 @@ export default async function StylistDetailPage({ params }: { params: { id: stri
           <SnsFeed posts={posts} />
         </div>
       </section>
+
+      {store && (
+        <section className="mt-12">
+          <h2 className="text-xl font-bold">所属サロン</h2>
+          <p className="mt-1 text-sm text-ink-500">
+            {stylist.name} さんはこちらの店舗に在籍しています。
+          </p>
+          <div className="mt-5 max-w-xl">
+            <StoreCard store={store} />
+          </div>
+        </section>
+      )}
     </div>
   );
 }
