@@ -22,26 +22,46 @@ export default async function StylistDetailPage({ params }: { params: { id: stri
         ← 美容師一覧に戻る
       </Link>
 
-      <section className="mt-6 grid gap-8 md:grid-cols-[280px_1fr]">
-        <div>
-          <div className="card overflow-hidden">
-            <div className="aspect-square overflow-hidden bg-ink-100">
-              <StylistAvatar
-                src={stylist.avatar}
-                name={stylist.name}
-                className="h-full w-full"
-              />
-            </div>
+      <section className="relative mt-6 overflow-hidden rounded-3xl shadow-sm ring-1 ring-ink-100/70">
+        {/* 所属店舗の内装をぼかして背景に敷く（画像が無ければ淡いブランドグラデ） */}
+        <div className="absolute inset-0 bg-gradient-to-br from-pomie-50 to-white" aria-hidden />
+        {store?.image && (
+          <div className="absolute inset-0" aria-hidden>
+            <div
+              className="absolute inset-0 scale-110 bg-cover bg-center blur-2xl"
+              style={{ backgroundImage: `url('${store.image}')` }}
+            />
+            <div className="absolute inset-0 bg-gradient-to-br from-white/92 via-white/82 to-pomie-50/75" />
           </div>
-          <dl className="mt-4 space-y-2 text-sm">
-            <Row k="所属店舗" v={store?.name ?? "-"} />
-            <Row k="エリア" v={stylist.area} />
-            <Row k="評価" v={`★ ${stylist.rating.toFixed(1)} (${stylist.worksCount} 件)`} />
-            <Row k="料金目安" v={formatPriceRange(stylist.priceRange.min, stylist.priceRange.max)} />
-          </dl>
-        </div>
+        )}
 
-        <div>
+        <div className="relative grid gap-8 p-5 md:grid-cols-[280px_1fr] md:p-8">
+          <div>
+            <div className="overflow-hidden rounded-2xl bg-white shadow-lg ring-4 ring-white">
+              <div className="aspect-square overflow-hidden bg-ink-100">
+                <StylistAvatar
+                  src={stylist.avatar}
+                  name={stylist.name}
+                  className="h-full w-full"
+                />
+              </div>
+            </div>
+            <dl className="mt-4 space-y-2 rounded-2xl bg-white/75 p-4 text-sm shadow-sm ring-1 ring-white/60 backdrop-blur-sm">
+              <Row k="所属店舗" v={store?.name ?? "-"} />
+              <Row k="エリア" v={stylist.area} />
+              <Row
+                k="評価"
+                v={
+                  stylist.worksCount > 0
+                    ? `★ ${stylist.rating.toFixed(1)} (${stylist.worksCount} 件)`
+                    : "新規美容師"
+                }
+              />
+              <Row k="料金目安" v={formatPriceRange(stylist.priceRange.min, stylist.priceRange.max)} />
+            </dl>
+          </div>
+
+          <div>
           <header>
             <p className="text-sm text-ink-500">{stylist.nameKana}</p>
             <h1 className="mt-1 text-3xl font-bold">{stylist.name}</h1>
@@ -105,6 +125,7 @@ export default async function StylistDetailPage({ params }: { params: { id: stri
               LINE で予約
             </Link>
           </div>
+        </div>
         </div>
       </section>
 
