@@ -15,6 +15,8 @@ export default async function StylistDetailPage({ params }: { params: { id: stri
   if (!stylist) notFound();
   const store = getStoreById(stylist.storeId);
   const posts = await getSnsPostsByStylistId(stylist.id);
+  // ヒーロー背景: 美容師ごとの個別設定を優先、無ければ所属店舗のメイン写真
+  const heroBg = stylist.backgroundImage || store?.image;
 
   return (
     <div className="container-page py-10">
@@ -25,13 +27,13 @@ export default async function StylistDetailPage({ params }: { params: { id: stri
       <section className="relative mt-6 overflow-hidden rounded-3xl shadow-sm ring-1 ring-ink-100/70">
         {/* 所属店舗の内装をぼかして背景に敷く（画像が無ければ淡いブランドグラデ） */}
         <div className="absolute inset-0 bg-gradient-to-br from-pomie-50 to-white" aria-hidden />
-        {store?.image && (
+        {heroBg && (
           <div className="absolute inset-0" aria-hidden>
             <div
-              className="absolute inset-0 scale-110 bg-cover bg-center blur-2xl"
-              style={{ backgroundImage: `url('${store.image}')` }}
+              className="absolute inset-0 scale-105 bg-cover bg-center blur-md"
+              style={{ backgroundImage: `url('${heroBg}')` }}
             />
-            <div className="absolute inset-0 bg-gradient-to-br from-white/92 via-white/82 to-pomie-50/75" />
+            <div className="absolute inset-0 bg-gradient-to-br from-white/80 via-white/68 to-pomie-50/60" />
           </div>
         )}
 

@@ -30,6 +30,7 @@ function rowToStylist(row: StylistRow): Stylist {
     rating: Number(row.rating),
     worksCount: row.works_count,
     instagramSyncedAt: row.instagram_synced_at,
+    backgroundImage: row.background_image,
   };
 }
 

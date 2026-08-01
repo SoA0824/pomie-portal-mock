@@ -72,6 +72,7 @@ export function StylistForm({
     priceMin: initialValues?.priceRange.min.toString() ?? "7000",
     priceMax: initialValues?.priceRange.max.toString() ?? "20000",
     instagramHandle: initialValues?.instagramHandle ?? "",
+    backgroundImage: initialValues?.backgroundImage ?? "",
     contractStatus: (initialValues?.contractStatus ?? "active") as "active" | "inactive",
     featuredFlag: initialValues?.featuredFlag ?? false,
   });
@@ -151,6 +152,7 @@ export function StylistForm({
       priceRange: { min: priceMin, max: priceMax },
       availableTimeSlots,
       instagramHandle: form.instagramHandle,
+      backgroundImage: form.backgroundImage,
       contractStatus: form.contractStatus,
       featuredFlag: form.featuredFlag,
     };
@@ -413,6 +415,19 @@ export function StylistForm({
           <strong className="text-red-600">Instagram の画像 URL（cdninstagram.com）を直接貼ると表示できません</strong>
           （ホットリンク防止＆有効期限トークンのため）。
           実際の画像を出したい場合は Imgur / Cloudinary 等の画像ホスト URL を貼ってください。
+        </p>
+      </Field>
+
+      <Field label="詳細ページの背景画像 URL">
+        <input
+          value={form.backgroundImage}
+          onChange={(e) => update("backgroundImage", e.target.value)}
+          placeholder="例: /images/stores/pomie_ebisu_lobby.jpg（空欄なら所属店舗の写真）"
+          className="input"
+        />
+        <p className="mt-1 text-xs text-ink-500">
+          美容師詳細ページ上部にぼかして敷く背景画像。<strong>空欄なら所属店舗のメイン写真を使用</strong>します。
+          店舗の内装など「引き」の写真がおすすめです（public 配下に置いた画像パス、または外部画像ホストの URL）。
         </p>
       </Field>
 

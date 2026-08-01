@@ -95,6 +95,7 @@ export async function createStylist(
           ? input.availableTimeSlots
           : generateDummyAvailableSlots(id, 8),
       instagram_handle: handle,
+      background_image: input.backgroundImage?.trim() || null,
       sns_links: snsLinks,
       contract_status: input.contractStatus,
       featured_flag: input.featuredFlag,
@@ -128,6 +129,7 @@ export async function createStylist(
     rating: Number(data.rating),
     worksCount: data.works_count,
     instagramSyncedAt: null,
+    backgroundImage: data.background_image ?? null,
   };
 
   // ===== 初回 Instagram 同期（任意・失敗しても登録自体は成功扱い） =====

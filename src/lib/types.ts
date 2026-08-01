@@ -42,6 +42,8 @@ export type Stylist = {
   rating: number;
   worksCount: number;
   instagramSyncedAt?: string | null;
+  /** 詳細ページのヒーロー背景画像。未設定なら所属店舗のメイン画像を使用 */
+  backgroundImage?: string | null;
 };
 
 export type CreateStylistInput = {
@@ -57,6 +59,7 @@ export type CreateStylistInput = {
   /** 省略時は自動でダミー枠を生成 */
   availableTimeSlots?: string[];
   instagramHandle?: string;
+  backgroundImage?: string;
   contractStatus: "active" | "inactive";
   featuredFlag: boolean;
 };

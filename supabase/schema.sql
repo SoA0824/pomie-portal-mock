@@ -58,6 +58,7 @@ create table if not exists public.stylists (
   rating numeric(2,1) not null default 0,
   works_count integer not null default 0,
   instagram_synced_at timestamptz,
+  background_image text,
   created_at timestamptz default now(),
   updated_at timestamptz default now()
 );

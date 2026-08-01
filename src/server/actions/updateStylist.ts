@@ -111,6 +111,7 @@ export async function updateStylist(
       price_range: input.priceRange,
       available_time_slots: refreshedSlots,
       instagram_handle: handle,
+      background_image: input.backgroundImage?.trim() || null,
       sns_links: snsLinks,
       contract_status: input.contractStatus,
       featured_flag: input.featuredFlag,
@@ -144,6 +145,7 @@ export async function updateStylist(
     rating: Number(data.rating),
     worksCount: data.works_count,
     instagramSyncedAt: data.instagram_synced_at,
+    backgroundImage: data.background_image ?? null,
   };
 
   // ===== IG ハンドルが変わったら投稿を再同期 =====

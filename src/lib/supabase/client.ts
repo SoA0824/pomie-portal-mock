@@ -78,6 +78,7 @@ export type StylistRow = {
   rating: number;
   works_count: number;
   instagram_synced_at: string | null;
+  background_image: string | null;
   created_at: string;
   updated_at: string;
 };
