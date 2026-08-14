@@ -22,8 +22,8 @@ const REASON_LABELS: Record<string, string> = {
   missing_name: "名前を入力してください",
   missing_store: "店舗を選んでください",
   missing_profile: "プロフィールを入力してください",
-  missing_menus: "得意メニューを 1 つ以上入力してください",
-  invalid_menus: "メニュー名と施術時間を正しく入力してください",
+  missing_menus: "「予約可能メニュー」を 1 つ以上入力してください（メニュー名が必要です）",
+  invalid_menus: "「予約可能メニュー」の施術時間を正しく設定してください",
   invalid_price_range: "料金（最低・最高）を正しく入力してください",
   stylist_not_found: "対象の美容師が見つかりません",
 };
@@ -86,14 +86,20 @@ export function StylistForm({
       generateDummyAvailableSlots("draft", 8)
   );
 
+  // 予約可能メニュー欄でエラーが起きているか（赤枠表示に使う）
+  const menuError =
+    error === REASON_LABELS.missing_menus || error === REASON_LABELS.invalid_menus;
+
   const update = <K extends keyof typeof form>(key: K, value: (typeof form)[K]) => {
     setForm((s) => ({ ...s, [key]: value }));
+    setError(null); // 入力を直したらエラー表示を消す
   };
 
   const updateMenu = (i: number, patch: Partial<MenuRow>) => {
     setMenus((prev) =>
       prev.map((m, idx) => (idx === i ? { ...m, ...patch } : m))
     );
+    setError(null);
   };
   const removeMenu = (i: number) => {
     setMenus((prev) => prev.filter((_, idx) => idx !== i));
@@ -248,6 +254,9 @@ export function StylistForm({
       <fieldset className="space-y-2">
         <legend className="text-xs font-semibold text-ink-700">
           強み
+          <span className="ml-1.5 rounded bg-ink-100 px-1.5 py-0.5 text-[10px] font-normal text-ink-500">
+            任意
+          </span>
           <span className="ml-2 font-normal text-ink-500">
             ({strengths.length} 件) — 美容師詳細・カードに表示
           </span>
@@ -264,6 +273,9 @@ export function StylistForm({
       <fieldset className="space-y-2">
         <legend className="text-xs font-semibold text-ink-700">
           得意メニュー（表示用）
+          <span className="ml-1.5 rounded bg-ink-100 px-1.5 py-0.5 text-[10px] font-normal text-ink-500">
+            任意
+          </span>
           <span className="ml-2 font-normal text-ink-500">
             ({specialtyMenus.length} 件) — 一覧・詳細のタグ表示用
           </span>
@@ -282,13 +294,20 @@ export function StylistForm({
       {/* 予約可能メニュー入力（テーブル状） */}
       <fieldset className="space-y-2">
         <legend className="text-xs font-semibold text-ink-700">
-          予約可能メニュー <span className="text-pomie-600">*</span>
+          予約可能メニュー
+          <span className="ml-1.5 rounded bg-pomie-500 px-1.5 py-0.5 text-[10px] font-semibold text-white">
+            必須
+          </span>
           <span className="ml-2 font-normal text-ink-500">
             ({menus.filter((m) => m.name.trim()).length} 件 / 合計 {formatDuration(totalDuration)})
             — 予約フォームの選択肢になる
           </span>
         </legend>
-        <div className="overflow-hidden rounded-lg border border-ink-100">
+        <div
+          className={`overflow-hidden rounded-lg border ${
+            menuError ? "border-red-400 ring-2 ring-red-100" : "border-ink-100"
+          }`}
+        >
           <table className="w-full text-sm">
             <thead className="bg-pomie-50 text-xs text-ink-700">
               <tr>
