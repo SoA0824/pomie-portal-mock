@@ -39,5 +39,8 @@ export function middleware(request: NextRequest) {
 }
 
 export const config = {
-  matcher: ["/admin/:path*", "/stylist/:path*"],
+  // 注意: "/stylist/:path*" だけだと公開ページの /stylists（美容師一覧）にも
+  // マッチしてしまい、一般ユーザーに認証ダイアログが出てしまう。
+  // 美容師管理画面のトップ /stylist と、その配下だけを厳密に対象にする。
+  matcher: ["/admin", "/admin/:path*", "/stylist", "/stylist/:path+"],
 };
