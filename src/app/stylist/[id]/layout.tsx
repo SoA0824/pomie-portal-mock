@@ -30,12 +30,6 @@ export default async function StylistAdminLayout({
 
   return (
     <div>
-      {/* DEMO 警告バナー */}
-      <div className="bg-amber-100 px-4 py-2 text-center text-xs text-amber-800">
-        <strong>DEMO MODE</strong>: 認証なしで全美容師にアクセスできます。本番では
-        Supabase Auth で本人確認を行います。
-      </div>
-
       <div className="container-page py-8">
         <div className="grid gap-6 md:grid-cols-[240px_1fr]">
           <aside>

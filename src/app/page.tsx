@@ -38,8 +38,8 @@ export default async function Home() {
             </h1>
             <p className="mt-5 text-base text-white/90 drop-shadow md:text-lg">
               気になるテーマの記事から、ポミエ契約美容師を見つけて、
-              Web または LINE でそのまま予約。<br />
-              ポミエの席もあわせて自動で確保します。
+              そのまま予約へ。<br />
+              あなたに合う美容師がきっと見つかります。
             </p>
             <form action="/stylists" method="get" className="mt-8 flex flex-col gap-3 sm:flex-row">
               <input
@@ -139,15 +139,15 @@ export default async function Home() {
       <section className="container-page pb-20">
         <div className="card flex flex-col items-start gap-6 bg-pomie-100/60 p-8 md:flex-row md:items-center md:justify-between md:p-12">
           <div>
-            <h2 className="text-xl font-bold md:text-2xl">LINE で気軽に予約できます</h2>
+            <h2 className="text-xl font-bold md:text-2xl">
+              どの美容師にお願いするか迷ったら
+            </h2>
             <p className="mt-2 text-sm text-ink-700">
-              チャット形式で美容師選び・日時・メニューを案内。
-              <br className="md:hidden" />
-              席の空きも同時に確保します（モック動作）。
+              4 つの質問に答えるだけで、髪のお悩みや希望に合う美容師をご提案します。
             </p>
           </div>
-          <Link href="/line-bot" className="btn-primary">
-            LINE 予約モックを試す
+          <Link href="/match" className="btn-primary">
+            おすすめ診断をはじめる
           </Link>
         </div>
       </section>

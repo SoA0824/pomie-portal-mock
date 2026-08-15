@@ -25,9 +25,6 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
               </Link>
             ))}
           </nav>
-          <p className="mt-6 rounded-lg bg-amber-50 p-3 text-xs text-amber-700">
-            これは MVP モックです。本番ではアクセス制御を追加してください。
-          </p>
         </aside>
         <div>{children}</div>
       </div>

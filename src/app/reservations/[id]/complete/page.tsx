@@ -52,7 +52,7 @@ export default async function ReservationCompletePage({
           <Row k="施術時間" v={formatDuration(reservation.durationMinutes)} />
           <Row k="お名前" v={reservation.customerName} />
           <Row k="ご連絡先" v={reservation.customerContact} />
-          <Row k="チャネル" v={reservation.channel === "web" ? "Web" : "LINE Bot (モック)"} />
+          <Row k="チャネル" v={reservation.channel === "web" ? "Web" : "LINE"} />
         </dl>
 
         <div

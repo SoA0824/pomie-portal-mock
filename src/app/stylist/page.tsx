@@ -4,7 +4,7 @@ import { getStoreById } from "@/lib/data/stores";
 import { StylistAvatar } from "@/components/common/StylistAvatar";
 
 export const dynamic = "force-dynamic";
-export const metadata = { title: "美容師ログイン (デモ) | POMiE Portal" };
+export const metadata = { title: "美容師ログイン | POMiE Portal" };
 
 export default async function StylistLoginPage() {
   const stylists = await getAllStylistsIncludingInactive();
@@ -13,11 +13,9 @@ export default async function StylistLoginPage() {
   return (
     <div className="container-page py-12">
       <header className="text-center">
-        <span className="chip">DEMO MODE</span>
-        <h1 className="mt-3 text-2xl font-bold md:text-3xl">美容師アカウントを選択</h1>
+        <h1 className="text-2xl font-bold md:text-3xl">美容師アカウントを選択</h1>
         <p className="mx-auto mt-2 max-w-xl text-sm text-ink-500">
-          本番では各美容師がメールアドレスでログインしますが、デモ環境では認証なしで
-          自分のアカウントを下から選んでください。
+          ご自身のアカウントを選んでください。
         </p>
       </header>
 

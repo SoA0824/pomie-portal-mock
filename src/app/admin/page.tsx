@@ -67,7 +67,7 @@ export default async function AdminDashboard() {
               {reservations.length === 0 && (
                 <tr>
                   <td colSpan={5} className="px-3 py-6 text-center text-sm text-ink-500">
-                    まだ予約がありません。Web または LINE Bot モックから予約してみてください。
+                    まだ予約がありません。
                   </td>
                 </tr>
               )}

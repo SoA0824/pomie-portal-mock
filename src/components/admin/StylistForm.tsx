@@ -17,6 +17,7 @@ import {
   formatDuration,
 } from "@/lib/menuDurations";
 import { ScheduleEditor } from "@/components/admin/ScheduleEditor";
+import { ImageUploadField } from "@/components/admin/ImageUploadField";
 import { TagInput } from "@/components/admin/TagInput";
 import {
   STRENGTH_SUGGESTIONS,
@@ -582,35 +583,35 @@ export function StylistForm({
         <p className="mt-1 text-xs text-ink-500">
           {mode === "edit"
             ? "ハンドルを変更すると保存時に最新 8 投稿を自動で再取得します。"
-            : "登録後、自動で最新 8 投稿の取得を試みます。トークン未設定時はモック投稿が入ります。"}
+            : "登録後、自動で最新 8 投稿の取得を試みます。"}
         </p>
       </Field>
 
-      <Field label="アバター画像 URL">
-        <input
+      <Field label="アバター画像">
+        <ImageUploadField
           value={form.avatar}
-          onChange={(e) => update("avatar", e.target.value)}
-          placeholder="例: https://..."
-          className="input"
+          onChange={(url) => update("avatar", url)}
+          folder="avatars"
+          previewShape="square"
         />
         <p className="mt-1 text-xs text-ink-500">
-          空欄の場合は名前のイニシャルを表示します。<br />
-          <strong className="text-red-600">Instagram の画像 URL（cdninstagram.com）は直接貼っても表示できません</strong>
-          （ホットリンク防止＆有効期限トークンのため）。
-          Imgur / Cloudinary 等の画像ホストの URL を貼ってください。
+          空欄の場合は名前のイニシャルを表示します。
+          Instagram の画像は保存してからアップロードしてください
+          （<code>cdninstagram.com</code> の URL は直接貼っても表示できません）。
         </p>
       </Field>
 
-      <Field label="詳細ページの背景画像 URL">
-        <input
+      <Field label="詳細ページの背景画像">
+        <ImageUploadField
           value={form.backgroundImage}
-          onChange={(e) => update("backgroundImage", e.target.value)}
-          placeholder="例: /images/stores/pomie_ebisu_lobby.jpg（空欄なら所属店舗の写真）"
-          className="input"
+          onChange={(url) => update("backgroundImage", url)}
+          folder="backgrounds"
+          previewShape="wide"
         />
         <p className="mt-1 text-xs text-ink-500">
-          美容師詳細ページ上部にぼかして敷く背景画像。<strong>空欄なら所属店舗のメイン写真を使用</strong>します。
-          店舗の内装など「引き」の写真がおすすめです（public 配下に置いた画像パス、または外部画像ホストの URL）。
+          美容師詳細ページ上部にぼかして敷く背景画像。
+          <strong>空欄なら所属店舗のメイン写真を使用</strong>します。
+          店舗の内装など「引き」の写真がおすすめです。
         </p>
       </Field>
 

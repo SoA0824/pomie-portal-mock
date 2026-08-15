@@ -11,7 +11,7 @@ export default function AdminArticlesPage() {
       <header>
         <h1 className="text-2xl font-bold">記事一覧</h1>
         <p className="mt-1 text-sm text-ink-500">
-          現状はモックデータ（data/articles.json）から表示しています。本番では Claude API による自動生成 / DB への保存に差し替え予定です。
+          記事は現在ファイル管理です。今後、自動生成と管理画面からの編集に対応予定です。
         </p>
       </header>
 

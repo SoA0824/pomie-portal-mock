@@ -13,7 +13,7 @@ export default async function AdminSeatsPage() {
   return (
     <div>
       <header>
-        <h1 className="text-2xl font-bold">サロンボード（モック）席状況</h1>
+        <h1 className="text-2xl font-bold">サロンボード席状況</h1>
         <p className="mt-1 text-sm text-ink-500">
           ポータルからサロンボードに送信した予約の台帳です。本番では Salonboard 側のデータが反映されます。
         </p>

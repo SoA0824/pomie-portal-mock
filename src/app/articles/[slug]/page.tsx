@@ -46,7 +46,7 @@ export default async function ArticleDetailPage({ params }: { params: { slug: st
           <section className="mt-14 max-w-5xl">
             <h2 className="text-xl font-bold">この記事で紹介した美容師</h2>
             <p className="mt-1 text-sm text-ink-500">
-              気になる美容師は、詳細ページから Web または LINE で予約できます。
+              気になる美容師は、詳細ページから予約に進めます。
             </p>
             <div className="mt-5 grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
               {related.map((s) => (
@@ -60,8 +60,8 @@ export default async function ArticleDetailPage({ params }: { params: { slug: st
           <Link href="/stylists" className="btn-primary">
             すべての美容師を見る
           </Link>
-          <Link href="/line-bot" className="btn-secondary">
-            LINE で相談する
+          <Link href="/match" className="btn-secondary">
+            おすすめ診断を試す
           </Link>
         </div>
       </div>

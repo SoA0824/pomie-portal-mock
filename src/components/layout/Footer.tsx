@@ -8,8 +8,7 @@ export function Footer() {
         <div>
           <Logo className="h-8 w-auto" />
           <p className="mt-3 text-xs text-ink-500">
-            ポミエ契約美容師に出会えるポータル。<br />
-            これは MVP モックです。
+            ポミエ契約美容師に出会えるポータル。
           </p>
         </div>
         <div className="grid grid-cols-2 gap-3 text-sm md:col-span-2 md:grid-cols-4">
@@ -34,7 +33,7 @@ export function Footer() {
         </div>
       </div>
       <div className="border-t border-pomie-100 py-4 text-center text-xs text-ink-500">
-        © POMiE Portal Mock
+        © POMiE Portal
       </div>
     </footer>
   );

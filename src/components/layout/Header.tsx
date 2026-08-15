@@ -19,16 +19,9 @@ export function Header() {
             🔍 おすすめ診断
           </Link>
           {/*
-            管理系リンクは Basic 認証の対象。next/link だと画面表示時に
-            prefetch が走り、一般ユーザーにも認証ダイアログが出てしまうため
-            通常の <a> にして先読みを止める。
+            管理画面（/admin）と美容師管理（/stylist）へのリンクは
+            一般ユーザーに見せないため掲載しない。URL 直打ちでアクセスする。
           */}
-          <a href="/stylist" className="text-ink-500 hover:text-pomie-600">
-            美容師ログイン
-          </a>
-          <a href="/admin" className="text-ink-500 hover:text-pomie-600">
-            管理
-          </a>
         </nav>
         <Link href="/stylists" className="btn-primary md:hidden text-xs px-4 py-2">
           探す

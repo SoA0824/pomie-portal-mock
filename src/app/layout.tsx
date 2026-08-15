@@ -6,7 +6,7 @@ import { Footer } from "@/components/layout/Footer";
 export const metadata: Metadata = {
   title: "POMiE Portal | あなたの専属美容師に出会う",
   description:
-    "ポミエ契約美容師に出会える集客ポータル。記事から美容師を探し、Web または LINE で予約まで。",
+    "ポミエ契約美容師に出会えるポータル。記事や診断から、あなたに合う美容師を見つけて予約できます。",
 };
 
 export default function RootLayout({

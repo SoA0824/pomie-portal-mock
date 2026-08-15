@@ -42,7 +42,7 @@ export default async function StylistsPage({
       <header>
         <h1 className="text-2xl font-bold md:text-3xl">美容師を探す</h1>
         <p className="mt-2 text-sm text-ink-500">
-          ポミエ契約美容師のみを掲載。気になる方の詳細から、Web または LINE で予約できます。
+          ポミエ契約美容師のみを掲載。気になる方の詳細ページから予約に進めます。
         </p>
       </header>
 
