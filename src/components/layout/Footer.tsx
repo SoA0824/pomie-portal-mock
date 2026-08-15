@@ -18,7 +18,7 @@ export function Footer() {
             items={[
               { label: "美容師を探す", href: "/stylists" },
               { label: "記事を読む", href: "/articles" },
-              { label: "LINE で予約", href: "/line-bot" },
+              { label: "おすすめ診断", href: "/match" },
             ]}
           />
           <FooterLinks
@@ -28,13 +28,9 @@ export function Footer() {
               { label: "ポミエ 恵比寿", href: "/stylists?storeId=s2" },
             ]}
           />
-          <FooterLinks
-            title="運営"
-            items={[
-              { label: "管理画面", href: "/admin" },
-              { label: "予約一覧", href: "/admin/reservations" },
-            ]}
-          />
+          {/* 管理系リンクは一般ユーザーに不要。next/link の prefetch で
+              Basic 認証ダイアログが出る問題も避けるため掲載しない。
+              管理画面は URL 直打ちでアクセスする運用。 */}
         </div>
       </div>
       <div className="border-t border-pomie-100 py-4 text-center text-xs text-ink-500">

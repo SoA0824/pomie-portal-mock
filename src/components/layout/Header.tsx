@@ -18,15 +18,17 @@ export function Header() {
           <Link href="/match" className="text-pomie-600 hover:text-pomie-700 font-semibold">
             🔍 おすすめ診断
           </Link>
-          <Link href="/line-bot" className="text-ink-700 hover:text-pomie-600">
-            LINE で予約
-          </Link>
-          <Link href="/stylist" className="text-ink-500 hover:text-pomie-600">
+          {/*
+            管理系リンクは Basic 認証の対象。next/link だと画面表示時に
+            prefetch が走り、一般ユーザーにも認証ダイアログが出てしまうため
+            通常の <a> にして先読みを止める。
+          */}
+          <a href="/stylist" className="text-ink-500 hover:text-pomie-600">
             美容師ログイン
-          </Link>
-          <Link href="/admin" className="text-ink-500 hover:text-pomie-600">
+          </a>
+          <a href="/admin" className="text-ink-500 hover:text-pomie-600">
             管理
-          </Link>
+          </a>
         </nav>
         <Link href="/stylists" className="btn-primary md:hidden text-xs px-4 py-2">
           探す
