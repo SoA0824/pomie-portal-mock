@@ -3,7 +3,6 @@
 import { revalidatePath } from "next/cache";
 import { getSupabase } from "@/lib/supabase/client";
 import { getStoreById } from "@/lib/data/stores";
-import { generateDummyAvailableSlots } from "@/lib/generateDummySlots";
 import type { CreateStylistInput, Stylist } from "@/lib/types";
 import { syncInstagramPosts } from "./syncInstagramPosts";
 
@@ -60,15 +59,9 @@ export async function createStylist(
   if (!store) return { ok: false, reason: "invalid_store", field: "storeId" };
   const area = store.area;
 
-  // ===== アバター補完 =====
-  let avatar = input.avatar?.trim() || "";
-  if (!avatar && handle) {
-    avatar = `https://unavatar.io/instagram/${handle}`;
-  }
-  if (!avatar) {
-    // 最終フォールバック
-    avatar = `https://picsum.photos/seed/${encodeURIComponent(input.name)}/300/300`;
-  }
+  // アバターは入力された URL のみ採用。
+  // 空欄なら表示側（StylistAvatar）が名前のイニシャルを描画する。
+  const avatar = input.avatar?.trim() || "";
 
   // ===== INSERT =====
   const id = generateStylistId();
@@ -90,10 +83,8 @@ export async function createStylist(
       specialty_menus: (input.specialtyMenus ?? []).map((s) => s.trim()).filter(Boolean),
       menus: input.menus.map((m) => ({ name: m.name.trim(), duration: m.duration })),
       price_range: input.priceRange,
-      available_time_slots:
-        input.availableTimeSlots && input.availableTimeSlots.length > 0
-          ? input.availableTimeSlots
-          : generateDummyAvailableSlots(id, 8),
+      // 入力されたスケジュールのみを保存（ダミー枠は自動生成しない）
+      available_time_slots: input.availableTimeSlots ?? [],
       instagram_handle: handle,
       background_image: input.backgroundImage?.trim() || null,
       booking_mode: input.bookingMode ?? "external",

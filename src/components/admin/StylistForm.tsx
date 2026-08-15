@@ -16,7 +16,6 @@ import {
   DURATION_OPTIONS,
   formatDuration,
 } from "@/lib/menuDurations";
-import { generateDummyAvailableSlots } from "@/lib/generateDummySlots";
 import { ScheduleEditor } from "@/components/admin/ScheduleEditor";
 import { TagInput } from "@/components/admin/TagInput";
 import {
@@ -89,9 +88,15 @@ export function StylistForm({
   const [specialtyMenus, setSpecialtyMenus] = useState<string[]>(
     initialValues?.specialtyMenus ?? []
   );
+  // 新規登録時は空から開始（ダミー枠は入れない）
   const [availableTimeSlots, setAvailableTimeSlots] = useState<string[]>(
-    initialValues?.availableTimeSlots ??
-      generateDummyAvailableSlots("draft", 8)
+    initialValues?.availableTimeSlots ?? []
+  );
+  // 料金「指定なし」: min/max ともに 0 なら未設定扱い
+  const [priceUnspecified, setPriceUnspecified] = useState<boolean>(
+    initialValues
+      ? !(initialValues.priceRange.min > 0 || initialValues.priceRange.max > 0)
+      : false
   );
   const [bookingMode, setBookingMode] = useState<BookingMode>(
     initialValues?.bookingMode ?? "external"
@@ -159,8 +164,9 @@ export function StylistForm({
       return;
     }
 
-    const priceMin = parseInt(form.priceMin, 10);
-    const priceMax = parseInt(form.priceMax, 10);
+    // 「指定なし」の場合は 0 として保存（表示側で「指定なし」と出す）
+    const priceMin = priceUnspecified ? 0 : parseInt(form.priceMin, 10);
+    const priceMax = priceUnspecified ? 0 : parseInt(form.priceMax, 10);
     if (
       Number.isNaN(priceMin) ||
       Number.isNaN(priceMax) ||
@@ -525,32 +531,52 @@ export function StylistForm({
         />
       </fieldset>
 
-      <div className="grid gap-5 md:grid-cols-2">
-        <Field label="料金 最低（円）" required>
+      <fieldset className="space-y-2">
+        <legend className="text-xs font-semibold text-ink-700">料金目安</legend>
+        <label className="inline-flex cursor-pointer items-center gap-2 text-sm">
           <input
-            type="number"
-            min={0}
-            value={form.priceMin}
-            onChange={(e) => update("priceMin", e.target.value)}
-            className="input"
+            type="checkbox"
+            checked={priceUnspecified}
+            onChange={(e) => {
+              setPriceUnspecified(e.target.checked);
+              setError(null);
+            }}
           />
-        </Field>
-        <Field label="料金 最高（円）" required>
-          <input
-            type="number"
-            min={0}
-            value={form.priceMax}
-            onChange={(e) => update("priceMax", e.target.value)}
-            className="input"
-          />
-        </Field>
-      </div>
+          指定なし（料金を公開しない）
+        </label>
+        {!priceUnspecified && (
+          <div className="grid gap-5 md:grid-cols-2">
+            <Field label="料金 最低（円）">
+              <input
+                type="number"
+                min={0}
+                value={form.priceMin}
+                onChange={(e) => update("priceMin", e.target.value)}
+                className="input"
+              />
+            </Field>
+            <Field label="料金 最高（円）">
+              <input
+                type="number"
+                min={0}
+                value={form.priceMax}
+                onChange={(e) => update("priceMax", e.target.value)}
+                className="input"
+              />
+            </Field>
+          </div>
+        )}
+        <p className="text-[11px] text-ink-500">
+          「指定なし」にすると、公開ページの料金目安が「指定なし」と表示されます。
+          片方だけ 0 にすると「¥7,000〜」「〜¥20,000」のような片側表示になります。
+        </p>
+      </fieldset>
 
       <Field label="Instagram ハンドル">
         <input
           value={form.instagramHandle}
           onChange={(e) => update("instagramHandle", e.target.value)}
-          placeholder="例: jima211 (@ は不要)"
+          placeholder="例: sharesalonpomie (@ は不要)"
           className="input"
         />
         <p className="mt-1 text-xs text-ink-500">
@@ -564,14 +590,14 @@ export function StylistForm({
         <input
           value={form.avatar}
           onChange={(e) => update("avatar", e.target.value)}
-          placeholder="例: https://... (空欄なら自動補完)"
+          placeholder="例: https://..."
           className="input"
         />
         <p className="mt-1 text-xs text-ink-500">
-          空欄なら IG ハンドルから自動取得（unavatar.io）→ それも失敗時はイニシャル表示。<br />
-          <strong className="text-red-600">Instagram の画像 URL（cdninstagram.com）を直接貼ると表示できません</strong>
+          空欄の場合は名前のイニシャルを表示します。<br />
+          <strong className="text-red-600">Instagram の画像 URL（cdninstagram.com）は直接貼っても表示できません</strong>
           （ホットリンク防止＆有効期限トークンのため）。
-          実際の画像を出したい場合は Imgur / Cloudinary 等の画像ホスト URL を貼ってください。
+          Imgur / Cloudinary 等の画像ホストの URL を貼ってください。
         </p>
       </Field>
 
@@ -588,10 +614,10 @@ export function StylistForm({
         </p>
       </Field>
 
-      <div className="flex flex-wrap items-center gap-6">
+      <div className="space-y-4 border-t border-ink-100 pt-4">
         {isLocked("contractStatus") ? (
           <div className="flex items-center gap-2 text-xs text-ink-500">
-            <span className="font-semibold text-ink-700">契約状態:</span>
+            <span className="font-semibold text-ink-700">公開状態:</span>
             <span
               className={`rounded-full px-2 py-0.5 font-semibold ${
                 form.contractStatus === "active"
@@ -599,14 +625,14 @@ export function StylistForm({
                   : "bg-ink-100 text-ink-500"
               }`}
             >
-              {form.contractStatus === "active" ? "掲載中" : "停止中"}
+              {form.contractStatus === "active" ? "公開" : "非公開"}
             </span>
             <span>（POMiE 担当者のみ変更可）</span>
           </div>
         ) : (
           <fieldset>
-            <legend className="text-xs font-semibold text-ink-700">契約状態</legend>
-            <div className="mt-1 flex gap-3 text-sm">
+            <legend className="text-xs font-semibold text-ink-700">公開状態</legend>
+            <div className="mt-1 flex flex-wrap gap-4 text-sm">
               <label className="inline-flex items-center gap-1.5">
                 <input
                   type="radio"
@@ -614,7 +640,7 @@ export function StylistForm({
                   checked={form.contractStatus === "active"}
                   onChange={() => update("contractStatus", "active")}
                 />
-                掲載中（公開）
+                公開
               </label>
               <label className="inline-flex items-center gap-1.5">
                 <input
@@ -623,20 +649,23 @@ export function StylistForm({
                   checked={form.contractStatus === "inactive"}
                   onChange={() => update("contractStatus", "inactive")}
                 />
-                停止中（非公開）
+                非公開
               </label>
             </div>
           </fieldset>
         )}
         {!isLocked("featuredFlag") && (
-          <label className="inline-flex items-center gap-1.5 text-sm">
-            <input
-              type="checkbox"
-              checked={form.featuredFlag}
-              onChange={(e) => update("featuredFlag", e.target.checked)}
-            />
-            注目美容師として表示
-          </label>
+          <div>
+            <p className="text-xs font-semibold text-ink-700">おすすめ表示</p>
+            <label className="mt-1 inline-flex cursor-pointer items-center gap-1.5 text-sm">
+              <input
+                type="checkbox"
+                checked={form.featuredFlag}
+                onChange={(e) => update("featuredFlag", e.target.checked)}
+              />
+              注目美容師として表示（トップページに掲載）
+            </label>
+          </div>
         )}
       </div>
 

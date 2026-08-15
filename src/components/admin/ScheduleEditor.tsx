@@ -1,7 +1,6 @@
 "use client";
 
 import { useMemo, useState } from "react";
-import { generateDummyAvailableSlots } from "@/lib/generateDummySlots";
 import { formatDuration } from "@/lib/menuDurations";
 
 const HOURS = [10, 11, 13, 14, 15, 16, 17, 18];
@@ -34,11 +33,11 @@ type ViewMode = "grid" | "cards";
 export function ScheduleEditor({
   value,
   onChange,
-  seedId,
 }: {
   value: string[];
   onChange: (slots: string[]) => void;
-  seedId: string;
+  /** @deprecated ダミー生成を廃止したため未使用（呼び出し側の互換のため受け取るだけ） */
+  seedId?: string;
 }) {
   const [view, setView] = useState<ViewMode>("grid");
   const [extraDates, setExtraDates] = useState<Set<string>>(new Set());
@@ -101,7 +100,18 @@ export function ScheduleEditor({
     onChange(all);
   };
   const clearAll = () => onChange([]);
-  const fillWithDummy = () => onChange(generateDummyAvailableSlots(seedId, 8));
+
+  /** 指定日を全枠 ON */
+  const selectDate = (date: Date) => {
+    const merged = new Set(value);
+    for (const h of HOURS) merged.add(toIso(date, h));
+    onChange(Array.from(merged));
+  };
+  /** 指定日を全枠 OFF */
+  const clearDate = (date: Date) => {
+    const dateSlots = HOURS.map((h) => toIso(date, h));
+    onChange(value.filter((s) => !dateSlots.includes(s)));
+  };
 
   // ===== Card view 用 =====
   // 表示する日付 = value にある日 ∪ extraDates
@@ -181,13 +191,6 @@ export function ScheduleEditor({
         >
           全クリア
         </button>
-        <button
-          type="button"
-          onClick={fillWithDummy}
-          className="rounded-full border border-ink-100 bg-white px-3 py-1 font-semibold text-ink-700 hover:bg-pomie-100"
-        >
-          ダミーで埋め直す（8 枠）
-        </button>
       </div>
 
       {/* ビュー */}
@@ -198,6 +201,8 @@ export function ScheduleEditor({
           onToggleSlot={toggleSlot}
           onToggleDate={toggleDate}
           onToggleHour={toggleHourColumn}
+          onSelectDate={selectDate}
+          onClearDate={clearDate}
         />
       ) : (
         <CardsView
@@ -205,6 +210,8 @@ export function ScheduleEditor({
           selectedSet={selectedSet}
           onToggleSlot={toggleSlot}
           onToggleDate={toggleDate}
+          onSelectDate={selectDate}
+          onClearDate={clearDate}
           onRemoveDate={removeCardDate}
           addableDates={addableDates}
           onAddDate={addCardDate}
@@ -225,12 +232,16 @@ function GridView({
   onToggleSlot,
   onToggleDate,
   onToggleHour,
+  onSelectDate,
+  onClearDate,
 }: {
   dateRange: Date[];
   selectedSet: Set<string>;
   onToggleSlot: (iso: string) => void;
   onToggleDate: (date: Date) => void;
   onToggleHour: (hour: number) => void;
+  onSelectDate: (date: Date) => void;
+  onClearDate: (date: Date) => void;
 }) {
   return (
     <div className="overflow-x-auto rounded-lg ring-1 ring-ink-100">
@@ -264,15 +275,33 @@ function GridView({
             return (
               <tr key={dateKey(d)} className="border-t border-ink-100/70">
                 <td className="sticky left-0 z-10 whitespace-nowrap bg-white px-2 py-1.5">
-                  <button
-                    type="button"
-                    onClick={() => onToggleDate(d)}
-                    title="この日全体を切替"
-                    className="text-left font-medium hover:text-pomie-600"
-                  >
-                    {dateLabel(d)}
-                    <span className="ml-1 text-[10px] text-ink-500">{onCount}/8</span>
-                  </button>
+                  <div className="flex items-center gap-1.5">
+                    <button
+                      type="button"
+                      onClick={() => onToggleDate(d)}
+                      title="この日全体を切替"
+                      className="text-left font-medium hover:text-pomie-600"
+                    >
+                      {dateLabel(d)}
+                      <span className="ml-1 text-[10px] text-ink-500">{onCount}/8</span>
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => onSelectDate(d)}
+                      title="この日を全選択"
+                      className="rounded border border-ink-100 px-1 text-[10px] text-ink-500 hover:bg-pomie-100 hover:text-pomie-700"
+                    >
+                      全選
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => onClearDate(d)}
+                      title="この日をクリア"
+                      className="rounded border border-ink-100 px-1 text-[10px] text-ink-500 hover:bg-pomie-100 hover:text-pomie-700"
+                    >
+                      解除
+                    </button>
+                  </div>
                 </td>
                 {HOURS.map((h) => {
                   const iso = toIso(d, h);
@@ -310,6 +339,8 @@ function CardsView({
   selectedSet,
   onToggleSlot,
   onToggleDate,
+  onSelectDate,
+  onClearDate,
   onRemoveDate,
   addableDates,
   onAddDate,
@@ -320,6 +351,8 @@ function CardsView({
   selectedSet: Set<string>;
   onToggleSlot: (iso: string) => void;
   onToggleDate: (date: Date) => void;
+  onSelectDate: (date: Date) => void;
+  onClearDate: (date: Date) => void;
   onRemoveDate: (key: string) => void;
   addableDates: Date[];
   onAddDate: (key: string) => void;
@@ -350,6 +383,20 @@ function CardsView({
                 {dateLabel(d)}
               </button>
               <span className="text-[11px] text-ink-500">{onCount}/8</span>
+              <button
+                type="button"
+                onClick={() => onSelectDate(d)}
+                className="rounded border border-ink-100 px-1.5 py-0.5 text-[11px] text-ink-500 hover:bg-pomie-100 hover:text-pomie-700"
+              >
+                全選択
+              </button>
+              <button
+                type="button"
+                onClick={() => onClearDate(d)}
+                className="rounded border border-ink-100 px-1.5 py-0.5 text-[11px] text-ink-500 hover:bg-pomie-100 hover:text-pomie-700"
+              >
+                全クリア
+              </button>
               <button
                 type="button"
                 onClick={() => onRemoveDate(key)}

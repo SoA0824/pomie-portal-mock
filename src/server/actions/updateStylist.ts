@@ -3,7 +3,6 @@
 import { revalidatePath } from "next/cache";
 import { getSupabase } from "@/lib/supabase/client";
 import { getStoreById } from "@/lib/data/stores";
-import { generateDummyAvailableSlots } from "@/lib/generateDummySlots";
 import type { UpdateStylistInput, Stylist } from "@/lib/types";
 import { syncInstagramPosts } from "./syncInstagramPosts";
 
@@ -64,14 +63,9 @@ export async function updateStylist(
   if (fetchError) return { ok: false, reason: fetchError.message };
   if (!existing) return { ok: false, reason: "stylist_not_found" };
 
-  // ===== アバター補完: 空欄なら IG / picsum へ =====
-  let avatar = input.avatar?.trim() || "";
-  if (!avatar && handle) {
-    avatar = `https://unavatar.io/instagram/${handle}`;
-  }
-  if (!avatar) {
-    avatar = `https://picsum.photos/seed/${encodeURIComponent(input.name)}/300/300`;
-  }
+  // アバターは入力された URL のみ採用。
+  // 空欄なら表示側（StylistAvatar）が名前のイニシャルを描画する。
+  const avatar = input.avatar?.trim() || "";
 
   const snsLinks: Record<string, string> = { ...(existing.sns_links ?? {}) };
   if (handle) {
@@ -81,19 +75,11 @@ export async function updateStylist(
   }
 
   // ===== スロット解決 =====
-  // 1) 入力で明示的に指定されたら必ず使う（空配列なら空のまま）
-  // 2) 未指定（undefined）なら、未来枠が無い場合のみ自動補完
-  let refreshedSlots: string[];
-  if (Array.isArray(input.availableTimeSlots)) {
-    refreshedSlots = input.availableTimeSlots;
-  } else {
-    const currentSlots: string[] = existing.available_time_slots ?? [];
-    const todayIso = new Date().toISOString().slice(0, 10);
-    const hasFutureSlot = currentSlots.some((s) => s.slice(0, 10) >= todayIso);
-    refreshedSlots = hasFutureSlot
-      ? currentSlots
-      : generateDummyAvailableSlots(input.id, 8);
-  }
+  // 入力があればそれを使う（空配列なら空のまま）。未指定なら既存値を維持。
+  // ダミー枠の自動生成は行わない（テスト/本番では実際の空き枠のみを扱う）。
+  const refreshedSlots: string[] = Array.isArray(input.availableTimeSlots)
+    ? input.availableTimeSlots
+    : (existing.available_time_slots ?? []);
 
   // ===== UPDATE =====
   const { data, error: updateError } = await sb

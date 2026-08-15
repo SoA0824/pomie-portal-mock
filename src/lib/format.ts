@@ -27,7 +27,16 @@ export function formatTime(iso: string): string {
   return `${hh}:${mi}`;
 }
 
+/**
+ * 料金レンジの表示。min / max がともに 0（または未設定）なら「指定なし」。
+ * 片方だけ 0 の場合は「〜¥20,000」「¥7,000〜」のように片側だけ表示する。
+ */
 export function formatPriceRange(min: number, max: number): string {
+  const hasMin = Number(min) > 0;
+  const hasMax = Number(max) > 0;
+  if (!hasMin && !hasMax) return "指定なし";
+  if (hasMin && !hasMax) return `¥${min.toLocaleString()}〜`;
+  if (!hasMin && hasMax) return `〜¥${max.toLocaleString()}`;
   return `¥${min.toLocaleString()}〜¥${max.toLocaleString()}`;
 }
 
