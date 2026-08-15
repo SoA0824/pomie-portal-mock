@@ -19,6 +19,17 @@ export type StylistMenu = {
   duration: number; // 施術時間（分）
 };
 
+/** 予約受付の方式 */
+export type BookingMode = "pomie" | "external";
+
+/** 美容師独自の予約受付リンク（Web フォーム / Instagram DM など） */
+export type BookingLink = {
+  /** ボタンに表示するテキスト（例: 「Web フォームで予約」「Instagram DM で予約」） */
+  label: string;
+  /** 遷移先 URL */
+  url: string;
+};
+
 export type Stylist = {
   id: string;
   name: string;
@@ -44,6 +55,10 @@ export type Stylist = {
   instagramSyncedAt?: string | null;
   /** 詳細ページのヒーロー背景画像。未設定なら所属店舗のメイン画像を使用 */
   backgroundImage?: string | null;
+  /** 予約受付の方式（既定: external = 美容師独自受付） */
+  bookingMode: BookingMode;
+  /** bookingMode が external のときに表示する予約リンク群 */
+  bookingLinks: BookingLink[];
 };
 
 export type CreateStylistInput = {
@@ -60,6 +75,8 @@ export type CreateStylistInput = {
   availableTimeSlots?: string[];
   instagramHandle?: string;
   backgroundImage?: string;
+  bookingMode?: BookingMode;
+  bookingLinks?: BookingLink[];
   contractStatus: "active" | "inactive";
   featuredFlag: boolean;
 };

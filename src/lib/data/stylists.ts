@@ -31,6 +31,8 @@ function rowToStylist(row: StylistRow): Stylist {
     worksCount: row.works_count,
     instagramSyncedAt: row.instagram_synced_at,
     backgroundImage: row.background_image,
+    bookingMode: row.booking_mode ?? "external",
+    bookingLinks: row.booking_links ?? [],
   };
 }
 

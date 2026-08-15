@@ -59,6 +59,8 @@ create table if not exists public.stylists (
   works_count integer not null default 0,
   instagram_synced_at timestamptz,
   background_image text,
+  booking_mode text not null default 'external' check (booking_mode in ('pomie', 'external')),
+  booking_links jsonb not null default '[]'::jsonb,
   created_at timestamptz default now(),
   updated_at timestamptz default now()
 );

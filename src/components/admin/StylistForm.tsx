@@ -2,7 +2,13 @@
 
 import { useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
-import type { Store, Stylist, StylistMenu } from "@/lib/types";
+import type {
+  BookingLink,
+  BookingMode,
+  Store,
+  Stylist,
+  StylistMenu,
+} from "@/lib/types";
 import { createStylist } from "@/server/actions/createStylist";
 import { updateStylist } from "@/server/actions/updateStylist";
 import {
@@ -22,6 +28,8 @@ const REASON_LABELS: Record<string, string> = {
   missing_name: "名前を入力してください",
   missing_store: "店舗を選んでください",
   missing_profile: "プロフィールを入力してください",
+  missing_booking_links:
+    "「美容師独自受付」を選んだ場合は、予約リンクを 1 つ以上（表示テキストと URL の両方）入力してください",
   missing_menus: "「予約可能メニュー」を 1 つ以上入力してください（メニュー名が必要です）",
   invalid_menus: "「予約可能メニュー」の施術時間を正しく設定してください",
   invalid_price_range: "料金（最低・最高）を正しく入力してください",
@@ -85,6 +93,23 @@ export function StylistForm({
     initialValues?.availableTimeSlots ??
       generateDummyAvailableSlots("draft", 8)
   );
+  const [bookingMode, setBookingMode] = useState<BookingMode>(
+    initialValues?.bookingMode ?? "external"
+  );
+  const [bookingLinks, setBookingLinks] = useState<BookingLink[]>(
+    initialValues?.bookingLinks && initialValues.bookingLinks.length > 0
+      ? initialValues.bookingLinks
+      : [{ label: "", url: "" }]
+  );
+
+  const updateBookingLink = (i: number, patch: Partial<BookingLink>) => {
+    setBookingLinks((prev) => prev.map((l, idx) => (idx === i ? { ...l, ...patch } : l)));
+    setError(null);
+  };
+  const addBookingLink = () =>
+    setBookingLinks((prev) => [...prev, { label: "", url: "" }]);
+  const removeBookingLink = (i: number) =>
+    setBookingLinks((prev) => prev.filter((_, idx) => idx !== i));
 
   // 予約可能メニュー欄でエラーが起きているか（赤枠表示に使う）
   const menuError =
@@ -146,6 +171,15 @@ export function StylistForm({
       return;
     }
 
+    const cleanedBookingLinks: BookingLink[] = bookingLinks
+      .map((l) => ({ label: l.label.trim(), url: l.url.trim() }))
+      .filter((l) => l.label && l.url);
+
+    if (bookingMode === "external" && cleanedBookingLinks.length === 0) {
+      setError(REASON_LABELS.missing_booking_links);
+      return;
+    }
+
     const payload = {
       name: form.name,
       nameKana: form.nameKana,
@@ -159,6 +193,8 @@ export function StylistForm({
       availableTimeSlots,
       instagramHandle: form.instagramHandle,
       backgroundImage: form.backgroundImage,
+      bookingMode,
+      bookingLinks: cleanedBookingLinks,
       contractStatus: form.contractStatus,
       featuredFlag: form.featuredFlag,
     };
@@ -289,6 +325,108 @@ export function StylistForm({
         <p className="text-[11px] text-ink-500">
           ※ 実際に予約できるメニューと施術時間は、下の「予約可能メニュー」で管理します。
         </p>
+      </fieldset>
+
+      {/* 予約受け付け導線 */}
+      <fieldset className="space-y-3 rounded-lg bg-pomie-50/60 p-4">
+        <legend className="text-xs font-semibold text-ink-700">
+          予約受け付け導線
+          <span className="ml-1.5 rounded bg-pomie-500 px-1.5 py-0.5 text-[10px] font-semibold text-white">
+            必須
+          </span>
+        </legend>
+
+        <div className="space-y-2">
+          <label className="flex cursor-pointer items-start gap-2 text-sm">
+            <input
+              type="radio"
+              name="bookingMode"
+              className="mt-1"
+              checked={bookingMode === "external"}
+              onChange={() => {
+                setBookingMode("external");
+                setError(null);
+              }}
+            />
+            <span>
+              <span className="font-semibold">美容師独自受付</span>
+              <span className="ml-2 rounded bg-ink-100 px-1.5 py-0.5 text-[10px] text-ink-500">
+                現在の推奨
+              </span>
+              <span className="block text-xs text-ink-500">
+                Web フォーム・Instagram DM など、美容師ごとの受付先へリンクします
+              </span>
+            </span>
+          </label>
+
+          <label className="flex cursor-pointer items-start gap-2 text-sm">
+            <input
+              type="radio"
+              name="bookingMode"
+              className="mt-1"
+              checked={bookingMode === "pomie"}
+              onChange={() => {
+                setBookingMode("pomie");
+                setError(null);
+              }}
+            />
+            <span>
+              <span className="font-semibold">POMiE システム受付</span>
+              <span className="block text-xs text-ink-500">
+                ポータル内の「Web で予約」「LINE で予約」を表示します
+                （最終版の予約導線が完成してから使用）
+              </span>
+            </span>
+          </label>
+        </div>
+
+        {bookingMode === "external" && (
+          <div className="space-y-2 border-t border-pomie-200/60 pt-3">
+            <p className="text-xs font-semibold text-ink-700">
+              予約リンク
+              <span className="ml-2 font-normal text-ink-500">
+                （{bookingLinks.filter((l) => l.label.trim() && l.url.trim()).length} 件）
+                — 美容師詳細ページにボタンとして表示
+              </span>
+            </p>
+            {bookingLinks.map((link, i) => (
+              <div key={i} className="grid gap-2 md:grid-cols-[1fr_2fr_auto]">
+                <input
+                  value={link.label}
+                  onChange={(e) => updateBookingLink(i, { label: e.target.value })}
+                  placeholder="ボタン表示テキスト（例: Web フォームで予約）"
+                  className="input"
+                />
+                <input
+                  value={link.url}
+                  onChange={(e) => updateBookingLink(i, { url: e.target.value })}
+                  placeholder="https://..."
+                  className="input"
+                />
+                <button
+                  type="button"
+                  onClick={() => removeBookingLink(i)}
+                  disabled={bookingLinks.length === 1}
+                  title="この行を削除"
+                  className="px-2 text-ink-500 hover:text-red-600 disabled:opacity-30"
+                >
+                  ✕
+                </button>
+              </div>
+            ))}
+            <button
+              type="button"
+              onClick={addBookingLink}
+              className="text-xs font-semibold text-pomie-600 hover:text-pomie-700"
+            >
+              + 予約リンクを追加
+            </button>
+            <p className="text-[11px] text-ink-500">
+              1 つ目のリンクが目立つボタン、2 つ目以降は補助ボタンとして表示されます。
+              Instagram DM は <code>https://www.instagram.com/ユーザー名/</code> などを指定してください。
+            </p>
+          </div>
+        )}
       </fieldset>
 
       {/* 予約可能メニュー入力（テーブル状） */}

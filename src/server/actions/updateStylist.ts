@@ -112,6 +112,10 @@ export async function updateStylist(
       available_time_slots: refreshedSlots,
       instagram_handle: handle,
       background_image: input.backgroundImage?.trim() || null,
+      booking_mode: input.bookingMode ?? "external",
+      booking_links: (input.bookingLinks ?? [])
+        .map((l) => ({ label: l.label.trim(), url: l.url.trim() }))
+        .filter((l) => l.label && l.url),
       sns_links: snsLinks,
       contract_status: input.contractStatus,
       featured_flag: input.featuredFlag,
@@ -146,6 +150,8 @@ export async function updateStylist(
     worksCount: data.works_count,
     instagramSyncedAt: data.instagram_synced_at,
     backgroundImage: data.background_image ?? null,
+    bookingMode: data.booking_mode ?? "external",
+    bookingLinks: data.booking_links ?? [],
   };
 
   // ===== IG ハンドルが変わったら投稿を再同期 =====

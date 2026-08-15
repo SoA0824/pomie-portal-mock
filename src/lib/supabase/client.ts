@@ -79,6 +79,8 @@ export type StylistRow = {
   works_count: number;
   instagram_synced_at: string | null;
   background_image: string | null;
+  booking_mode: "pomie" | "external" | null;
+  booking_links: Array<{ label: string; url: string }> | null;
   created_at: string;
   updated_at: string;
 };

@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useMemo, useState } from "react";
 import type { Stylist, Store } from "@/lib/types";
 import { StylistAvatar } from "@/components/common/StylistAvatar";
+import { BookingActions } from "@/components/stylist/BookingActions";
 import { formatPriceRange } from "@/lib/format";
 import {
   AREA_OPTIONS,
@@ -394,23 +395,12 @@ function ResultCard({
         </div>
       </div>
       <div className="flex flex-wrap items-center gap-2 border-t border-ink-100/70 px-4 py-3 md:px-5">
-        <Link
-          href={`/reservations/new?stylistId=${stylist.id}`}
-          className="rounded-full bg-pomie-500 px-4 py-1.5 text-xs font-semibold text-white transition hover:bg-pomie-600"
-        >
-          予約する
-        </Link>
+        <BookingActions stylist={stylist} size="small" />
         <Link
           href={`/stylists/${stylist.id}`}
           className="rounded-full border border-ink-100 bg-white px-4 py-1.5 text-xs font-semibold text-ink-700 transition hover:bg-pomie-100"
         >
           詳細を見る
-        </Link>
-        <Link
-          href={`/line-bot?stylistId=${stylist.id}`}
-          className="ml-auto text-xs text-pomie-600 hover:underline"
-        >
-          LINE で予約 ↗
         </Link>
       </div>
     </article>

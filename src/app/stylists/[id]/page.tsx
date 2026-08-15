@@ -2,6 +2,7 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { SnsFeed } from "@/components/stylist/SnsFeed";
 import { StylistAvatar } from "@/components/common/StylistAvatar";
+import { BookingActions } from "@/components/stylist/BookingActions";
 import { StoreCard } from "@/components/store/StoreCard";
 import { getStylistById } from "@/lib/data/stylists";
 import { getStoreById } from "@/lib/data/stores";
@@ -116,16 +117,8 @@ export default async function StylistDetailPage({ params }: { params: { id: stri
             </div>
           )}
 
-          <div className="mt-6 flex flex-col gap-3 sm:flex-row">
-            <Link
-              href={`/reservations/new?stylistId=${stylist.id}`}
-              className="btn-primary"
-            >
-              Web で予約
-            </Link>
-            <Link href={`/line-bot?stylistId=${stylist.id}`} className="btn-secondary">
-              LINE で予約
-            </Link>
+          <div className="mt-6">
+            <BookingActions stylist={stylist} />
           </div>
         </div>
         </div>
