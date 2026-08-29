@@ -672,7 +672,7 @@ export function StylistForm({
 
       {error && <p className="rounded-lg bg-red-50 p-3 text-sm text-red-700">{error}</p>}
 
-      <div className="flex gap-3">
+      <div className="flex flex-wrap items-center gap-3">
         <button type="submit" disabled={pending} className="btn-primary disabled:opacity-60">
           {ctaLabel}
         </button>
@@ -684,7 +684,18 @@ export function StylistForm({
         >
           キャンセル
         </button>
+        {pending && (
+          <span className="inline-flex items-center gap-1.5 text-xs text-ink-500">
+            <span className="inline-block h-3 w-3 animate-spin rounded-full border-2 border-pomie-200 border-t-pomie-600" />
+            保存しています...
+          </span>
+        )}
       </div>
+      {form.instagramHandle.trim() && (
+        <p className="text-[11px] text-ink-500">
+          ※ Instagram の投稿取得は保存後、美容師一覧の画面で自動的に行われます（数十秒かかる場合があります）。
+        </p>
+      )}
 
       <style jsx>{`
         :global(.input) {

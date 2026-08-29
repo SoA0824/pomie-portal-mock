@@ -302,14 +302,16 @@ export function AdminStylistList({
                       >
                         @{s.instagramHandle}
                       </a>
-                      {s.instagramSyncedAt ? (
+                      {s.instagramSyncedAt && (
                         <span className="text-ink-500">
-                          最終同期: {formatDateTime(s.instagramSyncedAt)}
+                          最終取得: {formatDateTime(s.instagramSyncedAt)}
                         </span>
-                      ) : (
-                        <span className="text-ink-500">未同期</span>
                       )}
-                      <SyncInstagramButton stylistId={s.id} />
+                      {/* 未取得なら画面表示時に自動で取得を開始する */}
+                      <SyncInstagramButton
+                        stylistId={s.id}
+                        autoStart={!s.instagramSyncedAt}
+                      />
                     </div>
                   )}
                 </div>

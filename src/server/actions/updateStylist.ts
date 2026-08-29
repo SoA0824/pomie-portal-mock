@@ -4,7 +4,6 @@ import { revalidatePath } from "next/cache";
 import { getSupabase } from "@/lib/supabase/client";
 import { getStoreById } from "@/lib/data/stores";
 import type { UpdateStylistInput, Stylist } from "@/lib/types";
-import { syncInstagramPosts } from "./syncInstagramPosts";
 
 export type UpdateStylistResult =
   | { ok: true; stylist: Stylist; instagramHandleChanged: boolean }
@@ -140,10 +139,16 @@ export async function updateStylist(
     bookingLinks: data.booking_links ?? [],
   };
 
-  // ===== IG ハンドルが変わったら投稿を再同期 =====
+  // ===== IG ハンドルが変わったら「未取得」に戻す =====
+  // ここで取得まで行うと保存完了まで 5〜30 秒待たされるため、
+  // 同期日時をクリアするだけにして、一覧画面側から非同期で取得させる。
   const handleChanged = (existing.instagram_handle ?? null) !== (handle ?? null);
   if (handleChanged && handle) {
-    await syncInstagramPosts(input.id);
+    await sb
+      .from("stylists")
+      .update({ instagram_synced_at: null })
+      .eq("id", input.id);
+    stylist.instagramSyncedAt = null;
   }
 
   revalidatePath("/admin/stylists");

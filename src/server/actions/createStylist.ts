@@ -4,10 +4,9 @@ import { revalidatePath } from "next/cache";
 import { getSupabase } from "@/lib/supabase/client";
 import { getStoreById } from "@/lib/data/stores";
 import type { CreateStylistInput, Stylist } from "@/lib/types";
-import { syncInstagramPosts } from "./syncInstagramPosts";
 
 export type CreateStylistResult =
-  | { ok: true; stylist: Stylist; syncedPostsCount?: number }
+  | { ok: true; stylist: Stylist }
   | { ok: false; reason: string; field?: string };
 
 function generateStylistId(): string {
@@ -129,19 +128,14 @@ export async function createStylist(
     bookingLinks: data.booking_links ?? [],
   };
 
-  // ===== 初回 Instagram 同期（任意・失敗しても登録自体は成功扱い） =====
-  let syncedPostsCount: number | undefined;
-  if (handle) {
-    const result = await syncInstagramPosts(id);
-    if (result.ok) {
-      syncedPostsCount = result.count;
-    }
-    // 失敗は無視（管理画面で個別に再試行可能）
-  }
+  // Instagram の投稿取得はここでは行わない。
+  // Apify の取得に 5〜30 秒かかり、登録完了まで待たされてしまうため。
+  // 登録後、美容師一覧の画面側から非同期で取得する（instagram_synced_at が
+  // 未設定 かつ ハンドルありの美容師が対象）。
 
   revalidatePath("/admin/stylists");
   revalidatePath("/stylists");
   revalidatePath("/");
 
-  return { ok: true, stylist, syncedPostsCount };
+  return { ok: true, stylist };
 }
