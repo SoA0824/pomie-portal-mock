@@ -36,8 +36,6 @@ export function ScheduleEditor({
 }: {
   value: string[];
   onChange: (slots: string[]) => void;
-  /** @deprecated ダミー生成を廃止したため未使用（呼び出し側の互換のため受け取るだけ） */
-  seedId?: string;
 }) {
   const [view, setView] = useState<ViewMode>("grid");
   const [extraDates, setExtraDates] = useState<Set<string>>(new Set());

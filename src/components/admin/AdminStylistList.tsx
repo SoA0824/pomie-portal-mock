@@ -7,7 +7,6 @@ import type { Store, Stylist } from "@/lib/types";
 import { StylistAvatar } from "@/components/common/StylistAvatar";
 import { SyncInstagramButton } from "@/components/admin/SyncInstagramButton";
 import { SyncGuardProvider } from "@/components/admin/SyncGuard";
-import { RegenerateSlotsButton } from "@/components/admin/RegenerateSlotsButton";
 import { formatDateTime } from "@/lib/format";
 import {
   applyStylistEdits,
@@ -339,7 +338,6 @@ export function AdminStylistList({
                     <strong className={s.availableTimeSlots.length === 0 ? "text-red-600" : "text-ink-900"}>
                       {s.availableTimeSlots.length} 件
                     </strong>
-                    <RegenerateSlotsButton stylistId={s.id} />
                   </span>
                   {s.contractStatus === "inactive" && (
                     <span className="text-ink-500">

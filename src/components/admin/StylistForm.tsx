@@ -528,7 +528,6 @@ export function StylistForm({
         <ScheduleEditor
           value={availableTimeSlots}
           onChange={setAvailableTimeSlots}
-          seedId={initialValues?.id ?? "draft"}
         />
       </fieldset>
 

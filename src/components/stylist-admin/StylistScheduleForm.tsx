@@ -32,7 +32,7 @@ export function StylistScheduleForm({
 
   return (
     <div className="space-y-4">
-      <ScheduleEditor value={slots} onChange={setSlots} seedId={stylistId} />
+      <ScheduleEditor value={slots} onChange={setSlots} />
 
       <div className="sticky bottom-3 z-10 flex flex-wrap items-center gap-3 rounded-xl bg-white p-3 shadow-md ring-1 ring-pomie-200">
         <button
