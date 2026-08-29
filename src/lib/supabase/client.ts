@@ -2,8 +2,16 @@ import { createClient, type SupabaseClient } from "@supabase/supabase-js";
 
 let cached: SupabaseClient | undefined;
 
-function readEnv(name: string): string {
-  const value = process.env[name];
+/**
+ * 重要: Next.js は `process.env.NEXT_PUBLIC_XXX` という「静的な記述」のときだけ
+ * ブラウザ用バンドルに値を埋め込む。`process.env[name]` のような動的アクセスだと
+ * クライアント側で undefined になり、画像アップロード等の client component が壊れる。
+ * そのため下記は必ず静的参照のままにすること。
+ */
+const SUPABASE_URL = process.env.NEXT_PUBLIC_SUPABASE_URL;
+const SUPABASE_ANON_KEY = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
+
+function required(value: string | undefined, name: string): string {
   if (!value) {
     throw new Error(
       `[POMiE] 環境変数 ${name} が未設定です。.env.local（ローカル）または Vercel の Environment Variables に設定してください。`
@@ -14,10 +22,10 @@ function readEnv(name: string): string {
 
 export function getSupabase(): SupabaseClient {
   if (cached) return cached;
-  const url = readEnv("NEXT_PUBLIC_SUPABASE_URL");
+  const url = required(SUPABASE_URL, "NEXT_PUBLIC_SUPABASE_URL");
   // 書き込みも anon key で行う（RLS は無効化前提・MVP モック）。
   // 本番化時は server role key を使い、Server Action 限定で読み書きする構成へ。
-  const anonKey = readEnv("NEXT_PUBLIC_SUPABASE_ANON_KEY");
+  const anonKey = required(SUPABASE_ANON_KEY, "NEXT_PUBLIC_SUPABASE_ANON_KEY");
   cached = createClient(url, anonKey, {
     auth: { persistSession: false },
     global: {
