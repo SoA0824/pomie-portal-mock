@@ -3,6 +3,7 @@
 import { useEffect, useRef, useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { syncInstagramPosts } from "@/server/actions/syncInstagramPosts";
+import { useSyncGuard } from "@/components/admin/SyncGuard";
 
 const REASON_LABELS: Record<string, string> = {
   stylist_not_found: "美容師が見つかりません",
@@ -28,16 +29,23 @@ export function SyncInstagramButton({
   const [pending, startTransition] = useTransition();
   const [feedback, setFeedback] = useState<string | null>(null);
   const startedRef = useRef(false);
+  const { begin, end } = useSyncGuard();
 
   const run = () => {
     setFeedback(null);
     startTransition(async () => {
-      const result = await syncInstagramPosts(stylistId);
-      if (result.ok) {
-        setFeedback(`${result.count} 件取得しました`);
-        router.refresh();
-      } else {
-        setFeedback(REASON_LABELS[result.reason] ?? `失敗: ${result.reason}`);
+      // 取得中はページ離脱ガードを有効にする
+      begin();
+      try {
+        const result = await syncInstagramPosts(stylistId);
+        if (result.ok) {
+          setFeedback(`${result.count} 件取得しました`);
+          router.refresh();
+        } else {
+          setFeedback(REASON_LABELS[result.reason] ?? `失敗: ${result.reason}`);
+        }
+      } finally {
+        end();
       }
     });
   };

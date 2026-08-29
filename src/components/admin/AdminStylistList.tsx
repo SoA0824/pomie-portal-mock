@@ -6,6 +6,7 @@ import { useRouter } from "next/navigation";
 import type { Store, Stylist } from "@/lib/types";
 import { StylistAvatar } from "@/components/common/StylistAvatar";
 import { SyncInstagramButton } from "@/components/admin/SyncInstagramButton";
+import { SyncGuardProvider } from "@/components/admin/SyncGuard";
 import { RegenerateSlotsButton } from "@/components/admin/RegenerateSlotsButton";
 import { formatDateTime } from "@/lib/format";
 import {
@@ -145,7 +146,7 @@ export function AdminStylistList({
   };
 
   return (
-    <>
+    <SyncGuardProvider>
       {/* コントロールバー: 編集モード切替 + ソート */}
       <div className="mt-6 flex flex-wrap items-center gap-3 rounded-xl bg-white p-3 ring-1 ring-pomie-200">
         {!editMode ? (
@@ -351,7 +352,7 @@ export function AdminStylistList({
           );
         })}
       </section>
-    </>
+    </SyncGuardProvider>
   );
 }
 
