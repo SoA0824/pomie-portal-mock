@@ -47,11 +47,15 @@ export function AdminStylistList({
   stylists,
   storesById,
   sort,
+  staleImageStylistIds = [],
 }: {
   stylists: Stylist[];
   storesById: Record<string, Store>;
   sort: SortKey;
+  /** 画像が期限切れ URL のまま保存されている美容師（自動で再取得する） */
+  staleImageStylistIds?: string[];
 }) {
+  const staleImageIds = new Set(staleImageStylistIds);
   const router = useRouter();
   const [editMode, setEditMode] = useState(false);
   const [edits, setEdits] = useState<EditMap>({});
@@ -307,10 +311,10 @@ export function AdminStylistList({
                           最終取得: {formatDateTime(s.instagramSyncedAt)}
                         </span>
                       )}
-                      {/* 未取得なら画面表示時に自動で取得を開始する */}
+                      {/* 未取得、または画像が期限切れ URL のままなら自動で取得する */}
                       <SyncInstagramButton
                         stylistId={s.id}
-                        autoStart={!s.instagramSyncedAt}
+                        autoStart={!s.instagramSyncedAt || staleImageIds.has(s.id)}
                       />
                     </div>
                   )}

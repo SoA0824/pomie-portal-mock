@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { getAllStylistsIncludingInactive } from "@/lib/data/stylists";
+import { getStylistIdsWithExpiringImages } from "@/lib/data/snsPosts";
 import { getAllStores } from "@/lib/data/stores";
 import { AdminStylistList, type SortKey } from "@/components/admin/AdminStylistList";
 
@@ -14,6 +15,9 @@ export default async function AdminStylistsPage({
   searchParams: { sort?: string };
 }) {
   const stylists = await getAllStylistsIncludingInactive();
+  // 期限切れする Instagram CDN の URL を使っている美容師は、
+  // 一覧表示時に自動で再取得して自前ストレージの URL に置き換える。
+  const staleImageStylistIds = await getStylistIdsWithExpiringImages();
   const stores = getAllStores();
   const storesById = Object.fromEntries(stores.map((s) => [s.id, s]));
   const sortParam = searchParams.sort as SortKey | undefined;
@@ -45,7 +49,12 @@ export default async function AdminStylistsPage({
           </Link>
         </div>
       ) : (
-        <AdminStylistList stylists={stylists} storesById={storesById} sort={sort} />
+        <AdminStylistList
+          stylists={stylists}
+          storesById={storesById}
+          sort={sort}
+          staleImageStylistIds={staleImageStylistIds}
+        />
       )}
     </div>
   );

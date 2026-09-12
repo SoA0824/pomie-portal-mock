@@ -93,6 +93,13 @@ export function StylistForm({
   const [availableTimeSlots, setAvailableTimeSlots] = useState<string[]>(
     initialValues?.availableTimeSlots ?? []
   );
+  // 画像の保存先を決めるキー。既存の美容師はその ID、新規登録時は
+  // このフォームを開いている間だけ有効な一時 ID を使う
+  // （貼り替えても同じ場所に上書きされ、古い画像が溜まらないようにする）
+  const [imageKey] = useState(
+    () => initialValues?.id ?? `draft-${Math.random().toString(36).slice(2, 10)}`
+  );
+
   // 料金「指定なし」: min/max ともに 0 なら未設定扱い
   const [priceUnspecified, setPriceUnspecified] = useState<boolean>(
     initialValues
@@ -591,6 +598,7 @@ export function StylistForm({
           value={form.avatar}
           onChange={(url) => update("avatar", url)}
           folder="avatars"
+          ownerKey={imageKey}
           previewShape="square"
         />
         <p className="mt-1 text-xs text-ink-500">
@@ -605,6 +613,7 @@ export function StylistForm({
           value={form.backgroundImage}
           onChange={(url) => update("backgroundImage", url)}
           folder="backgrounds"
+          ownerKey={imageKey}
           previewShape="wide"
         />
         <p className="mt-1 text-xs text-ink-500">

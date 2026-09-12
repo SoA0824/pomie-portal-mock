@@ -2,10 +2,21 @@
 
 import { useRef, useState } from "react";
 import { getSupabase } from "@/lib/supabase/client";
+import {
+  STORAGE_BUCKET as BUCKET,
+  storagePathFromPublicUrl,
+  deleteStorageObjectByUrl,
+} from "@/lib/storage";
 
-const BUCKET = "stylist-images";
 const MAX_BYTES = 10 * 1024 * 1024; // 10MB
 const ACCEPTED = ["image/jpeg", "image/png", "image/webp", "image/gif"];
+
+const EXT_BY_MIME: Record<string, string> = {
+  "image/jpeg": "jpg",
+  "image/png": "png",
+  "image/webp": "webp",
+  "image/gif": "gif",
+};
 
 function formatBytes(bytes: number): string {
   if (bytes >= 1024 * 1024) return `${(bytes / 1024 / 1024).toFixed(1)}MB`;
@@ -23,12 +34,15 @@ export function ImageUploadField({
   value,
   onChange,
   folder,
+  ownerKey,
   previewShape = "square",
 }: {
   value: string;
   onChange: (url: string) => void;
   /** Storage 内のフォルダ名（例: "avatars" / "backgrounds"） */
   folder: string;
+  /** 保存先を一意に決めるキー（美容師 ID など）。貼り替え時は同じ場所へ上書きされる */
+  ownerKey: string;
   previewShape?: "square" | "wide";
 }) {
   const inputRef = useRef<HTMLInputElement>(null);
@@ -52,17 +66,32 @@ export function ImageUploadField({
     setUploading(true);
     try {
       const sb = getSupabase();
-      const ext = file.name.split(".").pop()?.toLowerCase() || "jpg";
-      const rand = Math.random().toString(36).slice(2, 8);
-      const path = `${folder}/${Date.now()}-${rand}.${ext}`;
+      const ext = EXT_BY_MIME[file.type] ?? "jpg";
+      // 美容師ごとの固定パスにして、貼り替え時は同じ場所へ上書きする。
+      // （毎回新しいファイル名にすると古い画像が残り続けて容量を圧迫するため）
+      const path = `${folder}/${ownerKey}.${ext}`;
+      const previousUrl = value;
 
       const { error: upErr } = await sb.storage
         .from(BUCKET)
-        .upload(path, file, { cacheControl: "3600", upsert: false });
+        .upload(path, file, {
+          contentType: file.type,
+          cacheControl: "3600",
+          upsert: true,
+        });
       if (upErr) throw new Error(upErr.message);
 
       const { data } = sb.storage.from(BUCKET).getPublicUrl(path);
-      onChange(data.publicUrl);
+      // 拡張子が変わった場合は前のファイルが残るので消しておく
+      const newPath = storagePathFromPublicUrl(data.publicUrl);
+      const oldPath = storagePathFromPublicUrl(previousUrl);
+      if (oldPath && oldPath !== newPath) {
+        await deleteStorageObjectByUrl(previousUrl);
+      }
+
+      // 同じパスに上書きした場合、ブラウザが古い画像をキャッシュしているので
+      // 表示用にクエリを付けて更新を反映させる
+      onChange(`${data.publicUrl}?v=${Date.now()}`);
     } catch (e) {
       const msg = e instanceof Error ? e.message : "アップロードに失敗しました";
       setError(
@@ -93,7 +122,12 @@ export function ImageUploadField({
           />
           <button
             type="button"
-            onClick={() => onChange("")}
+            onClick={async () => {
+              const removed = value;
+              onChange("");
+              // 自前ストレージの画像なら実体も消す（外部 URL の場合は何もしない）
+              await deleteStorageObjectByUrl(removed);
+            }}
             className="text-xs text-ink-500 hover:text-red-600"
           >
             画像を削除
