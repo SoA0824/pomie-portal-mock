@@ -20,9 +20,9 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     { url: `${SITE_URL}/match`, lastModified: now, changeFrequency: "monthly", priority: 0.6 },
   ];
 
-  const articlePages: MetadataRoute.Sitemap = getAllArticles().map((a) => ({
+  const articlePages: MetadataRoute.Sitemap = (await getAllArticles()).map((a) => ({
     url: `${SITE_URL}/articles/${a.slug}`,
-    lastModified: new Date(a.publishedAt),
+    lastModified: new Date(a.updatedAt),
     changeFrequency: "monthly",
     priority: 0.7,
   }));

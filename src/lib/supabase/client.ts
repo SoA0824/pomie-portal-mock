@@ -36,6 +36,23 @@ export function getSupabase(): SupabaseClient {
   return cached;
 }
 
+export type ArticleRow = {
+  id: string;
+  slug: string;
+  title: string;
+  summary: string;
+  body: string;
+  category: string;
+  cover_image: string;
+  related_stylist_ids: string[];
+  status: "draft" | "published";
+  target_keyword: string | null;
+  source: "manual" | "ai";
+  published_at: string | null;
+  created_at: string;
+  updated_at: string;
+};
+
 export type ReservationRow = {
   id: string;
   customer_name: string;

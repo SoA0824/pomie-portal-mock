@@ -15,7 +15,7 @@ export const metadata = {
 };
 
 export default async function Home() {
-  const articles = getFeaturedArticles(3);
+  const articles = await getFeaturedArticles(3);
   const stylists = await getFeaturedStylists(4);
   const stores = getAllStores();
   const structuredData = [

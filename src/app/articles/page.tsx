@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { ArticleCard } from "@/components/article/ArticleCard";
-import { getAllArticles, getArticleCategories } from "@/lib/data/articles";
+import { getAllArticles } from "@/lib/data/articles";
 import type { ArticleCategory } from "@/lib/types";
 
 export const metadata = {
@@ -12,16 +12,18 @@ export const metadata = {
 
 const CATEGORY_ALL = "all" as const;
 
-export default function ArticlesPage({
+export const dynamic = "force-dynamic";
+
+export default async function ArticlesPage({
   searchParams,
 }: {
   searchParams: { category?: string };
 }) {
-  const categories = getArticleCategories();
+  const all = await getAllArticles();
+  const categories = Array.from(new Set(all.map((a) => a.category)));
   const selected = searchParams.category && categories.includes(searchParams.category as ArticleCategory)
     ? (searchParams.category as ArticleCategory)
     : CATEGORY_ALL;
-  const all = getAllArticles();
   const articles = selected === CATEGORY_ALL ? all : all.filter((a) => a.category === selected);
 
   return (

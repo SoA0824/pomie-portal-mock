@@ -27,6 +27,9 @@
   .card {
     @apply rounded-2xl bg-white shadow-sm ring-1 ring-ink-100/60;
   }
+  .input {
+    @apply w-full rounded-lg border border-ink-100 bg-white px-3 py-2 text-sm focus:border-pomie-500 focus:outline-none focus:ring-2 focus:ring-pomie-200;
+  }
 }
 
 .markdown h2 {

@@ -1,17 +1,45 @@
-export type ArticleCategory = "カット" | "カラー" | "メンズ" | "ケア" | "エリア";
+export const ARTICLE_CATEGORIES = ["カット", "カラー", "メンズ", "ケア", "エリア"] as const;
+export type ArticleCategory = (typeof ARTICLE_CATEGORIES)[number];
+
+/** draft: 下書き（非公開・URL は 404） / published: 公開 */
+export type ArticleStatus = "draft" | "published";
 
 export type Article = {
   id: string;
   title: string;
   slug: string;
   summary: string;
+  /** 本文（Markdown） */
   body: string;
   category: ArticleCategory;
+  /** 公開日時。未公開の下書きは作成日時 */
   publishedAt: string;
+  /** カバー画像（未設定なら空。表示時は articleCover() で既定画像にする） */
   coverImage: string;
   relatedStylistIds: string[];
-  /** false なら非公開（サイトに表示せず、URL も 404） */
-  published: boolean;
+  status: ArticleStatus;
+  /** 狙う検索キーワード */
+  targetKeyword: string | null;
+  /** manual: 手書き / ai: 自動執筆 */
+  source: "manual" | "ai";
+  createdAt: string;
+  updatedAt: string;
+};
+
+export type SaveArticleInput = {
+  /** 省略時は新規作成 */
+  id?: string;
+  title: string;
+  slug: string;
+  summary: string;
+  body: string;
+  category: ArticleCategory;
+  coverImage: string;
+  relatedStylistIds: string[];
+  status: ArticleStatus;
+  targetKeyword?: string;
+  /** 公開日時（ISO）。空なら公開時に現在時刻 */
+  publishedAt?: string;
 };
 
 export type SnsPlatform = "instagram" | "x" | "tiktok";

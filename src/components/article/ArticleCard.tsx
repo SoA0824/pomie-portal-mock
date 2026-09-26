@@ -1,6 +1,7 @@
 import Link from "next/link";
 import type { Article } from "@/lib/types";
 import { formatDate } from "@/lib/format";
+import { articleCover } from "@/lib/articleCover";
 
 export function ArticleCard({ article }: { article: Article }) {
   return (
@@ -11,7 +12,7 @@ export function ArticleCard({ article }: { article: Article }) {
       <div className="aspect-[2/1] overflow-hidden bg-ink-100">
         {/* eslint-disable-next-line @next/next/no-img-element */}
         <img
-          src={article.coverImage}
+          src={articleCover(article)}
           alt={article.title}
           className="h-full w-full object-cover transition group-hover:scale-105"
         />

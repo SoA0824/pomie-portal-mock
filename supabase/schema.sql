@@ -82,18 +82,43 @@ create table if not exists public.sns_posts (
 
 create index if not exists idx_sns_posts_stylist on public.sns_posts (stylist_id, posted_at desc);
 
+create table if not exists public.articles (
+  id text primary key,
+  slug text not null unique,
+  title text not null,
+  summary text not null default '',
+  body text not null default '',
+  category text not null,
+  cover_image text not null default '',
+  related_stylist_ids text[] not null default '{}',
+  -- draft: 下書き（非公開） / published: 公開
+  status text not null default 'draft' check (status in ('draft', 'published')),
+  -- 狙う検索キーワード（記事の自動執筆・効果測定で使う）
+  target_keyword text,
+  -- manual: 手書き / ai: 自動執筆
+  source text not null default 'manual' check (source in ('manual', 'ai')),
+  published_at timestamptz,
+  created_at timestamptz not null default now(),
+  updated_at timestamptz not null default now()
+);
+
+create index if not exists idx_articles_status_published
+  on public.articles (status, published_at desc);
+
 -- MVP モック前提: RLS は無効化（誰でも読み書き可能）。
 -- 本番化時は RLS を有効にし、認証ロール別のポリシーを設定すること。
 alter table public.reservations disable row level security;
 alter table public.salonboard_bookings disable row level security;
 alter table public.stylists disable row level security;
 alter table public.sns_posts disable row level security;
+alter table public.articles disable row level security;
 
 -- anon / authenticated ロールへ権限を付与（RLS 無効でも GRANT は別途必要）
 grant select, insert, update, delete on public.reservations to anon, authenticated;
 grant select, insert, update, delete on public.salonboard_bookings to anon, authenticated;
 grant select, insert, update, delete on public.stylists to anon, authenticated;
 grant select, insert, update, delete on public.sns_posts to anon, authenticated;
+grant select, insert, update, delete on public.articles to anon, authenticated;
 
 -- PostgREST のスキーマキャッシュをリロード
 notify pgrst, 'reload schema';
