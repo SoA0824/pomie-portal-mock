@@ -1,6 +1,7 @@
 import type { SnsPost } from "@/lib/types";
 import { formatDate } from "@/lib/format";
 import { proxyIfInstagram } from "@/lib/image-proxy";
+import { SnsPostCard } from "@/components/stylist/SnsPostCard";
 
 const platformLabel: Record<SnsPost["platform"], string> = {
   instagram: "Instagram",
@@ -19,27 +20,13 @@ export function SnsFeed({ posts }: { posts: SnsPost[] }) {
   return (
     <div className="grid grid-cols-2 gap-3 md:grid-cols-3">
       {posts.map((p) => (
-        <article key={p.id} className="card overflow-hidden">
-          <div className="aspect-square overflow-hidden bg-ink-100">
-            {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img
-              src={proxyIfInstagram(p.imageUrl)}
-              alt={p.caption}
-              className="h-full w-full object-cover"
-              loading="lazy"
-              referrerPolicy="no-referrer"
-            />
-          </div>
-          <div className="p-3">
-            <div className="flex items-center justify-between text-xs text-ink-500">
-              <span className="rounded-full bg-pomie-100 px-2 py-0.5 text-pomie-700">
-                {platformLabel[p.platform]}
-              </span>
-              <span>{formatDate(p.postedAt)}</span>
-            </div>
-            <p className="mt-2 line-clamp-3 text-xs text-ink-700">{p.caption}</p>
-          </div>
-        </article>
+        <SnsPostCard
+          key={p.id}
+          imageSrc={proxyIfInstagram(p.imageUrl)}
+          caption={p.caption}
+          platformLabel={platformLabel[p.platform]}
+          dateLabel={formatDate(p.postedAt)}
+        />
       ))}
     </div>
   );

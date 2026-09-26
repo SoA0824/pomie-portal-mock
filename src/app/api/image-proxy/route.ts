@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { fetchInstagramImage } from "@/lib/instagramCdn";
 
 export const runtime = "edge";
 
@@ -36,23 +37,15 @@ export async function GET(request: Request) {
   }
 
   try {
-    const upstream = await fetch(target, {
-      headers: {
-        // IG ドメインから来たフリで取りに行く
-        "User-Agent":
-          "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
-        Referer: "https://www.instagram.com/",
-        Accept: "image/avif,image/webp,image/apng,image/svg+xml,image/*,*/*;q=0.8",
-      },
-      // IG CDN は普通の GET で取れる。再走 OK な無認証アクセス。
-      redirect: "follow",
-    });
-
-    if (!upstream.ok) {
-      return new NextResponse(`upstream ${upstream.status}`, {
-        status: upstream.status,
+    // 元の URL → 公開 CDN ホストに差し替えた URL の順に試す
+    // （地域限定キャッシュ *.fna.fbcdn.net は外部から名前解決できないため）
+    const fetched = await fetchInstagramImage(target);
+    if (!fetched.res) {
+      return new NextResponse(`upstream failed: ${fetched.reasons.join(" / ")}`, {
+        status: 502,
       });
     }
+    const upstream = fetched.res;
 
     const contentType = upstream.headers.get("content-type") ?? "image/jpeg";
     const body = await upstream.arrayBuffer();

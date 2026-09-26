@@ -7,11 +7,20 @@ import { getInstagramFetcher } from "@/lib/integrations/instagram";
 import {
   mirrorInstagramImage,
   cleanupUnusedInstagramImages,
+  listMirroredInstagramImages,
+  findPreviouslyMirrored,
 } from "@/lib/integrations/mirrorInstagramImage";
+import { isInstagramCdnUrl } from "@/lib/instagramCdn";
 import { getSupabase } from "@/lib/supabase/client";
 
 export type SyncResult =
-  | { ok: true; count: number; via: "apify" | "mock" }
+  | {
+      ok: true;
+      count: number;
+      /** 画像を保存できず掲載を見送った投稿数 */
+      skipped: number;
+      via: "apify" | "mock";
+    }
   | { ok: false; reason: string };
 
 export async function syncInstagramPosts(stylistId: string): Promise<SyncResult> {
@@ -30,16 +39,28 @@ export async function syncInstagramPosts(stylistId: string): Promise<SyncResult>
       limit: 8,
     });
 
-    // Instagram CDN の URL は有効期限つきトークンを含み、数時間〜数日で 403 になる。
-    // そのまま保存すると画像が後から表示されなくなるため、取得時に自前の
-    // Supabase Storage へ複製し、期限切れしない URL に差し替える。
-    // 複製に失敗した投稿は元の URL のまま（画像プロキシ経由で当面は表示できる）。
-    const mirrored = await Promise.all(
-      posts.map(async (p) => {
-        const url = await mirrorInstagramImage(stylistId, p.externalId, p.imageUrl);
-        return { ...p, imageUrl: url ?? p.imageUrl };
-      })
-    );
+    // Instagram CDN の URL は有効期限つきトークンを含み、時間が経つと表示できなくなる。
+    // さらにホストが地域限定キャッシュ（*.fna.fbcdn.net）で最初から取得できないこともある。
+    // そのため取得時に自前の Supabase Storage へ複製し、期限切れしない URL に差し替える。
+    //
+    // 複製できなかった投稿の扱い:
+    //   1) 前回までに保存済みの画像があればそれを使う
+    //   2) それも無ければその投稿は掲載しない
+    // 期限つきの CDN URL は絶対に保存しない（保存すると後から空白の画像になるため）。
+    const previouslyMirrored = await listMirroredInstagramImages(stylistId);
+
+    const results = await mapWithConcurrency(posts, 3, async (p) => {
+      // Instagram 以外の画像（モック等）は期限切れしないのでそのまま
+      if (!isInstagramCdnUrl(p.imageUrl)) return p;
+
+      const url =
+        (await mirrorInstagramImage(stylistId, p.externalId, p.imageUrl)) ??
+        findPreviouslyMirrored(previouslyMirrored, p.externalId);
+      return url ? { ...p, imageUrl: url } : null;
+    });
+
+    const mirrored = results.filter((p): p is (typeof posts)[number] => p !== null);
+    const skipped = posts.length - mirrored.length;
 
     const count = await replaceInstagramPosts(stylistId, mirrored);
 
@@ -59,9 +80,27 @@ export async function syncInstagramPosts(stylistId: string): Promise<SyncResult>
     revalidatePath(`/stylists/${stylistId}`);
     revalidatePath("/admin/stylists");
 
-    return { ok: true, count, via };
+    return { ok: true, count, skipped, via };
   } catch (err) {
     const message = err instanceof Error ? err.message : "unknown_error";
     return { ok: false, reason: message };
   }
+}
+
+/** 同時実行数を絞って順に処理する（CDN への一斉アクセスで弾かれるのを避ける） */
+async function mapWithConcurrency<T, R>(
+  items: T[],
+  limit: number,
+  fn: (item: T) => Promise<R>
+): Promise<R[]> {
+  const results = new Array<R>(items.length);
+  let next = 0;
+  const worker = async () => {
+    while (next < items.length) {
+      const i = next++;
+      results[i] = await fn(items[i]);
+    }
+  };
+  await Promise.all(Array.from({ length: Math.min(limit, items.length) }, worker));
+  return results;
 }

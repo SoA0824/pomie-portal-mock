@@ -39,7 +39,11 @@ export function SyncInstagramButton({
       try {
         const result = await syncInstagramPosts(stylistId);
         if (result.ok) {
-          setFeedback(`${result.count} 件取得しました`);
+          setFeedback(
+            result.skipped > 0
+              ? `${result.count} 件取得しました（画像を保存できなかった ${result.skipped} 件は掲載を見送り）`
+              : `${result.count} 件取得しました`
+          );
           router.refresh();
         } else {
           setFeedback(REASON_LABELS[result.reason] ?? `失敗: ${result.reason}`);

@@ -1,17 +1,10 @@
 import { getSupabase } from "@/lib/supabase/client";
-
-const BUCKET = "stylist-images";
-
-/** Instagram CDN から画像を取るときのヘッダー（ホットリンク防止対策） */
-const FETCH_HEADERS = {
-  "User-Agent":
-    "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
-  Referer: "https://www.instagram.com/",
-  Accept: "image/avif,image/webp,image/apng,image/svg+xml,image/*,*/*;q=0.8",
-};
+import { STORAGE_BUCKET as BUCKET } from "@/lib/storage";
+import { fetchInstagramImage } from "@/lib/instagramCdn";
 
 const EXT_BY_MIME: Record<string, string> = {
   "image/jpeg": "jpg",
+  "image/jpg": "jpg",
   "image/png": "png",
   "image/webp": "webp",
   "image/gif": "gif",
@@ -22,14 +15,45 @@ function isAlreadyMirrored(url: string): boolean {
   return url.includes("/storage/v1/object/public/");
 }
 
+function safeId(externalId: string): string {
+  return externalId.replace(/[^A-Za-z0-9_-]/g, "") || "post";
+}
+
+function folderOf(stylistId: string): string {
+  return `instagram/${stylistId}`;
+}
+
+/**
+ * 美容師の Instagram 画像フォルダに既にあるファイルを
+ * 「投稿 ID → 公開 URL」の形で返す。
+ * 今回の複製に失敗した投稿でも、前回までに保存済みならそれを使えるようにするため。
+ */
+export async function listMirroredInstagramImages(
+  stylistId: string
+): Promise<Map<string, string>> {
+  const map = new Map<string, string>();
+  try {
+    const sb = getSupabase();
+    const dir = folderOf(stylistId);
+    const { data } = await sb.storage.from(BUCKET).list(dir, { limit: 100 });
+    for (const f of data ?? []) {
+      const id = f.name.replace(/\.[^.]+$/, "");
+      map.set(id, sb.storage.from(BUCKET).getPublicUrl(`${dir}/${f.name}`).data.publicUrl);
+    }
+  } catch {
+    // 一覧が取れなくても複製処理は続ける
+  }
+  return map;
+}
+
 /**
  * Instagram CDN の画像を Supabase Storage に複製し、期限切れしない公開 URL を返す。
  *
- * Instagram の画像 URL には有効期限つきトークン（`oe=`）が含まれており、
- * 数時間〜数日で 403 になって表示できなくなる。
- * そのため取得時に自前ストレージへ保存し、以後はそちらを配信する。
+ * Instagram の画像 URL には有効期限つきトークン（`oe=`）が含まれ、さらに
+ * ホストが地域限定キャッシュ（*.fna.fbcdn.net）でそもそも取得できないことがある。
+ * 元 URL → 公開 CDN ホストの順に試し、取れた画像を自前ストレージへ保存する。
  *
- * 複製に失敗した場合は null を返す（呼び出し側で元 URL にフォールバックする）。
+ * 複製できなかった場合は null を返す（期限つき URL は保存しないこと）。
  */
 export async function mirrorInstagramImage(
   stylistId: string,
@@ -37,43 +61,65 @@ export async function mirrorInstagramImage(
   sourceUrl: string
 ): Promise<string | null> {
   if (!sourceUrl) return null;
-  // 既に自前ストレージの URL ならそのまま使う
   if (isAlreadyMirrored(sourceUrl)) return sourceUrl;
 
+  const fetched = await fetchInstagramImage(sourceUrl, { cache: "no-store" });
+  if (!fetched.res) {
+    console.warn(
+      `[instagram] 画像の取得に失敗 stylist=${stylistId} post=${externalId}: ${fetched.reasons.join(" / ")}`
+    );
+    return null;
+  }
+
   try {
-    const res = await fetch(sourceUrl, {
-      headers: FETCH_HEADERS,
-      redirect: "follow",
-      cache: "no-store",
-    });
-    if (!res.ok) return null;
-
-    const contentType = (res.headers.get("content-type") ?? "image/jpeg")
+    const contentType = (fetched.res.headers.get("content-type") ?? "image/jpeg")
       .split(";")[0]
-      .trim();
+      .trim()
+      .toLowerCase();
     const ext = EXT_BY_MIME[contentType];
-    // 画像以外が返ってきた場合は保存しない
-    if (!ext) return null;
+    if (!ext) {
+      console.warn(
+        `[instagram] 未対応の画像形式 stylist=${stylistId} post=${externalId}: ${contentType}`
+      );
+      return null;
+    }
 
-    const body = await res.arrayBuffer();
+    const body = await fetched.res.arrayBuffer();
     if (body.byteLength === 0) return null;
 
-    // externalId ごとに固定パスにするので、再同期時は同じ場所へ上書きされる
-    const safeId = externalId.replace(/[^A-Za-z0-9_-]/g, "") || "post";
-    const path = `instagram/${stylistId}/${safeId}.${ext}`;
+    // 投稿 ID ごとに固定パスにするので、再同期時は同じ場所へ上書きされる
+    const path = `${folderOf(stylistId)}/${safeId(externalId)}.${ext}`;
 
     const sb = getSupabase();
     const { error } = await sb.storage.from(BUCKET).upload(path, body, {
-      contentType,
+      contentType: contentType === "image/jpg" ? "image/jpeg" : contentType,
       cacheControl: "31536000",
       upsert: true,
     });
-    if (error) return null;
+    if (error) {
+      console.warn(
+        `[instagram] ストレージへの保存に失敗 stylist=${stylistId} post=${externalId}: ${error.message}`
+      );
+      return null;
+    }
 
     return sb.storage.from(BUCKET).getPublicUrl(path).data.publicUrl;
-  } catch {
+  } catch (err) {
+    console.warn(
+      `[instagram] 画像の保存中にエラー stylist=${stylistId} post=${externalId}: ${
+        err instanceof Error ? err.message : err
+      }`
+    );
     return null;
   }
+}
+
+/** 投稿 ID から、前回までに保存済みの画像 URL を探す */
+export function findPreviouslyMirrored(
+  existing: Map<string, string>,
+  externalId: string
+): string | null {
+  return existing.get(safeId(externalId)) ?? null;
 }
 
 /**
@@ -86,7 +132,7 @@ export async function cleanupUnusedInstagramImages(
 ): Promise<void> {
   try {
     const sb = getSupabase();
-    const dir = `instagram/${stylistId}`;
+    const dir = folderOf(stylistId);
     const { data, error } = await sb.storage.from(BUCKET).list(dir, { limit: 100 });
     if (error || !data) return;
 
