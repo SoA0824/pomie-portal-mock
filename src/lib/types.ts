@@ -10,6 +10,8 @@ export type Article = {
   publishedAt: string;
   coverImage: string;
   relatedStylistIds: string[];
+  /** false なら非公開（サイトに表示せず、URL も 404） */
+  published: boolean;
 };
 
 export type SnsPlatform = "instagram" | "x" | "tiktok";

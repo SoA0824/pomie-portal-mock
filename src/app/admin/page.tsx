@@ -30,7 +30,7 @@ export default async function AdminDashboard() {
         <Stat label="本日の予約" value={todayReservations.length.toString()} />
         <Stat label="掲載中の美容師" value={stylists.length.toString()} suffix="名" />
         <Stat label="店舗数" value={stores.length.toString()} suffix="店" />
-        <Stat label="記事数" value={articles.length.toString()} />
+        <Stat label="公開記事数" value={articles.length.toString()} />
         <Stat label="サロンボード連携 失敗" value={sbFailed.toString()} suffix="件" tone={sbFailed > 0 ? "alert" : "default"} />
       </section>
 

@@ -8,7 +8,11 @@
     "category": "ケア",
     "publishedAt": "2026-05-08T10:00",
     "coverImage": "https://picsum.photos/seed/article-1/1200/600",
-    "relatedStylistIds": ["st-01", "st-08"]
+    "relatedStylistIds": [
+      "st-01",
+      "st-08"
+    ],
+    "published": false
   },
   {
     "id": "a-2",
@@ -19,7 +23,11 @@
     "category": "メンズ",
     "publishedAt": "2026-05-06T11:00",
     "coverImage": "https://picsum.photos/seed/article-2/1200/600",
-    "relatedStylistIds": ["st-02", "st-04"]
+    "relatedStylistIds": [
+      "st-02",
+      "st-04"
+    ],
+    "published": false
   },
   {
     "id": "a-3",
@@ -30,7 +38,13 @@
     "category": "エリア",
     "publishedAt": "2026-05-04T09:30",
     "coverImage": "https://picsum.photos/seed/article-3/1200/600",
-    "relatedStylistIds": ["st-01", "st-02", "st-03", "st-06"]
+    "relatedStylistIds": [
+      "st-01",
+      "st-02",
+      "st-03",
+      "st-06"
+    ],
+    "published": false
   },
   {
     "id": "a-4",
@@ -41,7 +55,11 @@
     "category": "カラー",
     "publishedAt": "2026-05-02T08:00",
     "coverImage": "https://picsum.photos/seed/article-4/1200/600",
-    "relatedStylistIds": ["st-03", "st-10"]
+    "relatedStylistIds": [
+      "st-03",
+      "st-10"
+    ],
+    "published": false
   },
   {
     "id": "a-5",
@@ -52,7 +70,11 @@
     "category": "カラー",
     "publishedAt": "2026-04-28T12:00",
     "coverImage": "https://picsum.photos/seed/article-5/1200/600",
-    "relatedStylistIds": ["st-10", "st-02"]
+    "relatedStylistIds": [
+      "st-10",
+      "st-02"
+    ],
+    "published": false
   },
   {
     "id": "a-6",
@@ -63,7 +85,11 @@
     "category": "カット",
     "publishedAt": "2026-04-25T15:00",
     "coverImage": "https://picsum.photos/seed/article-6/1200/600",
-    "relatedStylistIds": ["st-06", "st-03"]
+    "relatedStylistIds": [
+      "st-06",
+      "st-03"
+    ],
+    "published": false
   },
   {
     "id": "a-7",
@@ -74,7 +100,10 @@
     "category": "ケア",
     "publishedAt": "2026-04-20T09:00",
     "coverImage": "https://picsum.photos/seed/article-7/1200/600",
-    "relatedStylistIds": ["st-07"]
+    "relatedStylistIds": [
+      "st-07"
+    ],
+    "published": false
   },
   {
     "id": "a-8",
@@ -85,6 +114,12 @@
     "category": "エリア",
     "publishedAt": "2026-04-15T11:00",
     "coverImage": "https://picsum.photos/seed/article-8/1200/600",
-    "relatedStylistIds": ["st-07", "st-08", "st-10", "st-11"]
+    "relatedStylistIds": [
+      "st-07",
+      "st-08",
+      "st-10",
+      "st-11"
+    ],
+    "published": false
   }
 ]

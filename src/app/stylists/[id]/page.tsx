@@ -1,5 +1,9 @@
+import type { Metadata } from "next";
+import { cache } from "react";
 import Link from "next/link";
 import { notFound } from "next/navigation";
+import { JsonLd } from "@/components/seo/JsonLd";
+import { SITE_NAME, SITE_URL, DEFAULT_OG_IMAGE, absoluteUrl, truncate } from "@/lib/site";
 import { SnsFeed } from "@/components/stylist/SnsFeed";
 import { StylistAvatar } from "@/components/common/StylistAvatar";
 import { BookingActions } from "@/components/stylist/BookingActions";
@@ -11,16 +15,97 @@ import { formatDateTime, formatPriceRange } from "@/lib/format";
 
 export const dynamic = "force-dynamic";
 
+// generateMetadata とページ本体で同じ美容師を 2 回 DB から取らないようにする
+const loadStylist = cache((id: string) => getStylistById(id));
+
+export async function generateMetadata({
+  params,
+}: {
+  params: { id: string };
+}): Promise<Metadata> {
+  const stylist = await loadStylist(params.id);
+  if (!stylist) return { title: `美容師が見つかりません | ${SITE_NAME}` };
+
+  const store = getStoreById(stylist.storeId);
+  // 店舗名にエリア名が含まれる（例: ポミエ 表参道）ので店舗名だけを使う
+  const place = store ? store.name : "ポミエ";
+  const title = `${stylist.name}｜${place}の美容師 | ${SITE_NAME}`;
+  const lead = [
+    stylist.strengths.length > 0 ? `強み: ${stylist.strengths.slice(0, 3).join("・")}。` : "",
+    stylist.specialtyMenus.length > 0
+      ? `得意メニュー: ${stylist.specialtyMenus.slice(0, 4).join("・")}。`
+      : "",
+  ].join("");
+  const description = truncate(`${place}の美容師 ${stylist.name}。${lead}${stylist.profile}`, 120);
+  const image = stylist.avatar || store?.image || DEFAULT_OG_IMAGE;
+  const url = `/stylists/${stylist.id}`;
+
+  return {
+    title,
+    description,
+    alternates: { canonical: url },
+    openGraph: {
+      type: "profile",
+      url,
+      title,
+      description,
+      images: [{ url: image, alt: stylist.name }],
+    },
+    twitter: { card: "summary_large_image", title, description, images: [image] },
+  };
+}
+
 export default async function StylistDetailPage({ params }: { params: { id: string } }) {
-  const stylist = await getStylistById(params.id);
+  const stylist = await loadStylist(params.id);
   if (!stylist) notFound();
   const store = getStoreById(stylist.storeId);
   const posts = await getSnsPostsByStylistId(stylist.id);
   // ヒーロー背景: 美容師ごとの個別設定を優先、無ければ所属店舗のメイン写真
   const heroBg = stylist.backgroundImage || store?.image;
 
+  const pageUrl = `${SITE_URL}/stylists/${stylist.id}`;
+  // 構造化データ: 美容師（人物）とその所属サロン、パンくず
+  // ※ 店舗の住所は正確性を確認できるまで載せない
+  const structuredData = [
+    {
+      "@context": "https://schema.org",
+      "@type": "Person",
+      "@id": `${pageUrl}#person`,
+      name: stylist.name,
+      ...(stylist.nameKana ? { alternateName: stylist.nameKana } : {}),
+      jobTitle: "美容師",
+      url: pageUrl,
+      description: truncate(stylist.profile, 200),
+      ...(stylist.avatar ? { image: absoluteUrl(stylist.avatar) } : {}),
+      ...(stylist.specialtyMenus.length > 0 ? { knowsAbout: stylist.specialtyMenus } : {}),
+      ...(stylist.instagramHandle
+        ? { sameAs: [`https://www.instagram.com/${stylist.instagramHandle}/`] }
+        : {}),
+      ...(store
+        ? {
+            worksFor: {
+              "@type": "HairSalon",
+              name: store.name,
+              areaServed: store.area,
+              ...(store.image ? { image: absoluteUrl(store.image) } : {}),
+            },
+          }
+        : {}),
+    },
+    {
+      "@context": "https://schema.org",
+      "@type": "BreadcrumbList",
+      itemListElement: [
+        { "@type": "ListItem", position: 1, name: "トップ", item: `${SITE_URL}/` },
+        { "@type": "ListItem", position: 2, name: "美容師一覧", item: `${SITE_URL}/stylists` },
+        { "@type": "ListItem", position: 3, name: stylist.name, item: pageUrl },
+      ],
+    },
+  ];
+
   return (
     <div className="container-page py-10">
+      <JsonLd data={structuredData} />
       <Link href="/stylists" className="text-sm text-pomie-600 hover:underline">
         ← 美容師一覧に戻る
       </Link>

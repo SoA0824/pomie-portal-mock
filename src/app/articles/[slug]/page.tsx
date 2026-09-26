@@ -1,3 +1,4 @@
+import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import ReactMarkdown from "react-markdown";
@@ -6,11 +7,35 @@ import { getAllArticles, getArticleBySlug } from "@/lib/data/articles";
 import { getStylistById } from "@/lib/data/stylists";
 import type { Stylist } from "@/lib/types";
 import { formatDate } from "@/lib/format";
+import { JsonLd } from "@/components/seo/JsonLd";
+import { SITE_NAME, SITE_URL, absoluteUrl, truncate } from "@/lib/site";
 
 export const dynamic = "force-dynamic";
 
 export function generateStaticParams() {
   return getAllArticles().map((a) => ({ slug: a.slug }));
+}
+
+export function generateMetadata({ params }: { params: { slug: string } }): Metadata {
+  const article = getArticleBySlug(params.slug);
+  if (!article) return { title: `記事が見つかりません | ${SITE_NAME}` };
+  const title = `${article.title} | ${SITE_NAME}`;
+  const description = truncate(article.summary || article.body, 120);
+  const url = `/articles/${article.slug}`;
+  return {
+    title,
+    description,
+    alternates: { canonical: url },
+    openGraph: {
+      type: "article",
+      url,
+      title,
+      description,
+      publishedTime: article.publishedAt,
+      images: [{ url: article.coverImage, alt: article.title }],
+    },
+    twitter: { card: "summary_large_image", title, description, images: [article.coverImage] },
+  };
 }
 
 export default async function ArticleDetailPage({ params }: { params: { slug: string } }) {
@@ -22,8 +47,37 @@ export default async function ArticleDetailPage({ params }: { params: { slug: st
   );
   const related = relatedResults.filter((s): s is Stylist => Boolean(s));
 
+  const pageUrl = `${SITE_URL}/articles/${article.slug}`;
+  const structuredData = [
+    {
+      "@context": "https://schema.org",
+      "@type": "BlogPosting",
+      headline: article.title,
+      description: truncate(article.summary || article.body, 200),
+      image: absoluteUrl(article.coverImage),
+      datePublished: article.publishedAt,
+      mainEntityOfPage: pageUrl,
+      author: { "@type": "Organization", name: SITE_NAME, url: SITE_URL },
+      publisher: {
+        "@type": "Organization",
+        name: SITE_NAME,
+        logo: { "@type": "ImageObject", url: absoluteUrl("/logo/pomie-logo.svg") },
+      },
+    },
+    {
+      "@context": "https://schema.org",
+      "@type": "BreadcrumbList",
+      itemListElement: [
+        { "@type": "ListItem", position: 1, name: "トップ", item: `${SITE_URL}/` },
+        { "@type": "ListItem", position: 2, name: "記事一覧", item: `${SITE_URL}/articles` },
+        { "@type": "ListItem", position: 3, name: article.title, item: pageUrl },
+      ],
+    },
+  ];
+
   return (
     <article>
+      <JsonLd data={structuredData} />
       <div className="aspect-[2/1] w-full overflow-hidden bg-ink-100 md:aspect-[3/1]">
         {/* eslint-disable-next-line @next/next/no-img-element */}
         <img src={article.coverImage} alt={article.title} className="h-full w-full object-cover" />

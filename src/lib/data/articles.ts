@@ -1,10 +1,19 @@
 import articlesJson from "../../../data/articles.json";
 import type { Article, ArticleCategory } from "../types";
 
-const articles = articlesJson as Article[];
+const allArticles = articlesJson as Article[];
+/** 公開中の記事だけ。サイト側の表示・sitemap はすべてこれを使う */
+const articles = allArticles.filter((a) => a.published);
+
+const byNewest = (a: Article, b: Article) => (a.publishedAt < b.publishedAt ? 1 : -1);
 
 export function getAllArticles(): Article[] {
-  return [...articles].sort((a, b) => (a.publishedAt < b.publishedAt ? 1 : -1));
+  return [...articles].sort(byNewest);
+}
+
+/** 管理画面用: 非公開も含めた全記事 */
+export function getAllArticlesIncludingDrafts(): Article[] {
+  return [...allArticles].sort(byNewest);
 }
 
 export function getArticleBySlug(slug: string): Article | undefined {

@@ -5,7 +5,8 @@ import { getAllStores } from "@/lib/data/stores";
 export const dynamic = "force-dynamic";
 
 export const metadata = {
-  title: "LINE Bot 予約 (モック) | POMiE Portal",
+  title: "LINE 予約 | POMiE Portal",
+  robots: { index: false, follow: false },
 };
 
 export default async function LineBotPage({

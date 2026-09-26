@@ -7,6 +7,7 @@ import { getStoreById } from "@/lib/data/stores";
 
 export const metadata = {
   title: "予約 | POMiE Portal",
+  robots: { index: false, follow: false },
 };
 
 export default async function NewReservationPage({

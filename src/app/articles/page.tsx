@@ -4,7 +4,10 @@ import { getAllArticles, getArticleCategories } from "@/lib/data/articles";
 import type { ArticleCategory } from "@/lib/types";
 
 export const metadata = {
-  title: "記事一覧 | POMiE Portal",
+  title: "髪・美容師選びのヒント｜記事一覧 | POMiE Portal",
+  description:
+    "髪の悩みやスタイル選び、美容師の選び方など、ポミエ契約美容師の知見をもとにした記事をお届けします。",
+  alternates: { canonical: "/articles" },
 };
 
 const CATEGORY_ALL = "all" as const;
@@ -49,7 +52,7 @@ export default function ArticlesPage({
       </section>
 
       {articles.length === 0 && (
-        <p className="mt-8 text-sm text-ink-500">該当する記事がありません。</p>
+        <p className="mt-8 text-sm text-ink-500">記事は現在準備中です。</p>
       )}
     </div>
   );

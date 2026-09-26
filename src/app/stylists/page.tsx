@@ -4,7 +4,11 @@ import { listAllMenus, searchStylists, type StylistSort } from "@/lib/data/styli
 import { getAllStores } from "@/lib/data/stores";
 
 export const metadata = {
-  title: "美容師を探す | POMiE Portal",
+  title: "美容師を探す｜表参道・恵比寿のポミエ契約美容師 | POMiE Portal",
+  description:
+    "表参道・恵比寿のポミエ契約美容師を、得意メニュー・エリア・料金から探せます。髪質改善、似合わせカット、カラーなど、あなたに合う美容師が見つかります。",
+  // 絞り込み（?menu= / ?storeId= / ?sort=）の URL は一覧本体に集約する
+  alternates: { canonical: "/stylists" },
 };
 
 export const dynamic = "force-dynamic";

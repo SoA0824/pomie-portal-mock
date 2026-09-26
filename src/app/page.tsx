@@ -5,15 +5,46 @@ import { StoreCard } from "@/components/store/StoreCard";
 import { getFeaturedArticles } from "@/lib/data/articles";
 import { getFeaturedStylists } from "@/lib/data/stylists";
 import { getAllStores } from "@/lib/data/stores";
+import { JsonLd } from "@/components/seo/JsonLd";
+import { SITE_NAME, SITE_URL, SITE_DESCRIPTION, absoluteUrl } from "@/lib/site";
 
 export const dynamic = "force-dynamic";
+
+export const metadata = {
+  alternates: { canonical: "/" },
+};
 
 export default async function Home() {
   const articles = getFeaturedArticles(3);
   const stylists = await getFeaturedStylists(4);
   const stores = getAllStores();
+  const structuredData = [
+    {
+      "@context": "https://schema.org",
+      "@type": "WebSite",
+      name: SITE_NAME,
+      url: `${SITE_URL}/`,
+      description: SITE_DESCRIPTION,
+      inLanguage: "ja",
+      // サイト内検索（美容師検索）を Google に伝える
+      potentialAction: {
+        "@type": "SearchAction",
+        target: `${SITE_URL}/stylists?keyword={search_term_string}`,
+        "query-input": "required name=search_term_string",
+      },
+    },
+    {
+      "@context": "https://schema.org",
+      "@type": "Organization",
+      name: SITE_NAME,
+      url: `${SITE_URL}/`,
+      logo: absoluteUrl("/logo/pomie-logo.svg"),
+    },
+  ];
+
   return (
     <>
+      <JsonLd data={structuredData} />
       {/* メインビジュアル */}
       <section className="relative overflow-hidden bg-gradient-to-br from-pomie-600 to-pomie-900">
         {/* 背景写真（public/images/hero/hero.jpg を置くと表示。無ければブランドグラデ） */}
@@ -97,6 +128,7 @@ export default async function Home() {
         </Link>
       </section>
 
+      {articles.length > 0 && (
       <section className="container-page py-14">
         <SectionHeader
           title="髪・美容師選びのヒント"
@@ -109,6 +141,7 @@ export default async function Home() {
           ))}
         </div>
       </section>
+      )}
 
       <section className="container-page py-14">
         <SectionHeader

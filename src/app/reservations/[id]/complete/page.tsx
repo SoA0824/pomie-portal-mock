@@ -10,6 +10,7 @@ export const dynamic = "force-dynamic";
 
 export const metadata = {
   title: "予約完了 | POMiE Portal",
+  robots: { index: false, follow: false },
 };
 
 export default async function ReservationCompletePage({

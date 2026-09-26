@@ -7,6 +7,7 @@ export const metadata = {
   title: "あなたにぴったりの美容師を診断 | POMiE Portal",
   description:
     "髪のお悩み・希望スタイル・店舗エリア・予算から、相性のいい美容師を診断します。",
+  alternates: { canonical: "/match" },
 };
 
 export default async function MatchPage() {
