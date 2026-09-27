@@ -29,10 +29,24 @@ export function BookingActions({
   if (stylist.bookingMode === "pomie") {
     return (
       <div className={isSmall ? "flex flex-wrap gap-2" : "flex flex-col gap-3 sm:flex-row"}>
-        <Link href={`/reservations/new?stylistId=${stylist.id}`} className={primaryClass}>
+        <Link
+          href={`/reservations/new?stylistId=${stylist.id}`}
+          className={primaryClass}
+          data-ga-event="booking_click"
+          data-ga-stylist_id={stylist.id}
+          data-ga-stylist_name={stylist.name}
+          data-ga-method="pomie_web"
+        >
           Web で予約
         </Link>
-        <Link href={`/line-bot?stylistId=${stylist.id}`} className={secondaryClass}>
+        <Link
+          href={`/line-bot?stylistId=${stylist.id}`}
+          className={secondaryClass}
+          data-ga-event="booking_click"
+          data-ga-stylist_id={stylist.id}
+          data-ga-stylist_name={stylist.name}
+          data-ga-method="pomie_line"
+        >
           LINE で予約
         </Link>
       </div>
@@ -52,6 +66,11 @@ export function BookingActions({
           target="_blank"
           rel="noreferrer noopener"
           className={i === 0 ? primaryClass : secondaryClass}
+          data-ga-event="booking_click"
+          data-ga-stylist_id={stylist.id}
+          data-ga-stylist_name={stylist.name}
+          data-ga-method="external"
+          data-ga-link_label={link.label}
         >
           {link.label} ↗
         </a>

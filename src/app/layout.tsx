@@ -2,7 +2,22 @@ import type { Metadata } from "next";
 import "../styles/globals.css";
 import { Header } from "@/components/layout/Header";
 import { Footer } from "@/components/layout/Footer";
-import { SITE_URL, SITE_NAME, SITE_DESCRIPTION, DEFAULT_OG_IMAGE } from "@/lib/site";
+import { GoogleAnalytics } from "@/components/analytics/GoogleAnalytics";
+import {
+  SITE_URL,
+  SITE_NAME,
+  SITE_DESCRIPTION,
+  DEFAULT_OG_IMAGE,
+  GA_MEASUREMENT_ID,
+} from "@/lib/site";
+
+/**
+ * GA は Vercel の本番環境だけで読み込む（ローカル・プレビューのアクセスは送らない）。
+ * ローカルで動作確認したいときは GA_FORCE_ENABLE=1 を付けて起動する。
+ */
+const gaEnabled =
+  Boolean(GA_MEASUREMENT_ID) &&
+  (process.env.VERCEL_ENV === "production" || process.env.GA_FORCE_ENABLE === "1");
 
 export const metadata: Metadata = {
   // 相対パスの OGP 画像・canonical を絶対 URL に解決する基準
@@ -39,6 +54,7 @@ export default function RootLayout({
         <Header />
         <main className="flex-1">{children}</main>
         <Footer />
+        {gaEnabled && <GoogleAnalytics measurementId={GA_MEASUREMENT_ID} />}
       </body>
     </html>
   );

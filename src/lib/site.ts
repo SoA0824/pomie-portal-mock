@@ -12,6 +12,9 @@ export const SITE_NAME = "POMiE Portal";
 export const SITE_DESCRIPTION =
   "ポミエ契約美容師に出会えるポータル。記事や診断から、あなたに合う美容師を見つけて予約できます。";
 
+/** Google アナリティクス 4 の測定 ID（公開情報。環境変数で上書き可） */
+export const GA_MEASUREMENT_ID = process.env.NEXT_PUBLIC_GA_MEASUREMENT_ID ?? "G-B7M5FQX839";
+
 /** OGP の既定画像（トップのメインビジュアル） */
 export const DEFAULT_OG_IMAGE = "/images/hero/hero.jpg";
 
