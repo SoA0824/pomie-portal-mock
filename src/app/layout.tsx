@@ -20,6 +20,12 @@ export const metadata: Metadata = {
   twitter: {
     card: "summary_large_image",
   },
+  // Google Search Console の所有権確認（HTML タグ方式）。
+  // Vercel の環境変数 GOOGLE_SITE_VERIFICATION に確認コードを入れて再デプロイすると
+  // <meta name="google-site-verification" content="..."> が出力される。
+  ...(process.env.GOOGLE_SITE_VERIFICATION
+    ? { verification: { google: process.env.GOOGLE_SITE_VERIFICATION } }
+    : {}),
 };
 
 export default function RootLayout({
