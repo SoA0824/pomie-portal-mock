@@ -1,0 +1,71 @@
+# 記事の自動化（サーバー経路）
+#
+# - 毎日 03:00 JST: 承認済みのキーワード候補を記事（下書き）にする
+# - 毎週月曜 05:00 JST: 種キーワードをもとに候補を提案する
+# - 手動実行（Actions タブ → Run workflow）でも動かせる
+#
+# 必要な Secrets（リポジトリの Settings → Secrets and variables → Actions）:
+#   ARTICLES_SUPABASE_URL / ARTICLES_SUPABASE_ANON_KEY … 本番サイトと同じ Supabase
+#   ANTHROPIC_API_KEY … 記事の執筆と企画案（console.anthropic.com）
+#   RAKKO_API_KEY     … ラッコキーワード API（マイページで発行）
+#
+# コネクタ経路（Claude Code から /propose-keywords, /write-article）だけで運用する場合、
+# このワークフローは無効化してよい（Actions タブ → このワークフロー → Disable workflow）。
+name: 記事の自動化
+
+on:
+  schedule:
+    - cron: "0 18 * * *" # 毎日 03:00 JST: 記事化
+    - cron: "0 20 * * 0" # 毎週月曜 05:00 JST: 候補の提案
+  workflow_dispatch:
+    inputs:
+      task:
+        description: 実行する処理
+        type: choice
+        options: [write, propose, status]
+        default: write
+      limit:
+        description: 件数（write は記事数、propose は候補数）
+        default: "2"
+
+permissions:
+  contents: read
+
+concurrency:
+  group: articles
+  cancel-in-progress: false
+
+jobs:
+  run:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: npm
+      - run: npm ci --no-audit --no-fund
+
+      - name: 処理を決める
+        id: task
+        run: |
+          if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
+            echo "task=${{ inputs.task }}" >> "$GITHUB_OUTPUT"
+            echo "limit=${{ inputs.limit }}" >> "$GITHUB_OUTPUT"
+          elif [ "${{ github.event.schedule }}" = "0 20 * * 0" ]; then
+            echo "task=propose" >> "$GITHUB_OUTPUT"
+            echo "limit=8" >> "$GITHUB_OUTPUT"
+          else
+            echo "task=write" >> "$GITHUB_OUTPUT"
+            echo "limit=2" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: 実行
+        env:
+          ARTICLES_SUPABASE_URL: ${{ secrets.ARTICLES_SUPABASE_URL }}
+          ARTICLES_SUPABASE_ANON_KEY: ${{ secrets.ARTICLES_SUPABASE_ANON_KEY }}
+          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+          RAKKO_API_KEY: ${{ secrets.RAKKO_API_KEY }}
+          NEXT_PUBLIC_SITE_URL: https://portal.pomie.jp
+        run: node scripts/articles/run.mjs ${{ steps.task.outputs.task }} --limit ${{ steps.task.outputs.limit }}

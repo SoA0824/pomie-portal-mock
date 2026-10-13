@@ -1,5 +1,7 @@
-import type { Article, ArticleCategory } from "../types";
+import type { Article, ArticleCategory, ArticleGenerationLog, ArticleSupervisor } from "../types";
 import { getSupabase, type ArticleRow } from "@/lib/supabase/client";
+import { getStylistByIdIncludingInactive } from "./stylists";
+import { getStoreById } from "./stores";
 
 function rowToArticle(row: ArticleRow): Article {
   return {
@@ -15,9 +17,38 @@ function rowToArticle(row: ArticleRow): Article {
     status: row.status,
     targetKeyword: row.target_keyword,
     source: row.source,
+    supervisorStylistId: row.supervisor_stylist_id ?? null,
+    supervisorName: row.supervisor_name ?? null,
+    supervisorTitle: row.supervisor_title ?? null,
+    keywordCandidateId: row.keyword_candidate_id ?? null,
+    generationLog: (row.generation_log as ArticleGenerationLog | null) ?? null,
     createdAt: row.created_at,
     updatedAt: row.updated_at,
   };
+}
+
+/**
+ * 記事の監修者を表示用に解決する。
+ * 美容師を選んでいればその名前・店舗・写真を使い、公開中ならプロフィールへのリンクも付ける。
+ */
+export async function resolveArticleSupervisor(article: Article): Promise<ArticleSupervisor | null> {
+  if (article.supervisorStylistId) {
+    const stylist = await getStylistByIdIncludingInactive(article.supervisorStylistId);
+    if (stylist) {
+      const store = getStoreById(stylist.storeId);
+      return {
+        name: stylist.name,
+        title: `${store ? store.name : "ポミエ"} 美容師`,
+        stylistId: stylist.id,
+        avatar: stylist.avatar || undefined,
+        url: stylist.contractStatus === "active" ? `/stylists/${stylist.id}` : undefined,
+      };
+    }
+  }
+  if (article.supervisorName) {
+    return { name: article.supervisorName, title: article.supervisorTitle ?? "" };
+  }
+  return null;
 }
 
 /**

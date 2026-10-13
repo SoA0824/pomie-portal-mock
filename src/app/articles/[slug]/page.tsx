@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import { cache } from "react";
 import { notFound } from "next/navigation";
 import { ArticleView } from "@/components/article/ArticleView";
-import { getArticleBySlug } from "@/lib/data/articles";
+import { getArticleBySlug, resolveArticleSupervisor } from "@/lib/data/articles";
 import { getStylistById } from "@/lib/data/stylists";
 import type { Stylist } from "@/lib/types";
 import { JsonLd } from "@/components/seo/JsonLd";
@@ -49,6 +49,7 @@ export default async function ArticleDetailPage({ params }: { params: { slug: st
     article.relatedStylistIds.map((id) => getStylistById(id))
   );
   const related = relatedResults.filter((s): s is Stylist => Boolean(s));
+  const supervisor = await resolveArticleSupervisor(article);
 
   const pageUrl = `${SITE_URL}/articles/${article.slug}`;
   const structuredData = [
@@ -62,6 +63,17 @@ export default async function ArticleDetailPage({ params }: { params: { slug: st
       dateModified: article.updatedAt,
       mainEntityOfPage: pageUrl,
       author: { "@type": "Organization", name: SITE_NAME, url: SITE_URL },
+      // 監修者（専門家による確認を Google に伝える）
+      ...(supervisor
+        ? {
+            reviewedBy: {
+              "@type": "Person",
+              name: supervisor.name,
+              ...(supervisor.title ? { jobTitle: supervisor.title } : {}),
+              ...(supervisor.url ? { url: absoluteUrl(supervisor.url) } : {}),
+            },
+          }
+        : {}),
       publisher: {
         "@type": "Organization",
         name: SITE_NAME,
@@ -82,7 +94,7 @@ export default async function ArticleDetailPage({ params }: { params: { slug: st
   return (
     <article>
       <JsonLd data={structuredData} />
-      <ArticleView article={article} related={related} />
+      <ArticleView article={article} related={related} supervisor={supervisor} />
     </article>
   );
 }

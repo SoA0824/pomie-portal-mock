@@ -211,25 +211,26 @@ POMiEポータル/
 - `INSTAGRAM_FETCHER=apify`: Apify 固定（トークン必須）
 - 未指定: トークンがあれば apify、無ければ mock（自動）
 
-## 記事の自動執筆
-
-Claude Code のスキル `/write-article` で、キーワード選定 → リサーチ → 執筆 → 検品 → 下書き保存までを行います。
-公開は管理画面（/admin/articles）で内容を確認してから行います。
+## 記事の自動化（キーワード提案 → 承認 → 自動執筆 → 承認・公開）
 
 ```
-/write-article 表参道 髪質改善      # このキーワードで 1 本書く
-/write-article                      # キーワードの候補を出す
+① /propose-keywords   候補をラッコキーワードで調査・選定し、管理画面に登録
+② /admin/keywords     管理者が候補を承認 / 却下
+③ /write-article --approved   承認済みの候補を記事（下書き）にする
+④ /admin/articles     プレビュー → 監修者（任意）を付けて「承認して公開」
 ```
 
+- 運用手順・2 つの動かし方（Claude Code のコネクタ / GitHub Actions）: [docs/ARTICLE-PIPELINE.md](./docs/ARTICLE-PIPELINE.md)
 - 編集方針・表現のルール: [docs/ARTICLE-GUIDELINES.md](./docs/ARTICLE-GUIDELINES.md)
-- 手順の定義: `.claude/skills/write-article/SKILL.md`
-- スクリプト（Node 18 以上・追加パッケージ不要）:
-  - `node scripts/articles/context.mjs --keyword "..."` … 美容師・既存記事などの材料を JSON で出す
-  - `node scripts/articles/check.mjs content/drafts/xxx.md` … 検品（表現・リンク・長さ）
-  - `node scripts/articles/save.mjs content/drafts/xxx.md` … 下書きとして DB に保存
+- スキル: `.claude/skills/propose-keywords/`, `.claude/skills/write-article/`
+- スクリプト（`scripts/articles/`）:
+  - `context.mjs` … 美容師・既存記事・候補などの材料を JSON で出す
+  - `candidates.mjs` … 候補の一覧・評価・登録（コネクタ経路）
+  - `check.mjs` / `save.mjs` … 下書きの検品と保存
+  - `run.mjs propose|write|status` … サーバー経路（ラッコ API + Claude API）。GitHub Actions `.github/workflows/articles.yml` から定期実行
 
-初回だけ、プロジェクト直下に `.env.production.local` を作り、Vercel と同じ
-`NEXT_PUBLIC_SUPABASE_URL` / `NEXT_PUBLIC_SUPABASE_ANON_KEY` を書いてください（本番と同じ DB に保存するため）。
+初回だけ、`supabase/migration-009-keyword-pipeline.sql` の実行と、プロジェクト直下の `.env.production.local`
+（Vercel と同じ `NEXT_PUBLIC_SUPABASE_URL` / `NEXT_PUBLIC_SUPABASE_ANON_KEY`）が必要です。
 
 ## 既知の制限（MVP スコープ外）
 

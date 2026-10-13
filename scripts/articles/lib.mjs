@@ -213,6 +213,10 @@ export function parseDraft(text) {
       meta[currentKey] = unquote(v);
     }
   }
+  // 「cover_image:」のように値が空の項目は、配列ではなく空文字として扱う
+  for (const key of ["title", "slug", "category", "summary", "target_keyword", "cover_image"]) {
+    if (Array.isArray(meta[key])) meta[key] = meta[key].join(", ");
+  }
   // related_stylist_ids は "st-a, st-b" のような書き方も受け付ける
   if (typeof meta.related_stylist_ids === "string") {
     meta.related_stylist_ids = meta.related_stylist_ids
@@ -458,4 +462,207 @@ export function printLint({ errors, warnings }) {
   for (const e of errors) console.log(`  ✗ [${e.rule}] ${e.message}`);
   for (const w of warnings) console.log(`  ! [${w.rule}] ${w.message}`);
   if (!errors.length && !warnings.length) console.log("  ✓ 問題は見つかりませんでした");
+}
+
+// ---------------------------------------------------------------------------
+// 記事の材料（文脈）: context.mjs / run.mjs / candidates.mjs で共通
+// ---------------------------------------------------------------------------
+
+export function newId(prefix) {
+  return `${prefix}-${Date.now().toString(36)}${Math.random().toString(36).slice(2, 6)}`;
+}
+
+export function loadStores() {
+  return JSON.parse(fs.readFileSync(path.join(ROOT, "data", "stores.json"), "utf8"));
+}
+
+export function normalizeMenus(raw) {
+  if (!Array.isArray(raw)) return [];
+  return raw
+    .map((m) => (typeof m === "string" ? { name: m, duration: 60 } : { name: m?.name ?? "", duration: m?.duration ?? 60 }))
+    .filter((m) => m.name);
+}
+
+/**
+ * 記事を書くための材料をまとめて取る。
+ * stylists は掲載中のみ（記事に書いてよい公開情報）。allStylists は検品用に非公開も含む。
+ */
+export async function buildContext(db) {
+  const stores = loadStores();
+  const storeById = Object.fromEntries(stores.map((s) => [s.id, s]));
+  const [stylistRows, articleRows] = await Promise.all([
+    rest(
+      db,
+      "GET",
+      "stylists?select=id,name,name_kana,profile,store_id,strengths,specialty_menus,menus,price_range,instagram_handle,booking_mode,booking_links,contract_status,featured_flag&order=id"
+    ),
+    rest(
+      db,
+      "GET",
+      "articles?select=id,slug,title,summary,category,status,target_keyword,related_stylist_ids,published_at,updated_at&order=updated_at.desc"
+    ),
+  ]);
+
+  const stylists = stylistRows
+    .filter((s) => s.contract_status === "active")
+    .map((s) => {
+      const store = storeById[s.store_id];
+      return {
+        id: s.id,
+        name: s.name,
+        nameKana: s.name_kana ?? "",
+        url: `${SITE_URL}/stylists/${s.id}`,
+        store: store ? { id: store.id, name: store.name, area: store.area } : { id: s.store_id, name: "", area: "" },
+        profile: s.profile ?? "",
+        strengths: s.strengths ?? [],
+        specialtyMenus: s.specialty_menus ?? [],
+        menus: normalizeMenus(s.menus),
+        // price_range は jsonb { min, max }（0 なら「指定なし」）
+        priceRange: { min: Number(s.price_range?.min ?? 0), max: Number(s.price_range?.max ?? 0) },
+        instagram: s.instagram_handle ? `https://www.instagram.com/${s.instagram_handle}/` : null,
+        bookingMode: s.booking_mode ?? "external",
+        hasBookingLink: (s.booking_mode ?? "external") === "pomie" || (s.booking_links ?? []).length > 0,
+        featured: Boolean(s.featured_flag),
+      };
+    });
+
+  const articles = articleRows.map((a) => ({
+    id: a.id,
+    slug: a.slug,
+    url: `${SITE_URL}/articles/${a.slug}`,
+    title: a.title,
+    summary: a.summary,
+    category: a.category,
+    status: a.status,
+    targetKeyword: a.target_keyword,
+    relatedStylistIds: a.related_stylist_ids ?? [],
+    publishedAt: a.published_at,
+    updatedAt: a.updated_at,
+  }));
+
+  const uniq = (arr) => [...new Set(arr.filter(Boolean))];
+  return {
+    generatedAt: new Date().toISOString(),
+    db: db.label,
+    site: SITE_URL,
+    links: {
+      stylistList: `${SITE_URL}/stylists`,
+      stylistByMenu: `${SITE_URL}/stylists?menu={メニュー名を URL エンコード}`,
+      stylistByStore: `${SITE_URL}/stylists?storeId={s1|s2}`,
+      match: `${SITE_URL}/match`,
+      articles: `${SITE_URL}/articles`,
+    },
+    stores: stores.map((s) => ({ id: s.id, name: s.name, area: s.area, catchphrase: s.catchphrase ?? "", image: s.image, gallery: s.gallery ?? [] })),
+    stylists,
+    allStylists: stylistRows.map((s) => ({ id: s.id, name: s.name, active: s.contract_status === "active", storeId: s.store_id })),
+    articles,
+    taxonomy: {
+      areas: uniq(stores.map((s) => s.area)),
+      menus: uniq(stylists.flatMap((s) => s.menus.map((m) => m.name))),
+      specialtyMenus: uniq(stylists.flatMap((s) => s.specialtyMenus)),
+      strengths: uniq(stylists.flatMap((s) => s.strengths)),
+    },
+  };
+}
+
+/** キーワードが既存の記事・候補と重なっていないか */
+export function keywordOverlap(keyword, articles, candidates = []) {
+  const tokens = String(keyword).trim().toLowerCase().split(/[\s　]+/).filter(Boolean);
+  const entries = [
+    ...articles.map((a) => ({ kind: "記事", slug: a.slug, title: a.title, status: a.status, keyword: a.targetKeyword ?? "" })),
+    ...candidates.map((c) => ({ kind: "候補", slug: c.id, title: c.suggestedTitle ?? c.keyword, status: c.status, keyword: c.keyword })),
+  ];
+  const overlapping = entries
+    .map((e) => {
+      const hay = `${e.keyword} ${e.title}`.toLowerCase();
+      return { ...e, matchedTokens: tokens.filter((t) => hay.includes(t)) };
+    })
+    .filter((e) => e.matchedTokens.length > 0)
+    .sort((a, b) => b.matchedTokens.length - a.matchedTokens.length);
+  const same = overlapping.filter((e) => e.matchedTokens.length === tokens.length);
+  return {
+    keyword: String(keyword).trim(),
+    verdict:
+      same.length > 0
+        ? "既存の記事・候補と同じキーワードです。重複を避けるため、切り口を変えるか既存の更新を検討してください"
+        : overlapping.length > 0
+          ? "語の一部が重なる記事・候補があります。狙いが被らないか確認してください"
+          : "既存の記事・候補との重なりはありません",
+    sameKeyword: same,
+    overlapping: overlapping.slice(0, 10),
+  };
+}
+
+// ---------------------------------------------------------------------------
+// キーワード候補・記事の DB 操作（PostgREST）
+// ---------------------------------------------------------------------------
+
+export function rowToCandidate(row) {
+  return {
+    id: row.id,
+    keyword: row.keyword,
+    seed: row.seed ?? null,
+    searchVolume: row.search_volume ?? null,
+    seoDifficulty: row.seo_difficulty ?? null,
+    competition: row.competition ?? null,
+    cpc: row.cpc ?? null,
+    intent: row.intent ?? null,
+    category: row.category ?? null,
+    suggestedTitle: row.suggested_title ?? null,
+    angle: row.angle ?? null,
+    faqQuestions: row.faq_questions ?? [],
+    relatedKeywords: row.related_keywords ?? [],
+    targetStylistIds: row.target_stylist_ids ?? [],
+    score: row.score ?? null,
+    reason: row.reason ?? null,
+    status: row.status,
+    note: row.note ?? null,
+    articleId: row.article_id ?? null,
+    error: row.error ?? null,
+    proposedAt: row.proposed_at,
+    decidedAt: row.decided_at ?? null,
+    writtenAt: row.written_at ?? null,
+    updatedAt: row.updated_at,
+  };
+}
+
+export async function listCandidates(db, { status } = {}) {
+  const q = status ? `&status=eq.${encodeURIComponent(status)}` : "";
+  const rows = await rest(db, "GET", `keyword_candidates?select=*&order=score.desc${q}`);
+  return rows.map(rowToCandidate);
+}
+
+export async function getCandidate(db, idOrKeyword) {
+  const byId = await rest(db, "GET", `keyword_candidates?select=*&id=eq.${encodeURIComponent(idOrKeyword)}&limit=1`);
+  if (byId[0]) return rowToCandidate(byId[0]);
+  const byKw = await rest(db, "GET", `keyword_candidates?select=*&keyword=eq.${encodeURIComponent(idOrKeyword)}&limit=1`);
+  return byKw[0] ? rowToCandidate(byKw[0]) : null;
+}
+
+export async function updateCandidate(db, id, patch) {
+  await rest(db, "PATCH", `keyword_candidates?id=eq.${encodeURIComponent(id)}`, {
+    body: { ...patch, updated_at: new Date().toISOString() },
+    prefer: "return=minimal",
+  });
+}
+
+export async function insertCandidates(db, rows) {
+  if (!rows.length) return;
+  await rest(db, "POST", "keyword_candidates", { body: rows, prefer: "return=minimal" });
+}
+
+export async function listSeeds(db) {
+  const rows = await rest(db, "GET", "keyword_seeds?select=*&order=created_at");
+  return rows.map((r) => ({ id: r.id, keyword: r.keyword, enabled: r.enabled, note: r.note ?? null, lastUsedAt: r.last_used_at ?? null }));
+}
+
+/** 同じ slug の記事があれば -2, -3 … を付けて一意にする */
+export async function ensureUniqueSlug(db, slug) {
+  let candidate = slug;
+  for (let i = 2; i < 50; i++) {
+    const rows = await rest(db, "GET", `articles?select=id&slug=eq.${encodeURIComponent(candidate)}&limit=1`);
+    if (rows.length === 0) return candidate;
+    candidate = `${slug}-${i}`;
+  }
+  throw new Error(`slug を一意にできません: ${slug}`);
 }

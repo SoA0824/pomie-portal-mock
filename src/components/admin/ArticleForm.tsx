@@ -60,7 +60,14 @@ export function ArticleForm({
     status: (initial?.status ?? "draft") as ArticleStatus,
     // 公開済みの記事だけ公開日時を表示・編集する
     publishedAt: initial?.status === "published" ? toLocalInput(initial.publishedAt) : "",
+    supervisorStylistId: initial?.supervisorStylistId ?? "",
+    supervisorName: initial?.supervisorName ?? "",
+    supervisorTitle: initial?.supervisorTitle ?? "",
   });
+  // 監修者: 美容師から選ぶ / その他の人（名前と肩書を入力）
+  const [supervisorOther, setSupervisorOther] = useState(
+    Boolean(initial?.supervisorName && !initial?.supervisorStylistId)
+  );
   const [related, setRelated] = useState<string[]>(initial?.relatedStylistIds ?? []);
 
   const update = <K extends keyof typeof form>(key: K, value: (typeof form)[K]) => {
@@ -80,6 +87,9 @@ export function ArticleForm({
         ...form,
         relatedStylistIds: related,
         publishedAt: form.publishedAt ? new Date(form.publishedAt).toISOString() : undefined,
+        supervisorStylistId: supervisorOther ? null : form.supervisorStylistId || null,
+        supervisorName: supervisorOther ? form.supervisorName : "",
+        supervisorTitle: supervisorOther ? form.supervisorTitle : "",
       });
       if (result.ok) {
         router.push("/admin/articles");
@@ -254,6 +264,51 @@ export function ArticleForm({
           </div>
         )}
         <Hint>非公開の美容師は、選んでも記事には表示されません。</Hint>
+      </fieldset>
+
+      <fieldset className="border-t border-ink-100 pt-5">
+        <legend className="text-xs font-semibold text-ink-700">
+          監修者
+          <span className="ml-1.5 rounded bg-ink-100 px-1.5 py-0.5 text-[10px] font-normal text-ink-500">任意</span>
+        </legend>
+        <div className="mt-2 space-y-2 text-sm">
+          <label className="flex flex-wrap items-center gap-2">
+            <input type="radio" name="supervisorMode" checked={!supervisorOther} onChange={() => setSupervisorOther(false)} />
+            <span>美容師から選ぶ</span>
+            <select
+              value={form.supervisorStylistId}
+              onChange={(e) => update("supervisorStylistId", e.target.value)}
+              disabled={supervisorOther}
+              className="input max-w-xs"
+            >
+              <option value="">（監修者なし）</option>
+              {stylists.map((s) => (
+                <option key={s.id} value={s.id}>
+                  {s.name}（{s.storeName}）{s.active ? "" : "・非公開"}
+                </option>
+              ))}
+            </select>
+          </label>
+          <label className="flex flex-wrap items-center gap-2">
+            <input type="radio" name="supervisorMode" checked={supervisorOther} onChange={() => setSupervisorOther(true)} />
+            <span>その他の人</span>
+            <input
+              value={form.supervisorName}
+              onChange={(e) => update("supervisorName", e.target.value)}
+              disabled={!supervisorOther}
+              placeholder="名前"
+              className="input max-w-[180px]"
+            />
+            <input
+              value={form.supervisorTitle}
+              onChange={(e) => update("supervisorTitle", e.target.value)}
+              disabled={!supervisorOther}
+              placeholder="肩書（例: 毛髪診断士）"
+              className="input max-w-[220px]"
+            />
+          </label>
+        </div>
+        <Hint>記事に「この記事の監修者」として表示されます。美容師を選ぶと店舗名とプロフィールへのリンクも付きます。本人の了承を得てから設定してください。</Hint>
       </fieldset>
 
       <div className="grid gap-5 border-t border-ink-100 pt-5 md:grid-cols-2">

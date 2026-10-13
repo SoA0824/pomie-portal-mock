@@ -1,14 +1,23 @@
 import Link from "next/link";
 import ReactMarkdown from "react-markdown";
 import { StylistCard } from "@/components/stylist/StylistCard";
-import type { Article, Stylist } from "@/lib/types";
+import { StylistAvatar } from "@/components/common/StylistAvatar";
+import type { Article, ArticleSupervisor, Stylist } from "@/lib/types";
 import { formatDate } from "@/lib/format";
 import { articleCover } from "@/lib/articleCover";
 
 /**
  * 記事の本体表示。公開ページと管理画面のプレビューで共通。
  */
-export function ArticleView({ article, related }: { article: Article; related: Stylist[] }) {
+export function ArticleView({
+  article,
+  related,
+  supervisor,
+}: {
+  article: Article;
+  related: Stylist[];
+  supervisor?: ArticleSupervisor | null;
+}) {
   return (
     <>
       <div className="aspect-[2/1] w-full overflow-hidden bg-ink-100 md:aspect-[3/1]">
@@ -22,8 +31,13 @@ export function ArticleView({ article, related }: { article: Article; related: S
         <header className="mt-4">
           <span className="chip">{article.category}</span>
           <h1 className="mt-3 text-2xl font-bold leading-snug md:text-4xl">{article.title}</h1>
-          <p className="mt-2 text-xs text-ink-500">{formatDate(article.publishedAt)}</p>
+          <p className="mt-2 text-xs text-ink-500">
+            {formatDate(article.publishedAt)}
+            {article.updatedAt > article.publishedAt && `（更新: ${formatDate(article.updatedAt)}）`}
+          </p>
         </header>
+
+        {supervisor && <SupervisorCard supervisor={supervisor} />}
 
         <div className="markdown mt-8 max-w-3xl">
           <ReactMarkdown>{article.body}</ReactMarkdown>
@@ -53,5 +67,24 @@ export function ArticleView({ article, related }: { article: Article; related: S
         </div>
       </div>
     </>
+  );
+}
+
+/** 「この記事の監修者」カード */
+function SupervisorCard({ supervisor }: { supervisor: ArticleSupervisor }) {
+  return (
+    <aside className="mt-5 flex max-w-3xl items-center gap-3 rounded-xl bg-white p-3 ring-1 ring-ink-100">
+      <StylistAvatar src={supervisor.avatar} name={supervisor.name} className="h-12 w-12 shrink-0" rounded />
+      <div className="min-w-0 flex-1">
+        <p className="text-[11px] font-semibold uppercase tracking-wider text-ink-500">この記事の監修者</p>
+        <p className="truncate font-semibold text-ink-900">{supervisor.name}</p>
+        {supervisor.title && <p className="truncate text-xs text-ink-700">{supervisor.title}</p>}
+      </div>
+      {supervisor.url && (
+        <Link href={supervisor.url} className="shrink-0 text-xs font-semibold text-pomie-600 hover:underline">
+          プロフィールを見る →
+        </Link>
+      )}
+    </aside>
   );
 }

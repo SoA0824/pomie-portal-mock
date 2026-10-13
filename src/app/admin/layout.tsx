@@ -5,6 +5,7 @@ const NAV = [
   { href: "/admin/reservations", label: "予約一覧" },
   { href: "/admin/seats", label: "サロンボード席" },
   { href: "/admin/stylists", label: "美容師" },
+  { href: "/admin/keywords", label: "キーワード候補" },
   { href: "/admin/articles", label: "記事" },
 ];
 

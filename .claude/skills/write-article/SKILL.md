@@ -14,7 +14,9 @@ POMiE ポータル（https://portal.pomie.jp）の記事を、キーワード選
 
 - `/write-article 表参道 髪質改善` … このキーワードで 1 本書く
 - `/write-article 恵比寿で白髪ぼかしをしたい 40 代向けの記事` … テーマから書く（キーワードはこちらで決めて提案する）
-- `/write-article` … キーワードの候補を出して、どれを書くか聞く
+- `/write-article --approved` … 管理画面で承認済みのキーワード候補から 1 本書く（承認フローの記事化）
+- `/write-article --approved 3` … 承認済みの候補から 3 本書く
+- `/write-article` … キーワードの候補を出して、どれを書くか聞く（候補を DB に登録するなら `/propose-keywords`）
 - 「候補だけ出して」「3 本まとめて書いて」など、言われた範囲に合わせる
 
 ## 準備
@@ -30,6 +32,26 @@ POMiE ポータル（https://portal.pomie.jp）の記事を、キーワード選
    - `taxonomy` … メニュー・強み・エリアの一覧（キーワードの種）
    - `links` … サイト内リンクの形式
    - 失敗する場合: `.env.production.local` が無い → ユーザーに設定を依頼する（本番サイトと同じ DB に保存するため）。記事テーブルが無い → `supabase/migration-008-articles.sql` の実行を依頼する
+
+## 承認済みの候補から書く場合（--approved）
+
+管理画面 `/admin/keywords` で承認された候補を記事にする。キーワード選定は済んでいるので、手順 1 の代わりに次を行う。
+
+1. 候補を取る:
+   ```bash
+   node scripts/articles/candidates.mjs list --status approved
+   node scripts/articles/candidates.mjs show <候補ID>
+   ```
+   スコアが高い順に書く。`note`（運営のメモ）があれば最優先で従う
+2. 候補の `suggestedTitle` / `angle` / `category` / `targetStylistIds` を企画の出発点にする（より良くできれば変えてよい）
+3. `faqQuestions` が空なら、コネクタの `question-search`（中心語、`limit` 20）と `suggest-keywords`（キーワード、`limit` 30）で材料を取る（10 クレジット）
+4. 以降は手順 2〜5 と同じ
+5. 保存は候補と紐づける:
+   ```bash
+   node scripts/articles/save.mjs content/drafts/<slug>.md --candidate <候補ID>
+   ```
+   候補が「記事化済み」になり、記事一覧に下書きとして並ぶ
+6. 報告には「`/admin/articles` でプレビューを確認し、監修者を付けて『承認して公開』してください」を含める
 
 ## 手順 1. キーワード選定
 

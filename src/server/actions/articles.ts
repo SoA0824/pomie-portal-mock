@@ -12,6 +12,58 @@ export type SaveArticleResult =
 /** URL に使う文字列: 半角英小文字・数字・ハイフンのみ */
 const SLUG_PATTERN = /^[a-z0-9]+(?:-[a-z0-9]+)*$/;
 
+type SupervisorInput = {
+  supervisorStylistId?: string | null;
+  supervisorName?: string;
+  supervisorTitle?: string;
+};
+
+/** 監修者の入力を DB の列に直す。美容師を選んだときは名前・肩書の自由入力は使わない */
+function supervisorColumns(input: SupervisorInput) {
+  const stylistId = input.supervisorStylistId?.trim() || null;
+  return {
+    supervisor_stylist_id: stylistId,
+    supervisor_name: stylistId ? null : input.supervisorName?.trim() || null,
+    supervisor_title: stylistId ? null : input.supervisorTitle?.trim() || null,
+  };
+}
+
+export type ApproveArticleInput = { id: string } & SupervisorInput;
+
+/**
+ * 記事を承認して公開する（管理画面の「承認して公開」）。
+ * 監修者は任意。公開日時は初回公開なら現在時刻、再公開なら以前の値を保つ。
+ */
+export async function approveAndPublishArticle(
+  input: ApproveArticleInput
+): Promise<{ ok: true; slug: string } | { ok: false; reason: string }> {
+  const sb = getSupabase();
+  const { data: existing, error: getErr } = await sb
+    .from("articles")
+    .select("slug, summary, body, status, published_at, keyword_candidate_id")
+    .eq("id", input.id)
+    .maybeSingle();
+  if (getErr) return { ok: false, reason: getErr.message };
+  if (!existing) return { ok: false, reason: "article_not_found" };
+  if (!existing.summary?.trim()) return { ok: false, reason: "missing_summary_for_publish" };
+  if (!existing.body?.trim()) return { ok: false, reason: "missing_body_for_publish" };
+
+  const { error } = await sb
+    .from("articles")
+    .update({
+      status: "published",
+      published_at: existing.published_at ?? new Date().toISOString(),
+      ...supervisorColumns(input),
+      updated_at: new Date().toISOString(),
+    })
+    .eq("id", input.id);
+  if (error) return { ok: false, reason: error.message };
+
+  revalidateArticlePages([existing.slug]);
+  revalidatePath("/admin/keywords");
+  return { ok: true, slug: existing.slug };
+}
+
 function newArticleId(): string {
   return `ar-${Date.now().toString(36)}${Math.random().toString(36).slice(2, 6)}`;
 }
@@ -84,6 +136,7 @@ export async function saveArticle(input: SaveArticleInput): Promise<SaveArticleR
     status: input.status,
     target_keyword: input.targetKeyword?.trim() || null,
     published_at: publishedAt,
+    ...supervisorColumns(input),
     updated_at: new Date().toISOString(),
   };
 
@@ -106,7 +159,7 @@ export async function deleteArticle(id: string): Promise<{ ok: true } | { ok: fa
   const sb = getSupabase();
   const { data: existing, error: getErr } = await sb
     .from("articles")
-    .select("slug, cover_image")
+    .select("slug, cover_image, keyword_candidate_id")
     .eq("id", id)
     .maybeSingle();
   if (getErr) return { ok: false, reason: getErr.message };
@@ -114,6 +167,21 @@ export async function deleteArticle(id: string): Promise<{ ok: true } | { ok: fa
 
   const { error } = await sb.from("articles").delete().eq("id", id);
   if (error) return { ok: false, reason: error.message };
+
+  // 自動執筆の記事を消した場合は、元のキーワード候補を「失敗」に戻して
+  // 管理画面で「再試行」か「却下」を選べるようにする
+  if (existing.keyword_candidate_id) {
+    await sb
+      .from("keyword_candidates")
+      .update({
+        status: "failed",
+        article_id: null,
+        error: "生成された記事が管理画面で削除されました",
+        updated_at: new Date().toISOString(),
+      })
+      .eq("id", existing.keyword_candidate_id);
+    revalidatePath("/admin/keywords");
+  }
 
   await deleteStorageObjectByUrl(existing.cover_image);
   revalidateArticlePages([existing.slug]);

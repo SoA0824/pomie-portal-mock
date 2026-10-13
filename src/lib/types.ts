@@ -22,8 +22,37 @@ export type Article = {
   targetKeyword: string | null;
   /** manual: 手書き / ai: 自動執筆 */
   source: "manual" | "ai";
+  /** 監修者（美容師を選んだ場合はその ID。その他の人の場合は名前と肩書） */
+  supervisorStylistId: string | null;
+  supervisorName: string | null;
+  supervisorTitle: string | null;
+  /** 自動執筆の元になったキーワード候補 */
+  keywordCandidateId: string | null;
+  /** 自動執筆の記録（モデル・トークン・検品結果） */
+  generationLog: ArticleGenerationLog | null;
   createdAt: string;
   updatedAt: string;
+};
+
+export type ArticleGenerationLog = {
+  model?: string;
+  generatedAt?: string;
+  inputTokens?: number;
+  outputTokens?: number;
+  attempts?: number;
+  rakkoCredits?: number;
+  lintErrors?: string[];
+  lintWarnings?: string[];
+};
+
+/** 記事ページに表示する監修者 */
+export type ArticleSupervisor = {
+  name: string;
+  title: string;
+  stylistId?: string;
+  avatar?: string;
+  /** プロフィールページ（美容師が公開中のときだけ） */
+  url?: string;
 };
 
 export type SaveArticleInput = {
@@ -40,6 +69,54 @@ export type SaveArticleInput = {
   targetKeyword?: string;
   /** 公開日時（ISO）。空なら公開時に現在時刻 */
   publishedAt?: string;
+  supervisorStylistId?: string | null;
+  supervisorName?: string;
+  supervisorTitle?: string;
+};
+
+export type KeywordIntent = "booking" | "compare" | "info";
+export type KeywordCandidateStatus =
+  | "proposed"
+  | "approved"
+  | "rejected"
+  | "writing"
+  | "written"
+  | "failed";
+
+export type KeywordCandidate = {
+  id: string;
+  keyword: string;
+  seed: string | null;
+  searchVolume: number | null;
+  seoDifficulty: number | null;
+  competition: number | null;
+  cpc: number | null;
+  intent: KeywordIntent | null;
+  category: ArticleCategory | null;
+  suggestedTitle: string | null;
+  angle: string | null;
+  faqQuestions: string[];
+  relatedKeywords: Array<{ keyword: string; searchVolume: number | null }>;
+  targetStylistIds: string[];
+  score: number | null;
+  reason: string | null;
+  status: KeywordCandidateStatus;
+  note: string | null;
+  articleId: string | null;
+  error: string | null;
+  proposedAt: string;
+  decidedAt: string | null;
+  writtenAt: string | null;
+  updatedAt: string;
+};
+
+export type KeywordSeed = {
+  id: string;
+  keyword: string;
+  enabled: boolean;
+  note: string | null;
+  lastUsedAt: string | null;
+  createdAt: string;
 };
 
 export type SnsPlatform = "instagram" | "x" | "tiktok";

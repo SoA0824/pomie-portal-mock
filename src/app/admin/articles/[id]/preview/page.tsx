@@ -1,6 +1,6 @@
 import { notFound } from "next/navigation";
 import { ArticleView } from "@/components/article/ArticleView";
-import { getArticleByIdIncludingDrafts } from "@/lib/data/articles";
+import { getArticleByIdIncludingDrafts, resolveArticleSupervisor } from "@/lib/data/articles";
 import { getStylistById } from "@/lib/data/stylists";
 import type { Stylist } from "@/lib/types";
 
@@ -19,13 +19,14 @@ export default async function ArticlePreviewPage({ params }: { params: { id: str
   const related = (await Promise.all(article.relatedStylistIds.map((id) => getStylistById(id)))).filter(
     (s): s is Stylist => Boolean(s)
   );
+  const supervisor = await resolveArticleSupervisor(article);
 
   return (
     <div className="overflow-hidden rounded-2xl bg-pomie-50 ring-1 ring-ink-100">
       <div className="bg-amber-100 px-4 py-2 text-center text-xs text-amber-800">
         プレビュー表示です（{article.status === "published" ? "公開中" : "下書き・サイトには表示されていません"}）
       </div>
-      <ArticleView article={article} related={related} />
+      <ArticleView article={article} related={related} supervisor={supervisor} />
     </div>
   );
 }

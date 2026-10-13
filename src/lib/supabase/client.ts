@@ -49,8 +49,50 @@ export type ArticleRow = {
   target_keyword: string | null;
   source: "manual" | "ai";
   published_at: string | null;
+  supervisor_stylist_id: string | null;
+  supervisor_name: string | null;
+  supervisor_title: string | null;
+  keyword_candidate_id: string | null;
+  generation_log: Record<string, unknown> | null;
   created_at: string;
   updated_at: string;
+};
+
+export type KeywordCandidateRow = {
+  id: string;
+  keyword: string;
+  seed: string | null;
+  search_volume: number | null;
+  seo_difficulty: number | null;
+  competition: number | null;
+  cpc: number | null;
+  intent: string | null;
+  category: string | null;
+  suggested_title: string | null;
+  angle: string | null;
+  faq_questions: string[] | null;
+  related_keywords: Array<{ keyword: string; searchVolume: number | null }> | null;
+  target_stylist_ids: string[] | null;
+  score: number | null;
+  reason: string | null;
+  status: "proposed" | "approved" | "rejected" | "writing" | "written" | "failed";
+  note: string | null;
+  article_id: string | null;
+  error: string | null;
+  proposed_at: string;
+  decided_at: string | null;
+  written_at: string | null;
+  created_at: string;
+  updated_at: string;
+};
+
+export type KeywordSeedRow = {
+  id: string;
+  keyword: string;
+  enabled: boolean;
+  note: string | null;
+  last_used_at: string | null;
+  created_at: string;
 };
 
 export type ReservationRow = {

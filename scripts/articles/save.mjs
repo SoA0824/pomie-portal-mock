@@ -1,7 +1,9 @@
 /**
  * 下書きを DB に「下書き（非公開）」として保存する。
  *
- *   node scripts/articles/save.mjs content/drafts/xxx.md [--target production|mock] [--force] [--dry-run]
+ *   node scripts/articles/save.mjs content/drafts/xxx.md [--target production|mock] [--force] [--dry-run] [--candidate <候補ID>]
+ *
+ * --candidate を付けると、そのキーワード候補と記事を紐づけ、候補を「記事化済み」にする。
  *
  * 安全のためのルール:
  *   - 保存される記事は必ず status = draft（公開は管理画面で人が行う）
@@ -10,7 +12,7 @@
  *       公開中 … 上書きしない（公開中の記事は管理画面で編集する）
  *   - 検品でエラーがあれば保存しない
  */
-import { SITE_URL, fetchLintContext, lintDraft, loadDb, parseArgs, printLint, readDraft, rest } from "./lib.mjs";
+import { SITE_URL, fetchLintContext, getCandidate, lintDraft, loadDb, parseArgs, printLint, readDraft, rest, updateCandidate } from "./lib.mjs";
 
 const args = parseArgs(process.argv.slice(2));
 const file = args._[0];
@@ -29,6 +31,20 @@ async function main() {
   console.log(`接続先: ${db.label}`);
 
   const ctx = await fetchLintContext(db);
+
+  // 承認済みの候補から書いた場合は、候補と紐づける
+  let candidate = null;
+  if (typeof args.candidate === "string") {
+    candidate = await getCandidate(db, args.candidate);
+    if (!candidate) {
+      console.log(`候補が見つかりません: ${args.candidate}`);
+      process.exit(1);
+    }
+    if (candidate.status === "written" && candidate.articleId && !args.force) {
+      console.log(`候補「${candidate.keyword}」は既に記事化済みです（${candidate.articleId}）。上書きするには --force`);
+      process.exit(1);
+    }
+  }
   console.log(`検品: ${file}`);
   const result = lintDraft(meta, body, ctx);
   printLint(result);
@@ -63,6 +79,7 @@ async function main() {
     source: "ai",
     target_keyword: String(meta.target_keyword ?? "").trim() || null,
     published_at: null,
+    ...(candidate ? { keyword_candidate_id: candidate.id } : {}),
     updated_at: new Date().toISOString(),
   };
 
@@ -81,6 +98,15 @@ async function main() {
     id = newArticleId();
     await rest(db, "POST", "articles", { body: { id, ...row }, prefer: "return=minimal" });
     console.log(`\n保存しました（下書き）: ${row.title}`);
+  }
+  if (candidate) {
+    await updateCandidate(db, candidate.id, {
+      status: "written",
+      article_id: id,
+      written_at: new Date().toISOString(),
+      error: null,
+    });
+    console.log(`  候補「${candidate.keyword}」を記事化済みにしました`);
   }
   console.log(`  id: ${id} / slug: ${slug}`);
   console.log(`  プレビュー: ${SITE_URL}/admin/articles/${id}/preview`);
