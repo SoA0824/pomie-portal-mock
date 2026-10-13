@@ -211,6 +211,26 @@ POMiEポータル/
 - `INSTAGRAM_FETCHER=apify`: Apify 固定（トークン必須）
 - 未指定: トークンがあれば apify、無ければ mock（自動）
 
+## 記事の自動執筆
+
+Claude Code のスキル `/write-article` で、キーワード選定 → リサーチ → 執筆 → 検品 → 下書き保存までを行います。
+公開は管理画面（/admin/articles）で内容を確認してから行います。
+
+```
+/write-article 表参道 髪質改善      # このキーワードで 1 本書く
+/write-article                      # キーワードの候補を出す
+```
+
+- 編集方針・表現のルール: [docs/ARTICLE-GUIDELINES.md](./docs/ARTICLE-GUIDELINES.md)
+- 手順の定義: `.claude/skills/write-article/SKILL.md`
+- スクリプト（Node 18 以上・追加パッケージ不要）:
+  - `node scripts/articles/context.mjs --keyword "..."` … 美容師・既存記事などの材料を JSON で出す
+  - `node scripts/articles/check.mjs content/drafts/xxx.md` … 検品（表現・リンク・長さ）
+  - `node scripts/articles/save.mjs content/drafts/xxx.md` … 下書きとして DB に保存
+
+初回だけ、プロジェクト直下に `.env.production.local` を作り、Vercel と同じ
+`NEXT_PUBLIC_SUPABASE_URL` / `NEXT_PUBLIC_SUPABASE_ANON_KEY` を書いてください（本番と同じ DB に保存するため）。
+
 ## 既知の制限（MVP スコープ外）
 
 - 認証 / 権限管理（管理画面は無認証 / Supabase RLS は無効化）
