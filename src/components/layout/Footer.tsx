@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { Logo } from "./Logo";
+import { getAllStores } from "@/lib/data/stores";
 
 export function Footer() {
   return (
@@ -22,10 +23,7 @@ export function Footer() {
           />
           <FooterLinks
             title="店舗"
-            items={[
-              { label: "ポミエ 表参道", href: "/stylists?storeId=s1" },
-              { label: "ポミエ 恵比寿", href: "/stylists?storeId=s2" },
-            ]}
+            items={getAllStores().map((s) => ({ label: s.name, href: `/stores/${s.id}` }))}
           />
           {/* 管理系リンクは一般ユーザーに不要。next/link の prefetch で
               Basic 認証ダイアログが出る問題も避けるため掲載しない。

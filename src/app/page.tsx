@@ -160,7 +160,7 @@ export default async function Home() {
       <section className="container-page py-14">
         <SectionHeader
           title="サロン紹介"
-          subtitle="表参道・恵比寿の 2 店舗。通いやすい店舗からも美容師を探せます。"
+          subtitle="表参道・恵比寿の 2 店舗。店内の様子や、在籍する美容師をご覧いただけます。"
         />
         <div className="mt-6 grid gap-6 md:grid-cols-2">
           {stores.map((s) => (

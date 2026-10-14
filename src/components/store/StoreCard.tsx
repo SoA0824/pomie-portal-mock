@@ -8,7 +8,7 @@ import type { Store } from "@/lib/types";
 export function StoreCard({ store }: { store: Store }) {
   return (
     <Link
-      href={`/stylists?storeId=${store.id}`}
+      href={`/stores/${store.id}`}
       className="group relative block aspect-[16/10] overflow-hidden rounded-2xl shadow-sm ring-1 ring-ink-100"
     >
       {/* フォールバック背景（画像が無くても見える） */}
@@ -41,7 +41,7 @@ export function StoreCard({ store }: { store: Store }) {
           </p>
         )}
         <p className="mt-2 text-xs font-semibold text-white/90">
-          この店舗の美容師を見る →
+          店舗の詳細を見る →
         </p>
       </div>
     </Link>

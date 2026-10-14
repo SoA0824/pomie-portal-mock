@@ -3,14 +3,16 @@
     "id": "s1",
     "name": "ポミエ 表参道",
     "address": "東京都渋谷区神宮前4-12-10 表参道ヒルズ西館B1",
+    "addressVerified": false,
     "area": "表参道",
-    "image": "/images/stores/s1.jpg",
+    "image": "/images/stores/s2.jpg",
     "gallery": [
-      "/images/stores/s1.jpg",
+      "/images/stores/s2.jpg",
       "/images/stores/pomie_omotesando2.jpeg",
       "/images/stores/pomie_omotesando3.jpeg"
     ],
     "catchphrase": "トレンドの発信地・表参道で叶える、洗練の艶髪体験。",
+    "description": "トレンドの発信地・表参道にある、ポミエのシェアサロンです。ポミエと契約した美容師が、それぞれの得意分野を活かして施術を行います。\n\n気になる美容師を見つけたら、その美容師のページから予約にお進みください。",
     "salonboardShopId": "sb_omotesando",
     "salonboardCapacityPerSlot": 4
   },
@@ -18,15 +20,17 @@
     "id": "s2",
     "name": "ポミエ 恵比寿",
     "address": "東京都渋谷区恵比寿西1-8-3 ガーデンプレイス2F",
+    "addressVerified": false,
     "area": "恵比寿",
-    "image": "/images/stores/s2.jpg",
+    "image": "/images/stores/pomie_ebisu_lobby.jpg",
     "gallery": [
-      "/images/stores/s2.jpg",
+      "/images/stores/pomie_ebisu_lobby.jpg",
       "/images/stores/pomie_ebisu2.png",
       "/images/stores/pomie_ebisu3.png",
       "/images/stores/pomie_ebisu4.png"
     ],
     "catchphrase": "大人が落ち着いて通える、恵比寿のプライベートサロン。",
+    "description": "大人が落ち着いて通える、恵比寿のポミエ シェアサロンです。コンクリートと木を組み合わせた落ち着いた空間で、ポミエと契約した美容師がそれぞれのスタイルで施術を行います。\n\n気になる美容師を見つけたら、その美容師のページから予約にお進みください。",
     "salonboardShopId": "sb_ebisu",
     "salonboardCapacityPerSlot": 4
   }

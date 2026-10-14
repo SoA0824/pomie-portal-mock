@@ -2,6 +2,7 @@ import type { MetadataRoute } from "next";
 import { SITE_URL } from "@/lib/site";
 import { getAllArticles } from "@/lib/data/articles";
 import { getAllPublishedStylists } from "@/lib/data/stylists";
+import { getAllStores } from "@/lib/data/stores";
 
 // 美容師は DB から取るので、ビルド時ではなくリクエスト時に生成する
 export const dynamic = "force-dynamic";
@@ -19,6 +20,13 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     { url: `${SITE_URL}/articles`, lastModified: now, changeFrequency: "daily", priority: 0.8 },
     { url: `${SITE_URL}/match`, lastModified: now, changeFrequency: "monthly", priority: 0.6 },
   ];
+
+  const storePages: MetadataRoute.Sitemap = getAllStores().map((s) => ({
+    url: `${SITE_URL}/stores/${s.id}`,
+    lastModified: now,
+    changeFrequency: "monthly",
+    priority: 0.8,
+  }));
 
   const articlePages: MetadataRoute.Sitemap = (await getAllArticles()).map((a) => ({
     url: `${SITE_URL}/articles/${a.slug}`,
@@ -40,5 +48,5 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     // DB に繋がらなくても sitemap 自体は返す（固定ページと記事だけ）
   }
 
-  return [...staticPages, ...articlePages, ...stylistPages];
+  return [...staticPages, ...storePages, ...articlePages, ...stylistPages];
 }

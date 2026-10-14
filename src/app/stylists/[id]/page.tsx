@@ -85,7 +85,9 @@ export default async function StylistDetailPage({ params }: { params: { id: stri
         ? {
             worksFor: {
               "@type": "HairSalon",
+              "@id": `${SITE_URL}/stores/${store.id}#salon`,
               name: store.name,
+              url: `${SITE_URL}/stores/${store.id}`,
               areaServed: store.area,
               ...(store.image ? { image: absoluteUrl(store.image) } : {}),
             },

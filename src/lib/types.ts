@@ -205,6 +205,11 @@ export type Store = {
   id: string;
   name: string;
   address: string;
+  /**
+   * 住所の正確性を確認済みか。
+   * true のときだけ公開ページ・構造化データに住所を載せる（誤った住所で来店されるのを防ぐ）。
+   */
+  addressVerified?: boolean;
   area: string;
   /** 店舗のメイン写真のパス（public 配下）。画像が無い場合は表示側でフォールバック */
   image?: string;
@@ -212,6 +217,20 @@ export type Store = {
   gallery?: string[];
   /** 店舗の魅力を伝える 1 行コピー */
   catchphrase?: string;
+  /** 店舗紹介文。段落は空行で区切る */
+  description?: string;
+  /** 店舗の特徴（短い箇条書き） */
+  features?: string[];
+  /** アクセス（最寄り駅・出口・徒歩分数など） */
+  access?: string;
+  /** 営業時間（美容師により異なる場合はその旨も） */
+  hours?: string;
+  /** 定休日 */
+  holidays?: string;
+  /** 電話番号 */
+  phone?: string;
+  /** 地図リンク（Google マップの共有 URL など）。未設定で住所確認済みなら住所検索リンクを使う */
+  mapUrl?: string;
   salonboardShopId: string;
   salonboardCapacityPerSlot: number;
 };
