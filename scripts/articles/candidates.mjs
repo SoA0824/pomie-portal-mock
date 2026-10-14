@@ -27,7 +27,6 @@ import {
   updateCandidate,
 } from "./lib.mjs";
 import { normalizeKeywordItem } from "./rakko.mjs";
-import { buildCandidateRows } from "./propose.mjs";
 import { classifyIntent, evaluateKeyword, generateSeeds, guessCategory, heuristicPlan } from "./scoring.mjs";
 
 const args = parseArgs(process.argv.slice(2));
@@ -195,8 +194,6 @@ async function main() {
     return;
   }
 
-  // buildCandidateRows は propose.mjs と共有（未使用警告を避けるため参照）
-  void buildCandidateRows;
   console.log(`使い方は scripts/articles/candidates.mjs の先頭を参照してください（list / show / seeds / score / add / decide）`);
   process.exit(2);
 }

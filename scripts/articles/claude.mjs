@@ -9,7 +9,6 @@
  * - 安全分類での拒否時はサーバー側フォールバック（fallbacks: "default"）で別モデルに切り替える
  * - ARTICLE_WRITER=mock のときは API を呼ばず、呼び出し側が渡した mock() の結果を返す（テスト用）
  */
-import Anthropic from "@anthropic-ai/sdk";
 
 export const MODEL = process.env.ARTICLE_MODEL || "claude-opus-5-5";
 export const EFFORT = process.env.ARTICLE_EFFORT || "high";
@@ -18,9 +17,18 @@ export function claudeAvailable() {
   return process.env.ARTICLE_WRITER === "mock" || Boolean(process.env.ANTHROPIC_API_KEY || process.env.ANTHROPIC_AUTH_TOKEN);
 }
 
+// SDK は実際に API を呼ぶときだけ読み込む（コネクタ経路や status では不要なため）
+let Anthropic;
 let client;
-function getClient() {
-  if (!client) client = new Anthropic();
+async function getClient() {
+  if (!client) {
+    try {
+      ({ default: Anthropic } = await import("@anthropic-ai/sdk"));
+    } catch {
+      throw new Error("@anthropic-ai/sdk が見つかりません。プロジェクト直下で npm install を実行してください");
+    }
+    client = new Anthropic();
+  }
   return client;
 }
 
@@ -40,8 +48,9 @@ export async function generateText({ system, user, messages, maxTokens = 32000, 
     throw new Error("messages の最後は user のメッセージにしてください");
   }
 
+  const api = await getClient();
   const request = () =>
-    getClient().beta.messages.stream({
+    api.beta.messages.stream({
       model: MODEL,
       max_tokens: maxTokens,
       // 拒否されたときは別モデルにサーバー側で切り替える
