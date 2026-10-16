@@ -3,6 +3,7 @@ import { SITE_URL } from "@/lib/site";
 import { getAllArticles } from "@/lib/data/articles";
 import { getAllPublishedStylists } from "@/lib/data/stylists";
 import { getAllStores } from "@/lib/data/stores";
+import { AREAS } from "@/lib/areas";
 
 // 美容師は DB から取るので、ビルド時ではなくリクエスト時に生成する
 export const dynamic = "force-dynamic";
@@ -28,12 +29,21 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     priority: 0.8,
   }));
 
-  const articlePages: MetadataRoute.Sitemap = (await getAllArticles()).map((a) => ({
+  const publishedArticles = await getAllArticles();
+  const articlePages: MetadataRoute.Sitemap = publishedArticles.map((a) => ({
     url: `${SITE_URL}/articles/${a.slug}`,
     lastModified: new Date(a.updatedAt),
     changeFrequency: "monthly",
     priority: 0.7,
   }));
+
+  // エリアの記事一覧（公開記事が 1 本以上あるエリアだけ。記事が無いページは noindex のため）
+  const areaPages: MetadataRoute.Sitemap = AREAS.flatMap((area) => {
+    const inArea = publishedArticles.filter((a) => a.areas.includes(area.slug));
+    if (inArea.length === 0) return [];
+    const latest = inArea.reduce((m, a) => (a.updatedAt > m ? a.updatedAt : m), inArea[0].updatedAt);
+    return [{ url: `${SITE_URL}/articles/${area.slug}`, lastModified: new Date(latest), changeFrequency: "weekly" as const, priority: 0.8 }];
+  });
 
   let stylistPages: MetadataRoute.Sitemap = [];
   try {
@@ -48,5 +58,5 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     // DB に繋がらなくても sitemap 自体は返す（固定ページと記事だけ）
   }
 
-  return [...staticPages, ...storePages, ...articlePages, ...stylistPages];
+  return [...staticPages, ...storePages, ...areaPages, ...articlePages, ...stylistPages];
 }

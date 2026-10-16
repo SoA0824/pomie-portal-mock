@@ -20,6 +20,8 @@ export type Article = {
   status: ArticleStatus;
   /** 狙う検索キーワード */
   targetKeyword: string | null;
+  /** エリア（src/lib/areas.ts の slug。複数可） */
+  areas: string[];
   /** manual: 手書き / ai: 自動執筆 */
   source: "manual" | "ai";
   /** 監修者（美容師を選んだ場合はその ID。その他の人の場合は名前と肩書） */
@@ -67,6 +69,7 @@ export type SaveArticleInput = {
   relatedStylistIds: string[];
   status: ArticleStatus;
   targetKeyword?: string;
+  areas?: string[];
   /** 公開日時（ISO）。空なら公開時に現在時刻 */
   publishedAt?: string;
   supervisorStylistId?: string | null;

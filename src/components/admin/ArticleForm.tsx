@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import ReactMarkdown from "react-markdown";
 import { ImageUploadField } from "@/components/admin/ImageUploadField";
 import { saveArticle, deleteArticle } from "@/server/actions/articles";
+import { AREAS, detectAreas } from "@/lib/areas";
 import {
   ARTICLE_CATEGORIES,
   type Article,
@@ -17,6 +18,7 @@ export type StylistOption = { id: string; name: string; storeName: string; activ
 const REASON_LABELS: Record<string, string> = {
   missing_title: "タイトルを入力してください",
   invalid_slug: "URL は半角英小文字・数字・ハイフンで入力してください（例: omotesando-hair-care）",
+  reserved_slug: "この URL はエリアの記事一覧（/articles/omotesando など）で使っているため、記事には使えません。別の URL にしてください",
   duplicate_slug: "この URL は他の記事で使われています。別の URL にしてください",
   invalid_category: "カテゴリを選んでください",
   missing_summary_for_publish: "公開するには概要（リード文）を入力してください",
@@ -69,6 +71,17 @@ export function ArticleForm({
     Boolean(initial?.supervisorName && !initial?.supervisorStylistId)
   );
   const [related, setRelated] = useState<string[]>(initial?.relatedStylistIds ?? []);
+  // エリア（新規作成時はキーワード・タイトルから自動で推定し、手で変えたらそれを優先）
+  const [areas, setAreas] = useState<string[]>(initial?.areas ?? []);
+  const [areasTouched, setAreasTouched] = useState(Boolean(initial));
+  const effectiveAreas = areasTouched ? areas : detectAreas(form.targetKeyword, form.title);
+  const toggleArea = (slug: string) => {
+    setAreasTouched(true);
+    setAreas((prev) => {
+      const base = areasTouched ? prev : effectiveAreas;
+      return base.includes(slug) ? base.filter((a) => a !== slug) : [...base, slug];
+    });
+  };
 
   const update = <K extends keyof typeof form>(key: K, value: (typeof form)[K]) => {
     setForm((s) => ({ ...s, [key]: value }));
@@ -86,6 +99,7 @@ export function ArticleForm({
         id: initial?.id,
         ...form,
         relatedStylistIds: related,
+        areas: effectiveAreas,
         publishedAt: form.publishedAt ? new Date(form.publishedAt).toISOString() : undefined,
         supervisorStylistId: supervisorOther ? null : form.supervisorStylistId || null,
         supervisorName: supervisorOther ? form.supervisorName : "",
@@ -154,6 +168,23 @@ export function ArticleForm({
             ))}
           </select>
         </Field>
+      </div>
+
+      <div>
+        <span className="text-xs font-semibold text-ink-700">エリア</span>
+        <div className="mt-1 flex flex-wrap gap-4 text-sm">
+          {AREAS.map((a) => (
+            <label key={a.slug} className="inline-flex items-center gap-1.5">
+              <input type="checkbox" checked={effectiveAreas.includes(a.slug)} onChange={() => toggleArea(a.slug)} />
+              {a.name}
+              <span className="text-[11px] text-ink-500">/articles/{a.slug}</span>
+            </label>
+          ))}
+        </div>
+        <Hint>
+          チェックしたエリアの記事一覧に表示されます（複数可・エリアに関係ない記事は空欄）。
+          {!areasTouched && " キーワードとタイトルから自動で推定しています。"}
+        </Hint>
       </div>
 
       <Field label="狙う検索キーワード">

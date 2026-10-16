@@ -4,6 +4,9 @@ import { getAllArticlesIncludingDrafts } from "@/lib/data/articles";
 import { getStylistOptions } from "@/lib/data/stylistOptions";
 import { formatDateTime } from "@/lib/format";
 import type { Article } from "@/lib/types";
+import { AREAS } from "@/lib/areas";
+
+const AREA_NAME: Record<string, string> = Object.fromEntries(AREAS.map((a) => [a.slug, a.name]));
 
 export const dynamic = "force-dynamic";
 export const metadata = { title: "記事一覧 | 管理 | POMiE Portal" };
@@ -108,6 +111,7 @@ export default async function AdminArticlesPage() {
                       </Link>
                       <p className="font-mono text-[11px] text-ink-500">
                         /articles/{a.slug} ・ <span className="font-sans">{a.category}</span>
+                        {a.areas.length > 0 && <span className="font-sans"> ・ {a.areas.map((s) => AREA_NAME[s] ?? s).join("・")}</span>}
                       </p>
                     </td>
                     <td className="px-3 py-2 text-xs text-ink-700">{a.targetKeyword ?? "-"}</td>

@@ -49,6 +49,7 @@ export type ArticleRow = {
   target_keyword: string | null;
   source: "manual" | "ai";
   published_at: string | null;
+  areas: string[] | null;
   supervisor_stylist_id: string | null;
   supervisor_name: string | null;
   supervisor_title: string | null;

@@ -6,8 +6,10 @@
  * 公開は行わない。検品に残った問題は generation_log に記録し、管理画面に表示する。
  */
 import {
+  AREAS,
   CATEGORIES,
   SLUG_PATTERN,
+  deriveAreas,
   SITE_URL,
   buildContext,
   ensureUniqueSlug,
@@ -147,7 +149,9 @@ async function saveGenerated(db, candidate, result, context, research) {
 
   // slug が形式に合わなければ、候補 ID から作った仮の slug にする（管理画面で直せる）
   let baseSlug = String(meta.slug ?? "").trim().toLowerCase();
-  if (!SLUG_PATTERN.test(baseSlug)) baseSlug = `article-${candidate.id.replace(/[^a-z0-9]+/g, "-")}`;
+  if (!SLUG_PATTERN.test(baseSlug) || AREAS.some((a) => a.slug === baseSlug)) {
+    baseSlug = `article-${candidate.id.replace(/[^a-z0-9]+/g, "-")}`;
+  }
   const slug = await ensureUniqueSlug(db, baseSlug);
   const row = {
     id: newId("ar"),
@@ -161,6 +165,11 @@ async function saveGenerated(db, candidate, result, context, research) {
     status: "draft",
     source: "ai",
     target_keyword: candidate.keyword,
+    areas: deriveAreas({
+      keyword: candidate.keyword,
+      title: String(meta.title ?? ""),
+      stylistStoreIds: context.allStylists.filter((s) => relatedIds.includes(s.id)).map((s) => s.storeId),
+    }),
     keyword_candidate_id: candidate.id,
     published_at: null,
     generation_log: {

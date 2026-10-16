@@ -115,6 +115,7 @@ cover_image: /images/stores/s1.jpg
 ```
 
 - `category` は カット / カラー / メンズ / ケア / エリア のいずれか
+- エリア（`areas`）は省略可。キーワード・タイトルの地名、無ければ紹介する美容師の店舗から自動で付く。`omotesando` / `ebisu` は slug に使えない
 - `slug` は半角英小文字・数字・ハイフン。内容が分かる英単語（日本語のローマ字でも可）
 - `cover_image` は任意。エリアの記事なら店舗写真（`/images/stores/s1.jpg` = 表参道、`s2.jpg` = 恵比寿）を使ってよい
 - 本文はガイドラインの「記事の型」に従う。**送客セクションとよくある質問は必須**
@@ -150,7 +151,7 @@ node scripts/articles/save.mjs content/drafts/<slug>.md
 3. 紹介した美容師とリンク
 4. **`[要確認]` の一覧**（運営が確認すること）
 5. プレビュー URL と編集 URL
-6. 公開前のチェックリスト（`docs/ARTICLE-GUIDELINES.md` 7 章）への誘導
+6. 公開前のチェックリスト（`docs/ARTICLE-GUIDELINES.md` 8 章）への誘導
 
 公開は行わない。「公開しますか？」とも聞かない（管理画面で運営が行う）。
 

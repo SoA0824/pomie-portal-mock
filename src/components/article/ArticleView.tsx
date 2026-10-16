@@ -5,6 +5,7 @@ import { StylistAvatar } from "@/components/common/StylistAvatar";
 import type { Article, ArticleSupervisor, Stylist } from "@/lib/types";
 import { formatDate } from "@/lib/format";
 import { articleCover } from "@/lib/articleCover";
+import { getAreaBySlug } from "@/lib/areas";
 
 /**
  * 記事の本体表示。公開ページと管理画面のプレビューで共通。
@@ -29,7 +30,21 @@ export function ArticleView({
           ← 記事一覧に戻る
         </Link>
         <header className="mt-4">
-          <span className="chip">{article.category}</span>
+          <div className="flex flex-wrap items-center gap-2">
+            <span className="chip">{article.category}</span>
+            {article.areas.map((slug) => {
+              const area = getAreaBySlug(slug);
+              return area ? (
+                <Link
+                  key={slug}
+                  href={`/articles/${area.slug}`}
+                  className="rounded-full bg-white px-3 py-1 text-xs font-medium text-pomie-700 ring-1 ring-pomie-200 hover:bg-pomie-100"
+                >
+                  {area.name}の記事
+                </Link>
+              ) : null;
+            })}
+          </div>
           <h1 className="mt-3 text-2xl font-bold leading-snug md:text-4xl">{article.title}</h1>
           <p className="mt-2 text-xs text-ink-500">
             {formatDate(article.publishedAt)}

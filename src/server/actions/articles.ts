@@ -4,6 +4,7 @@ import { revalidatePath } from "next/cache";
 import { getSupabase } from "@/lib/supabase/client";
 import { deleteStorageObjectByUrl } from "@/lib/storage";
 import { ARTICLE_CATEGORIES, type SaveArticleInput } from "@/lib/types";
+import { AREA_SLUGS, isReservedArticleSlug } from "@/lib/areas";
 
 export type SaveArticleResult =
   | { ok: true; id: string; slug: string }
@@ -71,6 +72,7 @@ function newArticleId(): string {
 function revalidateArticlePages(slugs: string[]) {
   revalidatePath("/");
   revalidatePath("/articles");
+  for (const area of AREA_SLUGS) revalidatePath(`/articles/${area}`);
   revalidatePath("/sitemap.xml");
   revalidatePath("/admin");
   revalidatePath("/admin/articles");
@@ -89,6 +91,7 @@ export async function saveArticle(input: SaveArticleInput): Promise<SaveArticleR
 
   if (!title) return { ok: false, reason: "missing_title" };
   if (!SLUG_PATTERN.test(slug)) return { ok: false, reason: "invalid_slug" };
+  if (isReservedArticleSlug(slug)) return { ok: false, reason: "reserved_slug" };
   if (!ARTICLE_CATEGORIES.includes(input.category)) return { ok: false, reason: "invalid_category" };
   if (input.status === "published") {
     if (!summary) return { ok: false, reason: "missing_summary_for_publish" };
@@ -135,6 +138,7 @@ export async function saveArticle(input: SaveArticleInput): Promise<SaveArticleR
     related_stylist_ids: Array.from(new Set(input.relatedStylistIds)),
     status: input.status,
     target_keyword: input.targetKeyword?.trim() || null,
+    areas: Array.from(new Set((input.areas ?? []).filter((a) => AREA_SLUGS.includes(a)))),
     published_at: publishedAt,
     ...supervisorColumns(input),
     updated_at: new Date().toISOString(),

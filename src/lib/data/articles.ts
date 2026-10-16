@@ -16,6 +16,7 @@ function rowToArticle(row: ArticleRow): Article {
     relatedStylistIds: row.related_stylist_ids ?? [],
     status: row.status,
     targetKeyword: row.target_keyword,
+    areas: row.areas ?? [],
     source: row.source,
     supervisorStylistId: row.supervisor_stylist_id ?? null,
     supervisorName: row.supervisor_name ?? null,
@@ -85,6 +86,23 @@ export async function getArticleBySlug(slug: string): Promise<Article | undefine
   } catch (err) {
     console.error("[articles] 記事の取得に失敗:", err);
     return undefined;
+  }
+}
+
+/** エリアが付いた公開記事（エリア一覧ページ用） */
+export async function getArticlesByArea(areaSlug: string): Promise<Article[]> {
+  try {
+    const { data, error } = await getSupabase()
+      .from("articles")
+      .select("*")
+      .eq("status", "published")
+      .contains("areas", [areaSlug])
+      .order("published_at", { ascending: false });
+    if (error) throw new Error(error.message);
+    return (data ?? []).map(rowToArticle);
+  } catch (err) {
+    console.error("[articles] エリアの記事の取得に失敗:", err);
+    return [];
   }
 }
 

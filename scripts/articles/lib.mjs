@@ -17,6 +17,25 @@ export const SITE_URL = (process.env.NEXT_PUBLIC_SITE_URL || "https://portal.pom
 
 /** src/lib/types.ts の ARTICLE_CATEGORIES と合わせること */
 export const CATEGORIES = ["カット", "カラー", "メンズ", "ケア", "エリア"];
+
+/**
+ * 記事のエリア（タグ）。src/lib/areas.ts の AREAS と合わせること。
+ * slug はエリアの記事一覧 /articles/{slug} に使うため、記事の slug には使えない。
+ */
+export const AREAS = [
+  { slug: "omotesando", name: "表参道", storeIds: ["s1"] },
+  { slug: "ebisu", name: "恵比寿", storeIds: ["s2"] },
+];
+
+/**
+ * 記事のエリアを決める。キーワード・タイトルに地名があればそれ、
+ * 無ければ紹介する美容師の所属店舗のエリア。
+ */
+export function deriveAreas({ keyword = "", title = "", stylistStoreIds = [] } = {}) {
+  const byText = AREAS.filter((a) => `${keyword} ${title}`.includes(a.name)).map((a) => a.slug);
+  if (byText.length) return byText;
+  return AREAS.filter((a) => a.storeIds.some((id) => stylistStoreIds.includes(id))).map((a) => a.slug);
+}
 export const SLUG_PATTERN = /^[a-z0-9]+(?:-[a-z0-9]+)*$/;
 
 /** 検品の目安 */
@@ -154,11 +173,11 @@ export async function rest(db, method, pathAndQuery, { body, prefer } = {}) {
 /** 記事の検品・保存に使う最小限の文脈（美容師 / 記事一覧）を取る */
 export async function fetchLintContext(db) {
   const [stylists, articles] = await Promise.all([
-    rest(db, "GET", "stylists?select=id,name,contract_status&order=id"),
+    rest(db, "GET", "stylists?select=id,name,contract_status,store_id&order=id"),
     rest(db, "GET", "articles?select=id,slug,title,status,target_keyword"),
   ]);
   return {
-    stylists: new Map(stylists.map((s) => [s.id, { name: s.name, active: s.contract_status === "active" }])),
+    stylists: new Map(stylists.map((s) => [s.id, { name: s.name, active: s.contract_status === "active", storeId: s.store_id }])),
     articles: new Map(articles.map((a) => [a.slug, a])),
   };
 }
@@ -355,6 +374,7 @@ export function lintDraft(meta, body, ctx = null) {
 
   if (!meta.slug) err("slug", "slug（URL）がありません");
   else if (!SLUG_PATTERN.test(meta.slug)) err("slug", `slug は半角英小文字・数字・ハイフンのみ: ${meta.slug}`);
+  else if (AREAS.some((a) => a.slug === meta.slug)) err("slug", `slug「${meta.slug}」はエリアの記事一覧で使っているため使えません`);
 
   if (!CATEGORIES.includes(meta.category)) err("category", `category は ${CATEGORIES.join(" / ")} のいずれか: ${meta.category ?? "(未設定)"}`);
 

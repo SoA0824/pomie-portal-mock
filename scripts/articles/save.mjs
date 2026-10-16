@@ -12,7 +12,7 @@
  *       公開中 … 上書きしない（公開中の記事は管理画面で編集する）
  *   - 検品でエラーがあれば保存しない
  */
-import { SITE_URL, fetchLintContext, getCandidate, lintDraft, loadDb, parseArgs, printLint, readDraft, rest, updateCandidate } from "./lib.mjs";
+import { AREAS, SITE_URL, deriveAreas, fetchLintContext, getCandidate, lintDraft, loadDb, parseArgs, printLint, readDraft, rest, updateCandidate } from "./lib.mjs";
 
 const args = parseArgs(process.argv.slice(2));
 const file = args._[0];
@@ -23,6 +23,17 @@ if (!file) {
 
 function newArticleId() {
   return `ar-${Date.now().toString(36)}${Math.random().toString(36).slice(2, 6)}`;
+}
+
+/** フロントマターの areas（slug または地名）を優先し、無ければキーワード・美容師から推定 */
+function resolveAreas(meta, ctx) {
+  const raw = Array.isArray(meta.areas) ? meta.areas : typeof meta.areas === "string" && meta.areas ? meta.areas.split(/[,\s]+/) : [];
+  const explicit = raw
+    .map((v) => AREAS.find((a) => a.slug === v || a.name === v)?.slug)
+    .filter(Boolean);
+  if (explicit.length) return [...new Set(explicit)];
+  const stylistStoreIds = (meta.related_stylist_ids ?? []).map((id) => ctx.stylists.get(id)?.storeId).filter(Boolean);
+  return deriveAreas({ keyword: meta.target_keyword, title: meta.title, stylistStoreIds });
 }
 
 async function main() {
@@ -78,6 +89,7 @@ async function main() {
     status: "draft",
     source: "ai",
     target_keyword: String(meta.target_keyword ?? "").trim() || null,
+    areas: resolveAreas(meta, ctx),
     published_at: null,
     ...(candidate ? { keyword_candidate_id: candidate.id } : {}),
     updated_at: new Date().toISOString(),
@@ -108,7 +120,7 @@ async function main() {
     });
     console.log(`  候補「${candidate.keyword}」を記事化済みにしました`);
   }
-  console.log(`  id: ${id} / slug: ${slug}`);
+  console.log(`  id: ${id} / slug: ${slug} / エリア: ${row.areas.join(", ") || "なし"}`);
   console.log(`  プレビュー: ${SITE_URL}/admin/articles/${id}/preview`);
   console.log(`  編集・公開: ${SITE_URL}/admin/articles/${id}/edit`);
   console.log(`  ※ 公開は管理画面で内容を確認してから行ってください`);

@@ -98,6 +98,7 @@ create table if not exists public.articles (
   -- manual: 手書き / ai: 自動執筆
   source text not null default 'manual' check (source in ('manual', 'ai')),
   published_at timestamptz,
+  areas text[] not null default '{}',
   supervisor_stylist_id text,
   supervisor_name text,
   supervisor_title text,

@@ -2,6 +2,7 @@ import Link from "next/link";
 import { ArticleCard } from "@/components/article/ArticleCard";
 import { getAllArticles } from "@/lib/data/articles";
 import type { ArticleCategory } from "@/lib/types";
+import { AREAS } from "@/lib/areas";
 
 export const metadata = {
   title: "髪・美容師選びのヒント｜記事一覧 | POMiE Portal",
@@ -35,7 +36,15 @@ export default async function ArticlesPage({
         </p>
       </header>
 
-      <nav className="mt-6 flex flex-wrap gap-2">
+      <nav className="mt-6 flex flex-wrap items-center gap-2" aria-label="エリア">
+        <span className="mr-1 text-xs font-semibold text-ink-500">エリア</span>
+        {AREAS.map((a) => (
+          <CategoryChip key={a.slug} href={`/articles/${a.slug}`} label={a.name} active={false} />
+        ))}
+      </nav>
+
+      <nav className="mt-3 flex flex-wrap items-center gap-2" aria-label="カテゴリ">
+        <span className="mr-1 text-xs font-semibold text-ink-500">カテゴリ</span>
         <CategoryChip href="/articles" label="すべて" active={selected === CATEGORY_ALL} />
         {categories.map((c) => (
           <CategoryChip
