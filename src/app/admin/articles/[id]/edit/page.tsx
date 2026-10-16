@@ -3,6 +3,8 @@ import { notFound } from "next/navigation";
 import { ArticleForm } from "@/components/admin/ArticleForm";
 import { getArticleByIdIncludingDrafts } from "@/lib/data/articles";
 import { getStylistOptions } from "@/lib/data/stylistOptions";
+import { listRevisionsForArticle } from "@/lib/data/revisions";
+import { ArticleRewritePanel } from "@/components/admin/ArticleRewritePanel";
 
 export const dynamic = "force-dynamic";
 export const metadata = { title: "記事を編集 | 管理 | POMiE Portal" };
@@ -13,6 +15,7 @@ export default async function EditArticlePage({ params }: { params: { id: string
     getStylistOptions(),
   ]);
   if (!article) notFound();
+  const { revisions, error: revisionError } = await listRevisionsForArticle(article.id);
 
   return (
     <div>
@@ -31,7 +34,11 @@ export default async function EditArticlePage({ params }: { params: { id: string
         </a>
       </div>
       <div className="mt-6">
-        <ArticleForm initial={article} stylists={stylists} />
+        <ArticleRewritePanel article={article} revisions={revisions} stylists={stylists} loadError={revisionError} />
+      </div>
+      <div className="mt-6">
+        {/* リライトの反映で記事が変わったらフォームを作り直す */}
+        <ArticleForm key={article.updatedAt} initial={article} stylists={stylists} />
       </div>
     </div>
   );

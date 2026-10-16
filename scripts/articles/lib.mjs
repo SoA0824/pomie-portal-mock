@@ -162,8 +162,10 @@ export async function rest(db, method, pathAndQuery, { body, prefer } = {}) {
   if (!res.ok) {
     const msg =
       data && typeof data === "object" ? data.message || data.hint || JSON.stringify(data) : String(data);
-    const hint = /relation .* does not exist|Could not find the table/.test(msg)
-      ? "\n  記事テーブルが未作成の可能性があります。Supabase の SQL Editor で supabase/migration-008-articles.sql を実行してください。"
+    const table = pathAndQuery.split("?")[0];
+    const migration = { articles: "migration-008-articles.sql", keyword_candidates: "migration-009-keyword-pipeline.sql", keyword_seeds: "migration-009-keyword-pipeline.sql", article_revisions: "migration-012-article-revisions.sql" }[table];
+    const hint = /relation .* does not exist|Could not find the table/.test(msg) && migration
+      ? `\n  テーブル ${table} が未作成の可能性があります。Supabase の SQL Editor で supabase/${migration} を実行してください。`
       : "";
     throw new Error(`Supabase ${method} ${pathAndQuery.split("?")[0]} → HTTP ${res.status}: ${msg}${hint}`);
   }
@@ -459,6 +461,10 @@ export function lintDraft(meta, body, ctx = null) {
         if (!s) err("links", `リンク先の美容師が見つかりません: ${l.url}`);
         else if (!s.active) warn("links", `リンク先の美容師は非公開です: ${l.url}`);
       }
+    } else if ((m = p.match(/^\/articles\/([^/]+)$/)) && AREAS.some((a) => a.slug === m[1])) {
+      // エリアの記事一覧（/articles/omotesando など）
+    } else if ((m = p.match(/^\/stores\/([^/]+)$/))) {
+      if (!loadStores().some((st) => st.id === m[1])) warn("links", `リンク先の店舗が見つかりません: ${l.url}`);
     } else if ((m = p.match(/^\/articles\/([^/]+)$/))) {
       if (ctx) {
         const a = ctx.articles.get(m[1]);

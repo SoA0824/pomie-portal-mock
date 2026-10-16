@@ -87,6 +87,30 @@ export type KeywordCandidateRow = {
   updated_at: string;
 };
 
+export type ArticleRevisionRow = {
+  id: string;
+  article_id: string;
+  status: "requested" | "proposed" | "applied" | "rejected" | "failed";
+  instruction: string;
+  stylist_swap: { remove?: string[]; add?: string[] } | null;
+  analysis: string | null;
+  change_summary: string | null;
+  proposed_title: string | null;
+  proposed_summary: string | null;
+  proposed_body: string | null;
+  proposed_category: string | null;
+  proposed_related_stylist_ids: string[] | null;
+  proposed_areas: string[] | null;
+  base_updated_at: string | null;
+  lint: { errors?: string[]; warnings?: string[] } | null;
+  error: string | null;
+  requested_at: string;
+  proposed_at: string | null;
+  decided_at: string | null;
+  created_at: string;
+  updated_at: string;
+};
+
 export type KeywordSeedRow = {
   id: string;
   keyword: string;

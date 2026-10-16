@@ -77,6 +77,31 @@ export type SaveArticleInput = {
   supervisorTitle?: string;
 };
 
+export type RevisionStatus = "requested" | "proposed" | "applied" | "rejected" | "failed";
+
+/** 記事のリライト（依頼 → 提案 → 承認して反映） */
+export type ArticleRevision = {
+  id: string;
+  articleId: string;
+  status: RevisionStatus;
+  instruction: string;
+  stylistSwap: { remove?: string[]; add?: string[] };
+  analysis: string | null;
+  changeSummary: string | null;
+  proposedTitle: string | null;
+  proposedSummary: string | null;
+  proposedBody: string | null;
+  proposedCategory: ArticleCategory | null;
+  proposedRelatedStylistIds: string[] | null;
+  proposedAreas: string[] | null;
+  baseUpdatedAt: string | null;
+  lint: { errors?: string[]; warnings?: string[] } | null;
+  error: string | null;
+  requestedAt: string;
+  proposedAt: string | null;
+  decidedAt: string | null;
+};
+
 export type KeywordIntent = "booking" | "compare" | "info";
 export type KeywordCandidateStatus =
   | "proposed"

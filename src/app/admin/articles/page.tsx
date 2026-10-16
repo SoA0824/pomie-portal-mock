@@ -2,6 +2,7 @@ import Link from "next/link";
 import { ApproveArticlePanel } from "@/components/admin/ApproveArticlePanel";
 import { getAllArticlesIncludingDrafts } from "@/lib/data/articles";
 import { getStylistOptions } from "@/lib/data/stylistOptions";
+import { getOpenRevisionStatusByArticle } from "@/lib/data/revisions";
 import { formatDateTime } from "@/lib/format";
 import type { Article } from "@/lib/types";
 import { AREAS } from "@/lib/areas";
@@ -19,7 +20,8 @@ export default async function AdminArticlesPage() {
   } catch (err) {
     loadError = err instanceof Error ? err.message : String(err);
   }
-  const stylists = await getStylistOptions();
+  const [stylists, openRevisions] = await Promise.all([getStylistOptions(), getOpenRevisionStatusByArticle()]);
+  const activeStylistIds = new Set(stylists.filter((s) => s.active).map((s) => s.id));
   const stylistName = new Map(stylists.map((s) => [s.id, s.name]));
   const publishedCount = articles.filter((a) => a.status === "published").length;
   const draftCount = articles.length - publishedCount;
@@ -97,6 +99,19 @@ export default async function AdminArticlesPage() {
                           </span>
                         )}
                       </div>
+                      {openRevisions.get(a.id) && (
+                        <Link
+                          href={`/admin/articles/${a.id}/edit`}
+                          className={`mt-1 inline-block whitespace-nowrap rounded-full px-2 py-0.5 text-[11px] font-semibold ${
+                            openRevisions.get(a.id) === "proposed" ? "bg-pomie-100 text-pomie-700" : "bg-amber-100 text-amber-800"
+                          }`}
+                        >
+                          {openRevisions.get(a.id) === "proposed" ? "リライト案あり" : "リライト依頼中"}
+                        </Link>
+                      )}
+                      {a.status === "published" && a.relatedStylistIds.some((id) => !activeStylistIds.has(id)) && (
+                        <p className="mt-1 whitespace-nowrap text-[11px] text-red-700">紹介中の美容師が非公開 → 差し替え推奨</p>
+                      )}
                       {a.source === "ai" && a.status !== "published" && (lintErrors > 0 || lintWarnings > 0) && (
                         <p className={`mt-1 whitespace-nowrap text-[11px] ${lintErrors > 0 ? "text-red-700" : "text-ink-500"}`}>
                           検品: {lintErrors > 0 ? `要修正 ${lintErrors} 件` : ""}
