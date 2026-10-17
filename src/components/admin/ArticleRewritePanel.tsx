@@ -8,6 +8,7 @@ import { getAreaBySlug } from "@/lib/areas";
 import type { Article, ArticleRevision, RevisionStatus } from "@/lib/types";
 import type { StylistOption } from "@/components/admin/ArticleForm";
 import { formatDateTime } from "@/lib/format";
+import { RunJobButton } from "@/components/admin/RunJobButton";
 
 const STATUS_LABEL: Record<RevisionStatus, { label: string; className: string }> = {
   requested: { label: "依頼済み（リライト待ち）", className: "bg-amber-100 text-amber-800" },
@@ -269,7 +270,8 @@ function RevisionCard({
 
       {rev.status === "requested" && (
         <div className="mt-3 flex flex-wrap items-center gap-3 text-xs">
-          <span className="text-ink-500">Claude Code で <code>/rewrite-article</code> を実行すると、この依頼のリライト案が作られます。</span>
+          <RunJobButton kind="rewrite" targetId={rev.id} label="API で提案を作る" />
+          <span className="text-ink-500">または Claude Code で <code>/rewrite-article</code>（API 費用なし）。</span>
           <button type="button" onClick={onReject} disabled={pending} className="text-ink-500 hover:text-red-600">
             依頼を取り消す
           </button>

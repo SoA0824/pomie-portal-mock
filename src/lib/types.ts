@@ -177,6 +177,32 @@ export type SocialPost = {
   updatedAt: string;
 };
 
+// ---------------------------------------------------------------------------
+// ジョブ（管理画面やスケジュールから積む仕事。実行は GitHub Actions か Claude Code）
+// ---------------------------------------------------------------------------
+
+export type JobKind = "propose" | "write" | "rewrite" | "social" | "social_images";
+export const JOB_KINDS: readonly JobKind[] = ["propose", "write", "rewrite", "social", "social_images"];
+export type JobStatus = "queued" | "running" | "done" | "failed" | "canceled";
+
+export type Job = {
+  id: string;
+  kind: JobKind;
+  status: JobStatus;
+  targetId: string | null;
+  params: Record<string, unknown>;
+  requestedBy: string;
+  attempts: number;
+  runner: string | null;
+  startedAt: string | null;
+  finishedAt: string | null;
+  result: Record<string, unknown> | null;
+  error: string | null;
+  log: string | null;
+  createdAt: string;
+  updatedAt: string;
+};
+
 export type KeywordIntent = "booking" | "compare" | "info";
 export type KeywordCandidateStatus =
   | "proposed"

@@ -226,13 +226,15 @@ POMiEポータル/
 - 編集方針・表現のルール: [docs/ARTICLE-GUIDELINES.md](./docs/ARTICLE-GUIDELINES.md)
 - SNS 投稿（Instagram / X）の作成: [docs/SOCIAL-POSTS.md](./docs/SOCIAL-POSTS.md)
 - スキル: `.claude/skills/propose-keywords/`, `.claude/skills/write-article/`, `.claude/skills/rewrite-article/`, `.claude/skills/make-social-post/`
+- 管理画面だけで完結させる場合（API 経路）: 各画面の「API で…」ボタン → GitHub Actions（`.github/workflows/jobs.yml`）が実行 → `/admin/jobs` で進み具合
 - スクリプト（`scripts/articles/`）:
   - `context.mjs` … 美容師・既存記事・候補などの材料を JSON で出す
   - `candidates.mjs` … 候補の一覧・評価・登録（コネクタ経路）
   - `check.mjs` / `save.mjs` … 下書きの検品と保存
   - `rewrite.mjs` … リライトの依頼・分析・提案の保存
   - `../social/social.mjs` … SNS 投稿の依頼・企画の保存・画像生成（`scripts/social/`）
-  - `run.mjs propose|write|status` … サーバー経路（ラッコ API + Claude API）。GitHub Actions `.github/workflows/articles.yml` から定期実行
+  - `run.mjs propose|write|status` … API 経路の入口（ラッコ API + Claude API）
+  - `../jobs/run.mjs` … ジョブの実行（管理画面やスケジュールから積まれた提案・執筆・リライト・SNS を順に処理）
 
 初回だけ、`supabase/migration-009-keyword-pipeline.sql` の実行と、プロジェクト直下の `.env.production.local`
 （Vercel と同じ `NEXT_PUBLIC_SUPABASE_URL` / `NEXT_PUBLIC_SUPABASE_ANON_KEY`）が必要です。

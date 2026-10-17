@@ -10,6 +10,7 @@ import {
 } from "@/server/actions/keywords";
 import type { KeywordCandidate, KeywordCandidateStatus } from "@/lib/types";
 import type { StylistOption } from "@/components/admin/ArticleForm";
+import { RunJobButton } from "@/components/admin/RunJobButton";
 
 const TABS: Array<{ key: KeywordCandidateStatus | "all"; label: string }> = [
   { key: "proposed", label: "提案中" },
@@ -248,6 +249,11 @@ export function KeywordCandidateList({
                         >
                           却下
                         </button>
+                      </div>
+                    )}
+                    {c.status === "approved" && (
+                      <div className="mt-3">
+                        <RunJobButton kind="write" targetId={c.id} label="この候補をいま記事にする（API）" />
                       </div>
                     )}
                     {(c.status === "failed" || c.status === "rejected") && (

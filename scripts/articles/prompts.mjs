@@ -155,3 +155,121 @@ export function plannerUser({ items, context }) {
   lines.push(``, `上の候補すべてについて企画案を JSON 配列で返してください。`);
   return lines.join("\n");
 }
+
+// ---------------------------------------------------------------------------
+// リライト（API 実行用。Claude Code では .claude/skills/rewrite-article が同じルールを持つ）
+// ---------------------------------------------------------------------------
+
+const REWRITE_FORMAT = `出力は次の 3 つの区切りを必ずこの順で含める。前置き・説明・コードフェンスは付けない。
+
+===ANALYSIS===
+（分析の要約 3〜6 行。何が問題で、なぜその直し方にしたか）
+===SUMMARY===
+（変更点の箇条書き。どこをどう変えたか）
+===DRAFT===
+---
+title: （変えないならそのまま。変えるなら 32 文字以内・キーワードを前半に）
+category: （元と同じ。または ${CATEGORIES.join(" / ")}）
+summary: （80〜120 文字）
+target_keyword: （元のまま）
+related_stylist_ids: [（差し替え後の美容師 ID をカンマ区切り）]
+areas: [（元のまま）]
+base_updated_at: （渡された値をそのまま）
+---
+
+（本文全文。Markdown。見出しは ## から。省略や「以下同じ」は不可）`;
+
+export function rewriterSystem(guidelines) {
+  return `あなたは美容室のポータルサイト「POMiE Portal」の編集者です。公開中の記事を、依頼の指示に沿ってリライトします。
+
+守ること:
+- 原型を保つ: 見出しの構成・主張・良い部分は残す。指示がない限り、全面的な書き直しや構成の大きな変更はしない
+- URL（slug）は変えない。base_updated_at は渡された値をそのまま書く
+- 美容師の差し替え: 外す美容師の名前・リンク・メニューの記述を本文全体から消し、加える美容師はユーザーメッセージにある公開情報だけで紹介する
+- 料金・施術時間・メニューは、渡された今の値に合わせる
+- 美容師の発言・施術例・お客様の声を創作しない。断定できないことは [要確認: 内容]
+- 使ってはいけない表現（治る・修復・永久・絶対・No.1 など）を使わない。表と画像は使わない
+
+====== 記事ガイドライン ======
+${guidelines}
+====== ガイドラインここまで ======
+
+${REWRITE_FORMAT}`;
+}
+
+export function rewriterUser({ context, draft }) {
+  const rev = context.revision;
+  const lines = [`# リライトの依頼`, `- 指示: ${rev.instruction || "（指示なし。下の分析の「気になる点」を直す）"}`];
+  if (rev.stylistSwap?.remove?.length) lines.push(`- 外す美容師: ${rev.stylistSwap.remove.join(", ")}`);
+  if (rev.stylistSwap?.add?.length) lines.push(`- 加える美容師: ${rev.stylistSwap.add.join(", ")}`);
+  lines.push(``, `# 記事の状況（分析）`, JSON.stringify(context.analysis, null, 2));
+  lines.push(``, `# 美容師の情報（これ以外の美容師情報は書かない）`, JSON.stringify(context.stylists, null, 2));
+  lines.push(``, `# 店舗`, JSON.stringify(context.stores.map((s) => ({ id: s.id, name: s.name, area: s.area })), null, 2));
+  if (context.publishedArticles?.length) {
+    lines.push(``, `# 公開中の他の記事（関連があればリンクしてよい）`);
+    for (const a of context.publishedArticles.slice(0, 20)) lines.push(`- /articles/${a.slug} 「${a.title}」`);
+  }
+  lines.push(``, `# 今の記事（この内容を直す。フロントマターの base_updated_at はそのまま）`, draft);
+  lines.push(``, `# 依頼`, `上の指示と分析をもとに、原型を保ってリライトし、指定の 3 区切りの形式で出力してください。`);
+  return lines.join("\n");
+}
+
+export function rewriteFixUser(lint) {
+  const lines = [`検品で次の問題が見つかりました。該当箇所を直し、同じ 3 区切りの形式で全体をもう一度出力してください（直す必要のない部分は変えない）。`, ``];
+  for (const e of lint.errors) lines.push(`- [必ず直す] ${e.message}`);
+  for (const w of lint.warnings) lines.push(`- [できれば直す] ${w.message}`);
+  return lines.join("\n");
+}
+
+// ---------------------------------------------------------------------------
+// SNS 投稿（API 実行用。Claude Code では .claude/skills/make-social-post が同じルールを持つ）
+// ---------------------------------------------------------------------------
+
+export function socialSystem(guidelines) {
+  return `あなたは美容室ポータル「POMiE Portal」の SNS 担当です。記事をもとに Instagram（カルーセル）・Threads・X の投稿を企画し、JSON で出力します。
+
+ユーザーメッセージの rules / hashtags / links を必ず守ります。特に:
+- 美容師の名前・写真・リンクは入れない（article.stylistNamesNotToUse の名前は一切書かない）
+- hashtags.required をすべて含め、記事に合うタグを足して合計 10〜15 個
+- Instagram の本文（caption）に URL と # は書かない。X の本文（x_text）に URL を入れない。Threads（threads_text）は最後に記事 URL
+- スライドの文字に絵文字を使わない。見出しは 28 文字以内（13 文字を超えるなら区切りのよい位置に改行を入れる）、本文は 70 文字以内
+- AI 画像は 1〜2 枚。人の顔・施術例・ビフォーアフター風・文字を描かせない。指示（prompt）は英語でよい
+- 記事に無い事実・数字を足さない。下のガイドラインの「使ってはいけない表現」を使わない
+
+====== 記事ガイドライン（表現のルール） ======
+${guidelines}
+====== ここまで ======
+
+出力は JSON オブジェクトだけ（前置き・説明・コードフェンスは不要）:
+{
+  "caption": "Instagram の本文",
+  "hashtags": ["pomie", "ポミエ", "..."],
+  "alt_text": "画像の説明 1〜2 文",
+  "x_text": "X の本文（最後に『詳しくは返信のリンクから』）",
+  "x_reply": "返信の一言（URL は自動で付く）",
+  "threads_text": "Threads の本文（要点 2〜3 つ＋最後に記事 URL）",
+  "template": "photo",
+  "slides": [
+    { "kind": "cover", "headline": "…", "body": "…", "image": { "source": "ai", "prompt": "…" } },
+    { "kind": "point", "headline": "…", "body": "…", "image": { "source": "none" } },
+    { "kind": "point", "headline": "…", "body": "…", "image": { "source": "none" } },
+    { "kind": "cta", "headline": "続きはプロフィールのリンクから", "body": "…", "image": { "source": "none" } }
+  ]
+}
+post.platforms に無い媒体の項目は省略してよい。`;
+}
+
+export function socialUser({ context }) {
+  const regenerate = String(context.post?.mode ?? "").startsWith("regenerate");
+  const lines = [`# 材料`, JSON.stringify(context, null, 2), ``, `# 依頼`, `上の材料で投稿の企画を JSON で作ってください。`];
+  if (regenerate) lines.push(`post.existingPlan を土台に、必要な箇所だけ直してください。画像の作り直しの指示: ${context.post.imageRequest ?? "なし"}`);
+  if (context.post?.brief) lines.push(`運営からの指示（最優先）: ${context.post.brief}`);
+  return lines.join("\n");
+}
+
+export function socialFixUser(lint) {
+  const lines = [`検品で次の問題が見つかりました。該当箇所を直し、JSON 全体をもう一度出力してください（直す必要のない部分は変えない）。`, ``];
+  for (const e of lint.errors) lines.push(`- [必ず直す] ${e}`);
+  for (const w of lint.warnings) lines.push(`- [できれば直す] ${w}`);
+  return lines.join("\n");
+}

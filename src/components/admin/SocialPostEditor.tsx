@@ -4,6 +4,7 @@ import { useMemo, useState, useTransition } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { ImageUploadField } from "@/components/admin/ImageUploadField";
+import { RunJobButton } from "@/components/admin/RunJobButton";
 import {
   clearPosted,
   deleteSocialPost,
@@ -226,16 +227,17 @@ export function SocialPostEditor({
         {post.brief && <p className="mt-1 text-xs text-ink-700">指示: {post.brief}</p>}
         {post.status === "requested" && (
           <div className="mt-3 rounded-lg border border-amber-300 bg-amber-50 p-3 text-xs text-amber-900">
-            {post.imageRequest ? (
-              <>
-                画像の作り直しを依頼中です: 「{post.imageRequest}」。Claude Code で <code className="rounded bg-white px-1">/make-social-post</code>{" "}
-                を実行すると作り直されます。
-              </>
-            ) : (
-              <>
-                Claude Code で <code className="rounded bg-white px-1">/make-social-post</code> を実行すると、投稿文とスライド画像が作られます。
-              </>
-            )}
+            <div className="flex flex-wrap items-center gap-2">
+              {post.imageRequest ? (
+                <RunJobButton kind="social_images" targetId={post.id} label="API で画像を作り直す" className="btn-primary px-4 py-1.5 text-xs" />
+              ) : (
+                <RunJobButton kind="social" targetId={post.id} label="API で投稿文と画像を作る" className="btn-primary px-4 py-1.5 text-xs" />
+              )}
+              <span>
+                {post.imageRequest ? <>画像の作り直しを依頼中: 「{post.imageRequest}」。</> : null}
+                または Claude Code で <code className="rounded bg-white px-1">/make-social-post</code>（API 費用なし）。
+              </span>
+            </div>
           </div>
         )}
         {post.status === "failed" && post.error && <p className="mt-3 text-xs text-red-700">失敗: {post.error}</p>}

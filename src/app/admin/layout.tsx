@@ -8,6 +8,7 @@ const NAV = [
   { href: "/admin/keywords", label: "キーワード候補" },
   { href: "/admin/articles", label: "記事" },
   { href: "/admin/social", label: "SNS 投稿" },
+  { href: "/admin/jobs", label: "自動実行" },
 ];
 
 export default function AdminLayout({ children }: { children: React.ReactNode }) {

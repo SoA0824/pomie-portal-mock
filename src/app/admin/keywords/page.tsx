@@ -1,4 +1,6 @@
+import Link from "next/link";
 import { KeywordCandidateList } from "@/components/admin/KeywordCandidateList";
+import { RunJobButton } from "@/components/admin/RunJobButton";
 import { KeywordSeeds } from "@/components/admin/KeywordSeeds";
 import { listKeywordCandidates, listKeywordSeeds } from "@/lib/data/keywords";
 import { getStylistOptions } from "@/lib/data/stylistOptions";
@@ -28,6 +30,18 @@ export default async function AdminKeywordsPage() {
           自動で集めた記事のキーワード候補です。<strong>承認</strong>した候補は次回の自動実行で記事（下書き）になり、
           記事一覧で内容を確認してから公開します。
         </p>
+        <div className="mt-4 flex flex-wrap items-center gap-2 text-xs">
+          <RunJobButton
+            kind="propose"
+            params={{ limit: 8 }}
+            label="候補を提案する（API で実行）"
+            confirmText="ラッコキーワードのクレジットを 20 前後と Claude API を使います。実行しますか？（Claude Code の /propose-keywords なら API 費用なしで同じことができます）"
+          />
+          <RunJobButton kind="write" params={{ limit: 2 }} label="承認済みの候補を記事にする（API・2 本まで）" />
+          <Link href="/admin/jobs" className="text-pomie-600 hover:underline">
+            実行状況を見る
+          </Link>
+        </div>
       </header>
 
       {loadError && (

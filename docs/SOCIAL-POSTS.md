@@ -7,7 +7,7 @@
 
 ```
 ① 依頼    /admin/articles の公開中の記事 →「SNS 投稿を作る」（媒体・ひとこと指示）
-② 作成    Claude Code で /make-social-post
+② 作成    Claude Code で /make-social-post、または投稿の画面の「API で投稿文と画像を作る」
           記事 → 投稿文・ハッシュタグ・スライドの文言・画像の指示を作る
           → Gemini で雰囲気画像を生成 → Storage に保存 → 「下書き」
 ③ 確認    /admin/social でプレビュー。文言を直す・画像を差し替える（店舗写真 / アップロード / 作り直し依頼）
@@ -112,10 +112,15 @@ AI 画像には見えない透かし（Gemini: SynthID）が入り、Instagram �
 - できないこと: ストーリーズのリンクスタンプ、ハイライトへの保存、Instagram 本文のリンク（API の制限）
 - 接続先はテスト用に `INSTAGRAM_GRAPH_BASE` / `THREADS_GRAPH_BASE` で差し替えられる
 
+## API での作成（Claude Code を使わない）
+
+投稿の画面の「API で投稿文と画像を作る」「API で画像を作り直す」を押すと、ジョブが積まれて GitHub Actions が Claude API と Gemini で作る
+（設定は [ARTICLE-PIPELINE.md](./ARTICLE-PIPELINE.md) の「API 経路」）。進み具合は `/admin/jobs`。
+
 ## 今後（未実装）
 
 - 予約投稿（日時を指定して自動で投稿）
-- GitHub Actions で、記事の公開を検知して下書きを自動作成（サーバー経路）
+- 記事の公開を検知して SNS 投稿の下書きを自動で積む
 
 ## トラブルシューティング
 

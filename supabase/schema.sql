@@ -270,6 +270,27 @@ create table if not exists public.integration_tokens (
 );
 alter table public.integration_tokens disable row level security;
 
+-- ジョブ（migration-015。管理画面やスケジュールから積む仕事）
+create table if not exists public.jobs (
+  id text primary key,
+  kind text not null check (kind in ('propose', 'write', 'rewrite', 'social', 'social_images')),
+  status text not null default 'queued' check (status in ('queued', 'running', 'done', 'failed', 'canceled')),
+  target_id text,
+  params jsonb not null default '{}'::jsonb,
+  requested_by text not null default 'admin',
+  attempts int not null default 0,
+  runner text,
+  started_at timestamptz,
+  finished_at timestamptz,
+  result jsonb,
+  error text,
+  log text,
+  created_at timestamptz not null default now(),
+  updated_at timestamptz not null default now()
+);
+create index if not exists idx_jobs_status_created on public.jobs (status, created_at);
+alter table public.jobs disable row level security;
+
 -- anon / authenticated ロールへ権限を付与（RLS 無効でも GRANT は別途必要）
 grant select, insert, update, delete on public.reservations to anon, authenticated;
 grant select, insert, update, delete on public.salonboard_bookings to anon, authenticated;
@@ -281,6 +302,7 @@ grant select, insert, update, delete on public.keyword_seeds to anon, authentica
 grant select, insert, update, delete on public.article_revisions to anon, authenticated;
 grant select, insert, update, delete on public.social_posts to anon, authenticated;
 grant select, insert, update, delete on public.integration_tokens to anon, authenticated;
+grant select, insert, update, delete on public.jobs to anon, authenticated;
 
 -- PostgREST のスキーマキャッシュをリロード
 notify pgrst, 'reload schema';

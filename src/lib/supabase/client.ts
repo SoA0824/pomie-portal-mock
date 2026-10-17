@@ -155,6 +155,24 @@ export type IntegrationTokenRow = {
   updated_at: string;
 };
 
+export type JobRow = {
+  id: string;
+  kind: "propose" | "write" | "rewrite" | "social" | "social_images";
+  status: "queued" | "running" | "done" | "failed" | "canceled";
+  target_id: string | null;
+  params: Record<string, unknown> | null;
+  requested_by: string | null;
+  attempts: number | null;
+  runner: string | null;
+  started_at: string | null;
+  finished_at: string | null;
+  result: Record<string, unknown> | null;
+  error: string | null;
+  log: string | null;
+  created_at: string;
+  updated_at: string;
+};
+
 export type KeywordSeedRow = {
   id: string;
   keyword: string;

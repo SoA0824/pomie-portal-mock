@@ -16,16 +16,17 @@
 
 ## 2 つの動かし方
 
-| | コネクタ経路 | サーバー経路 |
+| | コネクタ経路（スキル） | API 経路（ジョブ） |
 |---|---|---|
-| どこで動く | Claude Code（このチャット） | GitHub Actions（無人） |
+| どこで動く | Claude Code（このチャット） | GitHub Actions（無人）。管理画面の「API で…」ボタンでも起動 |
 | キーワード調査 | ラッコキーワードの**コネクタ** | ラッコキーワード **API**（API キー） |
-| 執筆 | Claude Code 自身 | Claude **API**（API キー） |
-| 必要な設定 | `.env.production.local` だけ | GitHub Secrets 4 つ |
+| 執筆・リライト・SNS 投稿文 | Claude Code 自身 | Claude **API**（API キー） |
+| 必要な設定 | `.env.production.local` だけ | GitHub Secrets（下記） |
 | 追加費用 | なし（ラッコのクレジットのみ） | Claude API の従量課金（1 記事 ¥30〜60 程度）+ ラッコのクレジット |
-| 向いている | まず運用を始める・記事の質を見ながら調整する | 承認するだけで記事が貯まる状態にする |
+| 向いている | 費用を抑えたい・内容を見ながら調整する | 管理画面だけで完結させたい・放っておいても進む状態にする |
 
-**まずコネクタ経路で始め、流れが固まったらサーバー経路を有効にする**のがおすすめです。両方を併用しても問題ありません（同じ DB・同じ管理画面）。
+**両方を併用できます**（同じ DB・同じ管理画面）。管理画面で依頼したものは、スキルで処理しても「API で…」ボタンで処理してもよく、
+どちらも「下書き・提案を保存するだけ」で、公開・投稿は人が行います。
 
 ## 初回の準備
 
@@ -33,23 +34,34 @@
 2. プロジェクト直下に `.env.production.local` を作る（Vercel と同じ `NEXT_PUBLIC_SUPABASE_URL` / `NEXT_PUBLIC_SUPABASE_ANON_KEY`）
 3. 依存パッケージを入れる: `npm install`（Claude API 用の SDK が追加されています）
 
-### サーバー経路も使う場合
+### API 経路（ジョブ）も使う場合
 
-1. ラッコキーワードのマイページで API キーを発行する
+1. Supabase の SQL Editor で `supabase/migration-015-jobs.sql` を実行する
 2. https://console.anthropic.com で API キーを発行する（クレジットを少額チャージ）
 3. GitHub のリポジトリ → Settings → Secrets and variables → Actions に登録:
    - `ARTICLES_SUPABASE_URL` / `ARTICLES_SUPABASE_ANON_KEY`（Vercel と同じ値）
    - `ANTHROPIC_API_KEY`
-   - `RAKKO_API_KEY`
-4. Actions タブ → 「記事の自動化」→ Run workflow → `status` で接続を確認する
+   - `GEMINI_API_KEY`（SNS 投稿の画像）
+   - `RAKKO_API_KEY`（キーワード提案を API で動かす場合だけ）
+4. Actions タブ → 「自動実行」→ Run workflow → `status` で接続を確認する
+5. 管理画面のボタンで**すぐ**起動したい場合: GitHub で Fine-grained personal access token（対象リポジトリ、Actions: Read and write）を作り、
+   Vercel の Environment Variables に `GITHUB_DISPATCH_TOKEN` として追加 → Redeploy。無くても 15 分ごとの定期実行で処理される
 
-スケジュール（`.github/workflows/articles.yml`）: 毎日 03:00 JST に記事化（2 本まで）、毎週月曜 05:00 JST に候補の提案（8 件）。
+スケジュール（`.github/workflows/jobs.yml`）: 15 分ごとに待ちジョブを実行、毎日 03:00 JST に承認済み候補の記事化（2 本まで）、毎週月曜 05:00 JST に候補の提案（8 件）。
+GitHub はリポジトリに 60 日間コミットが無いとスケジュールを止めるので、止まっていたら Actions タブで再開する。
+
+### 管理画面からの実行（ジョブ）
+
+- キーワード候補: 「候補を提案する（API で実行）」「承認済みの候補を記事にする」、候補ごとの「この候補をいま記事にする」
+- 記事のリライト: 依頼のカードにある「API で提案を作る」
+- SNS 投稿: 依頼中の投稿にある「API で投稿文と画像を作る」「API で画像を作り直す」
+- `/admin/jobs`（自動実行）: 進み具合・結果・ログ・失敗の理由。「待ちジョブを今すぐ実行」「取り消す」「やり直す」
 
 ## 日々の運用
 
 ### 候補を増やす
 - コネクタ経路: Claude Code で `/propose-keywords`
-- サーバー経路: 毎週自動。すぐ欲しいときは Run workflow → `propose`
+- API 経路: 毎週自動。すぐ欲しいときは管理画面の「候補を提案する（API で実行）」
 
 ### 候補を承認する（/admin/keywords）
 - 各候補に、検索数・難易度・検索意図・タイトル案・切り口・紹介する美容師・理由が出ます
@@ -59,7 +71,7 @@
 
 ### 記事を作る
 - コネクタ経路: Claude Code で `/write-article --approved`（承認済みの候補から 1 本書く）
-- サーバー経路: 毎日自動。すぐ欲しいときは Run workflow → `write`
+- API 経路: 毎日自動（2 本まで）。すぐ欲しいときは候補の「この候補をいま記事にする（API）」
 - 書かれた記事は記事一覧に「自動執筆」「下書き」として並びます。検品で残った問題は「検品: 要修正 N 件」と表示されます
 
 ### 記事を公開する（/admin/articles）
@@ -116,7 +128,9 @@
 |---|---|
 | 管理画面に「候補を読み込めませんでした」 | migration-009 未実行 |
 | スクリプトが「.env.production.local に…が必要です」 | 初回の準備 2 |
-| 「RAKKO_API_KEY が設定されていません」 | サーバー経路の設定。コネクタ経路なら `/propose-keywords` を使う |
-| 「ANTHROPIC_API_KEY が設定されていません」 | サーバー経路の設定。コネクタ経路なら `/write-article --approved` を使う |
+| 「RAKKO_API_KEY が設定されていません」 | API 経路の設定（GitHub Secrets）。コネクタ経路なら `/propose-keywords` を使う |
+| 「ANTHROPIC_API_KEY が設定されていません」 | API 経路の設定（GitHub Secrets）。コネクタ経路なら `/write-article --approved` を使う |
+| 自動実行の画面で「ジョブを読み込めませんでした」 | migration-015 未実行 |
+| ジョブが「実行待ち」のまま進まない | GitHub Actions が止まっている（60 日無更新で停止）か Secrets 不足。Actions タブの「自動実行」の履歴を確認 |
 | 候補が「失敗」になる | 候補のエラー欄を確認。クレジット不足（402）やレート制限（429）なら時間をおいて再試行 |
 | 記事の検品に「要修正」が残る | 編集画面で該当箇所を直す（表現のルールは ARTICLE-GUIDELINES.md 5 章） |
