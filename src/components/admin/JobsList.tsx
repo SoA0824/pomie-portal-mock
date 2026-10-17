@@ -60,7 +60,7 @@ export function JobsList({ jobs, dispatchConfigured }: { jobs: Job[]; dispatchCo
         </button>
         {!dispatchConfigured && (
           <span className="text-ink-500">
-            Vercel に <code className="rounded bg-ink-100 px-1">GITHUB_DISPATCH_TOKEN</code> を設定すると、ボタンですぐ起動できます（未設定でも 15 分ごとに自動で実行されます）
+            Vercel に <code className="rounded bg-ink-100 px-1">GITHUB_DISPATCH_TOKEN</code> を設定すると、ボタンですぐ起動できます（未設定でも 1 時間ごとに自動で実行されます）
           </span>
         )}
         {active && <span className="text-ink-500">20 秒ごとに自動更新しています</span>}

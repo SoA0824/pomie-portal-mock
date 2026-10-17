@@ -1,6 +1,6 @@
 /**
  * GitHub Actions の「自動実行」ワークフローを管理画面から起動する（workflow_dispatch）。
- * トークンが無ければ起動しない（15 分ごとの定期実行で処理される）。
+ * トークンが無ければ起動しない（1 時間ごとの定期実行で処理される）。
  */
 const DEFAULT_REPO = "SoA0824/pomie-portal-mock";
 
@@ -10,7 +10,7 @@ export function dispatchConfigured(): boolean {
 
 export async function triggerRunner(): Promise<{ triggered: boolean; error?: string }> {
   const token = process.env.GITHUB_DISPATCH_TOKEN;
-  if (!token) return { triggered: false, error: "GITHUB_DISPATCH_TOKEN が未設定のため、15 分ごとの定期実行で処理されます" };
+  if (!token) return { triggered: false, error: "GITHUB_DISPATCH_TOKEN が未設定のため、1 時間ごとの定期実行で処理されます" };
   const repo = process.env.GITHUB_REPO || DEFAULT_REPO;
   const workflow = process.env.GITHUB_WORKFLOW_FILE || "jobs.yml";
   const base = (process.env.GITHUB_API_BASE || "https://api.github.com").replace(/\/$/, "");

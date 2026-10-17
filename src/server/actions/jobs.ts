@@ -22,7 +22,7 @@ function revalidateAll() {
 
 /**
  * ジョブを積む（管理画面の「いま実行」）。同じ対象の未完了ジョブがあればそれを返す。
- * GitHub のトークンがあればすぐ起動し、無ければ 15 分ごとの定期実行に任せる。
+ * GitHub のトークンがあればすぐ起動し、無ければ 1 時間ごとの定期実行に任せる。
  */
 export async function enqueueJob(input: { kind: JobKind; targetId?: string | null; params?: Record<string, unknown> }): Promise<EnqueueResult> {
   if (!JOB_KINDS.includes(input.kind)) return { ok: false, reason: "ジョブの種類が不正です" };

@@ -45,9 +45,9 @@
    - `RAKKO_API_KEY`（キーワード提案を API で動かす場合だけ）
 4. Actions タブ → 「自動実行」→ Run workflow → `status` で接続を確認する
 5. 管理画面のボタンで**すぐ**起動したい場合: GitHub で Fine-grained personal access token（対象リポジトリ、Actions: Read and write）を作り、
-   Vercel の Environment Variables に `GITHUB_DISPATCH_TOKEN` として追加 → Redeploy。無くても 15 分ごとの定期実行で処理される
+   Vercel の Environment Variables に `GITHUB_DISPATCH_TOKEN` として追加 → Redeploy。無くても 1 時間ごとの定期実行で処理される
 
-スケジュール（`.github/workflows/jobs.yml`）: 15 分ごとに待ちジョブを実行、毎日 03:00 JST に承認済み候補の記事化（2 本まで）、毎週月曜 05:00 JST に候補の提案（8 件）。
+スケジュール（`.github/workflows/jobs.yml`）: 1 時間ごと（毎時 30 分）に待ちジョブを実行、毎日 03:00 JST に承認済み候補の記事化（2 本まで）、毎週月曜 05:00 JST に候補の提案（8 件）。
 GitHub はリポジトリに 60 日間コミットが無いとスケジュールを止めるので、止まっていたら Actions タブで再開する。
 
 ### 管理画面からの実行（ジョブ）

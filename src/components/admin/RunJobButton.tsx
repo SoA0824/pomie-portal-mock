@@ -40,7 +40,7 @@ export function RunJobButton({
       }
       if (r.existing) setMessage("すでに実行待ち／実行中です");
       else if (r.triggered) setMessage("実行を始めました（数分で結果が出ます）");
-      else setMessage(`予約しました。${r.note ?? "15 分以内に始まります"}`);
+      else setMessage(`予約しました。${r.note ?? "1 時間以内に始まります"}`);
       router.refresh();
     });
   };
