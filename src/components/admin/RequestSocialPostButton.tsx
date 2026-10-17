@@ -15,8 +15,6 @@ export function RequestSocialPostButton({ articleId, articleTitle }: { articleId
   const [open, setOpen] = useState(false);
   const [platforms, setPlatforms] = useState<SocialPlatform[]>(["instagram", "x"]);
   const [brief, setBrief] = useState("");
-  const [consent, setConsent] = useState(false);
-  const [consentNote, setConsentNote] = useState("");
   const [pending, startTransition] = useTransition();
   const [error, setError] = useState<string | null>(null);
   const [doneId, setDoneId] = useState<string | null>(null);
@@ -30,7 +28,6 @@ export function RequestSocialPostButton({ articleId, articleTitle }: { articleId
         articleId,
         platforms,
         brief,
-        photoConsent: consent ? consentNote.trim() || "本人の了承あり" : undefined,
       });
       if (r.ok) {
         setDoneId(r.id);
@@ -79,18 +76,7 @@ export function RequestSocialPostButton({ articleId, articleTitle }: { articleId
         value={brief}
         onChange={(e) => setBrief(e.target.value)}
       />
-      <label className="flex items-start gap-1 text-[11px] text-ink-700">
-        <input type="checkbox" checked={consent} onChange={(e) => setConsent(e.target.checked)} className="mt-0.5" />
-        <span>紹介する美容師本人の写真を使ってよい（了承を得ている）</span>
-      </label>
-      {consent && (
-        <input
-          className="input text-xs"
-          placeholder="了承のメモ（例: 10/15 LINE で確認）"
-          value={consentNote}
-          onChange={(e) => setConsentNote(e.target.value)}
-        />
-      )}
+      <p className="text-[11px] text-ink-500">投稿には美容師の名前や写真は入れません（美容師は記事の中で紹介されます）。</p>
       {error && <p className="text-red-700">{error}</p>}
       <div className="flex gap-2">
         <button type="button" onClick={submit} disabled={pending} className="btn-primary px-4 py-1.5 text-xs disabled:opacity-50">

@@ -10,8 +10,10 @@ export { ROOT, SITE_URL };
 export const PLANS_DIR = path.join(ROOT, "content", "social");
 export const BUCKET = "social-images";
 
-export const BRAND_TAGS = ["pomie", "ポミエ"];
-export const FIXED_TAGS = ["シェアサロン", "フリーランス美容師", "美容師独立"];
+/** ブランド設定（data/brand.json。サイト側 src/lib/social/brand.ts と同じファイル） */
+export const BRAND = JSON.parse(fs.readFileSync(path.join(ROOT, "data", "brand.json"), "utf8"));
+export const BRAND_TAGS = BRAND.social.brandTags;
+export const FIXED_TAGS = BRAND.social.fixedTags;
 export const HASHTAG_MAX = 30;
 export const HASHTAG_RECOMMENDED = { min: 8, max: 20 };
 export const INSTAGRAM_CAPTION_LIMIT = 2200;
@@ -269,10 +271,16 @@ export function lintPlan(plan, { article, post, lintCtx }) {
   const todo = everything.match(/\[要確認[^\]]*\]/g) ?? [];
   if (todo.length) warn(`[要確認] が ${todo.length} 箇所あります。投稿前に運営側で確認してください`);
 
-  // 非公開の美容師の名前
+  // 美容師の名前は投稿に入れない（投稿はポータルの記事紹介。美容師は記事の中で紹介される）
   if (lintCtx) {
     for (const [id, s] of lintCtx.stylists) {
-      if (!s.active && s.name && everything.includes(s.name)) warn(`非公開の美容師「${s.name}」（${id}）の名前が入っています`);
+      const name = String(s.name ?? "").trim();
+      if (!name) continue;
+      const forms = [...new Set([name, name.replace(/[\s\u3000]+/g, "")])];
+      if (!forms.some((f) => everything.includes(f))) continue;
+      const message = `美容師「${name}」（${id}）の名前が入っています。SNS 投稿には美容師の情報を入れません（記事の中で紹介されます）`;
+      if (name.replace(/[\s\u3000]+/g, "").length >= 3) err(message);
+      else warn(message);
     }
   }
   return { errors, warnings };

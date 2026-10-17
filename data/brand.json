@@ -1,0 +1,21 @@
+{
+  "name": "POMiE",
+  "colors": {
+    "background": "#fdf6f0",
+    "surfaceSoft": "#f1c7a3",
+    "accent": "#c97539",
+    "text": "#3a1f0c",
+    "textMuted": "#3d3d3d",
+    "onPhoto": "#ffffff",
+    "photoShade": "26,15,6"
+  },
+  "font": {
+    "family": "Noto Sans JP",
+    "googleFamily": "Noto+Sans+JP"
+  },
+  "social": {
+    "brandTags": ["pomie", "ポミエ"],
+    "fixedTags": ["シェアサロン", "フリーランス美容師", "美容師独立"],
+    "watermarkOpacity": 0.08
+  }
+}

@@ -1,12 +1,13 @@
 /**
  * スライドを画像（PNG）にする。
  *
- * - 文字は Noto Sans JP。日本語フォントは大きいので、スライドに出る文字だけを
+ * - 文字はブランド設定のフォント（既定 Noto Sans JP）。日本語フォントは大きいので、スライドに出る文字だけを
  *   Google Fonts から部分取得する（取得結果はプロセス内でキャッシュ）
  * - 背景画像は公開 URL（Storage）か、サイト内のパス（店舗写真）を絶対 URL にして渡す
  */
 import { ImageResponse } from "next/og";
 import { SITE_URL } from "@/lib/site";
+import { BRAND } from "./brand";
 import type { SocialPost } from "@/lib/types";
 import { SLIDE_HEIGHT, SLIDE_WIDTH, collectSlideText, createSlideElement, type SlideContext } from "./templates";
 
@@ -20,7 +21,7 @@ async function loadFont(weight: 400 | 700, text: string): Promise<ArrayBuffer> {
   const hit = fontCache.get(key);
   if (hit) return hit;
   const p = (async () => {
-    const cssUrl = `https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@${weight}&text=${encodeURIComponent(chars)}`;
+    const cssUrl = `https://fonts.googleapis.com/css2?family=${BRAND.font.googleFamily}:wght@${weight}&text=${encodeURIComponent(chars)}`;
     const css = await fetch(cssUrl, { headers: { "User-Agent": FONT_UA } }).then((r) => {
       if (!r.ok) throw new Error(`フォントの取得に失敗しました（${r.status}）`);
       return r.text();
@@ -62,8 +63,8 @@ export async function renderSlide(post: SocialPost, ctx: SlideContext, index: nu
     width,
     height: Math.round(SLIDE_HEIGHT * scale),
     fonts: [
-      { name: "Noto Sans JP", data: regular, weight: 400, style: "normal" },
-      { name: "Noto Sans JP", data: bold, weight: 700, style: "normal" },
+      { name: BRAND.font.family, data: regular, weight: 400, style: "normal" },
+      { name: BRAND.font.family, data: bold, weight: 700, style: "normal" },
     ],
     headers: { "Cache-Control": "no-store" },
   });

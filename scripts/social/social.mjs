@@ -3,7 +3,7 @@
  *
  *   node scripts/social/social.mjs list
  *       … 作成待ち（依頼済み）の一覧
- *   node scripts/social/social.mjs request --article <slug|id> [--platforms instagram,x] [--brief "..."] [--consent "..."]
+ *   node scripts/social/social.mjs request --article <slug|id> [--platforms instagram,x] [--brief "..."]
  *       … チャットから依頼する（管理画面からの依頼と同じ扱い）
  *   node scripts/social/social.mjs context <投稿ID> [--out ディレクトリ]
  *       … 材料（記事・美容師・店舗・ルール）を JSON で出し、企画ファイル content/social/<投稿ID>.json を用意する
@@ -17,7 +17,7 @@
  */
 import fs from "node:fs";
 import path from "node:path";
-import { buildContext, fetchLintContext, loadDb, newId, parseArgs, rest } from "../articles/lib.mjs";
+import { fetchLintContext, loadDb, newId, parseArgs, rest } from "../articles/lib.mjs";
 import {
   HASHTAG_RECOMMENDED,
   INSTAGRAM_CAPTION_RECOMMENDED,
@@ -64,7 +64,7 @@ function skeletonPlan(article, post) {
       { kind: "point", headline: "", body: "", image: { source: "none" } },
       { kind: "point", headline: "", body: "", image: { source: "none" } },
       { kind: "point", headline: "", body: "", image: { source: "none" } },
-      { kind: "cta", headline: "続きはプロフィールのリンクから", body: "", image: { source: "store", url: storePhotos(article.areas)[0]?.photos[0] ?? "" } },
+      { kind: "cta", headline: "続きはプロフィールのリンクから", body: "", image: { source: "none" } },
     ],
   };
 }
@@ -136,7 +136,6 @@ async function main() {
       console.log(`${p.id}  ${a ? a.title : "(記事なし)"}  /articles/${a?.slug ?? "-"}  [${(p.platforms ?? []).map(platformLabel).join(" + ")}]`);
       if (p.brief) console.log(`    指示: ${p.brief.replace(/\n/g, " / ")}`);
       if (p.image_request) console.log(`    画像の作り直し: ${p.image_request}`);
-      if (p.photo_consent) console.log(`    美容師の写真: 使用可（${p.photo_consent}）`);
       if ((p.slides ?? []).length) console.log(`    （すでに ${p.slides.length} 枚のスライドあり → 作り直しモード）`);
     }
     return;
@@ -156,7 +155,6 @@ async function main() {
         platforms,
         status: "requested",
         brief: typeof args.brief === "string" ? args.brief : "",
-        photo_consent: typeof args.consent === "string" ? args.consent : null,
       },
       prefer: "return=minimal",
     });
@@ -167,10 +165,8 @@ async function main() {
   if (cmd === "context") {
     const post = await getPost(db, args._[1] ?? "");
     const article = await getArticle(db, post.article_id);
-    const [context, lintCtx] = await Promise.all([buildContext(db), fetchLintContext(db)]);
-    const detailById = new Map(context.stylists.map((s) => [s.id, s]));
-    const related = (article.related_stylist_ids ?? []).map((id) => detailById.get(id)).filter(Boolean);
-    const inactive = (article.related_stylist_ids ?? []).filter((id) => !detailById.has(id)).map((id) => lintCtx.stylists.get(id)?.name ?? id);
+    const lintCtx = await fetchLintContext(db);
+    const stylistNames = [...lintCtx.stylists.values()].map((s) => s.name).filter(Boolean);
     const platforms = post.platforms ?? ["instagram", "x"];
     const regenerate = (post.slides ?? []).length > 0;
     const stores = storePhotos(article.areas).map((s) => ({ ...s, photos: s.photos.map((p) => ({ path: p, url: absoluteUrl(p) })) }));
@@ -182,7 +178,6 @@ async function main() {
         format: post.format,
         brief: post.brief ?? "",
         imageRequest: post.image_request ?? null,
-        photoConsent: post.photo_consent ?? null,
         mode: regenerate ? "regenerate（既存の企画を直す。文字は必要な箇所だけ変える）" : "new",
         existingPlan: regenerate ? planFromPost(post) : null,
       },
@@ -197,8 +192,8 @@ async function main() {
         areas: article.areas ?? [],
         areaNames: areaNames(article.areas ?? []),
         body: article.body,
-        relatedStylists: related,
-        inactiveRelatedStylists: inactive,
+        // 記事本文に出てくる美容師の名前。投稿には書かない（検品でエラーになる）
+        stylistNamesNotToUse: stylistNames.filter((n) => (article.body ?? "").includes(n)),
       },
       stores,
       hashtags: {
@@ -214,11 +209,12 @@ async function main() {
       rules: {
         tone: "読みやすく、固すぎない。です・ます調をベースに、話しかけるように。Instagram の本文は絵文字 2〜4 個まで、X は 0〜1 個、スライドの文字には絵文字を使わない",
         audience: "記事の読者（お客さま）に向けて書く。固定タグ（#シェアサロン など）は美容師の採用にもつなげるためのもので、本文を採用向けにはしない",
-        instagramCaption: `${INSTAGRAM_CAPTION_RECOMMENDED.min}〜${INSTAGRAM_CAPTION_RECOMMENDED.max} 文字。冒頭 1 行で内容が分かるように（折りたたまれる）。最後に導線と、紹介する美容師の名前（公開情報のみ）`,
+        instagramCaption: `${INSTAGRAM_CAPTION_RECOMMENDED.min}〜${INSTAGRAM_CAPTION_RECOMMENDED.max} 文字。冒頭 1 行で内容が分かるように（折りたたまれる）。最後に記事への導線`,
+        stylists: "美容師の名前・プロフィール・写真・リンクは本文にもスライドにも入れない（投稿はポータルの記事紹介。美容師は記事の中で紹介される）。店舗名も基本は書かない（エリア名は可）",
         slides: `4〜5 枚（cover → point × 2〜3 → cta）。見出し ${SLIDE_LIMITS.headline} 文字以内、本文 ${SLIDE_LIMITS.body} 文字以内。記事の見出し・主張から作り、新しい主張や数字を足さない`,
         images: "AI 画像は表紙など 1〜2 枚まで。雰囲気（サロンの空間、髪の質感の寄り、小物、光）だけを描き、人の顔・施術例・ビフォーアフター風・文字は描かない。他のスライドは画像なし（クリーム地）か店舗写真",
         x: `本文は日本語換算 ${X_WEIGHT_LIMIT / 2} 文字まで。URL は入れない。最後に『詳しくは返信のリンクから』`,
-        facts: "料金・メニュー・美容師の情報は材料にあるものだけ。美容師の発言・お客様の声・施術例を創作しない。断定できないことは書かないか [要確認: …]",
+        facts: "料金・メニューなどの事実は記事にあるものだけ。発言・お客様の声・施術例を創作しない。断定できないことは書かないか [要確認: …]",
         promptSuffix: `画像の指示には自動で次が付く: ${PROMPT_SUFFIX}`,
       },
     };
@@ -237,7 +233,7 @@ async function main() {
     console.log(`媒体: ${platforms.map(platformLabel).join(" + ")} / エリア: ${areaNames(article.areas ?? []).join("・") || "なし"}`);
     if (post.brief) console.log(`指示: ${post.brief}`);
     if (post.image_request) console.log(`画像の作り直し: ${post.image_request}`);
-    console.log(`紹介する美容師: ${related.map((s) => s.name).join("、") || "なし"}${inactive.length ? `（非公開のため除外: ${inactive.join("、")}）` : ""}`);
+    if (out.article.stylistNamesNotToUse.length) console.log(`投稿に書かない名前（記事本文に出てくる美容師）: ${out.article.stylistNamesNotToUse.join("、")}`);
     console.log(`必須ハッシュタグ: ${out.hashtags.required.map((t) => `#${t}`).join(" ")}`);
     return;
   }

@@ -2,13 +2,14 @@
  * SNS 投稿の文字まわりのルール（ブラウザ・サーバー・どちらでも使う）。
  * scripts/social/lib.mjs にも同じルールがあるので、変えるときは両方を直す。
  */
+import brand from "../../../data/brand.json";
 import { AREAS } from "@/lib/areas";
 import type { SocialPost } from "@/lib/types";
 
-/** いつも付けるブランドのタグ。エリアを後ろに付けた形（#pomie表参道 など）も付ける */
-export const BRAND_TAGS = ["pomie", "ポミエ"];
-/** いつも付ける固定のタグ（美容師の採用にもつなげる） */
-export const FIXED_TAGS = ["シェアサロン", "フリーランス美容師", "美容師独立"];
+/** いつも付けるブランドのタグ（data/brand.json）。エリアを後ろに付けた形（#pomie表参道 など）も付ける */
+export const BRAND_TAGS: string[] = brand.social.brandTags;
+/** いつも付ける固定のタグ（data/brand.json。美容師の採用にもつなげる） */
+export const FIXED_TAGS: string[] = brand.social.fixedTags;
 
 export const INSTAGRAM_CAPTION_LIMIT = 2200;
 export const HASHTAG_MAX = 30;

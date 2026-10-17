@@ -54,7 +54,6 @@ export async function requestSocialPost(input: {
   platforms: SocialPlatform[];
   format?: SocialFormat;
   brief?: string;
-  photoConsent?: string;
 }): Promise<RequestResult> {
   const platforms = Array.from(new Set(input.platforms)).filter((p) => SOCIAL_PLATFORMS.includes(p));
   if (platforms.length === 0) return { ok: false, reason: "出す媒体を 1 つ以上選んでください" };
@@ -72,7 +71,6 @@ export async function requestSocialPost(input: {
     format: input.format ?? "carousel",
     status: "requested",
     brief: (input.brief ?? "").trim(),
-    photo_consent: input.photoConsent?.trim() || null,
   });
   if (error) return { ok: false, reason: error.message };
   revalidate();

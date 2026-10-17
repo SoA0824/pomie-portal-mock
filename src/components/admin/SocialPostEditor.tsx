@@ -195,7 +195,6 @@ export function SocialPostEditor({ post, article, stores }: { post: SocialPost; 
           )}
         </p>
         {post.brief && <p className="mt-1 text-xs text-ink-700">指示: {post.brief}</p>}
-        {post.photoConsent && <p className="mt-1 text-xs text-ink-700">美容師の写真: 使用可（{post.photoConsent}）</p>}
         {post.status === "requested" && (
           <div className="mt-3 rounded-lg border border-amber-300 bg-amber-50 p-3 text-xs text-amber-900">
             {post.imageRequest ? (
