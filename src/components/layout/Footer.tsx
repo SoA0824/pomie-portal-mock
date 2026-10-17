@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { Logo } from "./Logo";
 import { getAllStores } from "@/lib/data/stores";
+import { OPERATOR } from "@/lib/data/operator";
 
 export function Footer() {
   return (
@@ -9,7 +10,7 @@ export function Footer() {
         <div>
           <Logo className="h-8 w-auto" />
           <p className="mt-3 text-xs text-ink-500">
-            ポミエ契約美容師に出会えるポータル。
+            あなたに合う美容師に出会えるポータル。
           </p>
         </div>
         <div className="grid grid-cols-2 gap-3 text-sm md:col-span-2 md:grid-cols-4">
@@ -25,6 +26,15 @@ export function Footer() {
             title="店舗"
             items={getAllStores().map((s) => ({ label: s.name, href: `/stores/${s.id}` }))}
           />
+          {OPERATOR.confirmed && (
+            <FooterLinks
+              title="このサイトについて"
+              items={[
+                { label: "運営者情報", href: "/about" },
+                { label: "プライバシーポリシー", href: "/privacy" },
+              ]}
+            />
+          )}
           {/* 管理系リンクは一般ユーザーに不要。next/link の prefetch で
               Basic 認証ダイアログが出る問題も避けるため掲載しない。
               管理画面は URL 直打ちでアクセスする運用。 */}

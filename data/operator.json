@@ -1,0 +1,14 @@
+{
+  "confirmed": false,
+  "siteName": "POMiE Portal",
+  "companyName": "株式会社POMiE",
+  "postalCode": "150-0012",
+  "address": "東京都渋谷区広尾5丁目24番9号 1F",
+  "representatives": ["谷口 慎一郎", "田中 秀行"],
+  "founded": "2024年2月",
+  "business": ["シェアサロン「POMiE」の運営", "美容師紹介サイト「POMiE Portal」の運営"],
+  "officialSiteUrl": "https://pomie.jp/",
+  "contactUrl": "https://pomie.jp/contact",
+  "corporatePrivacyPolicyUrl": "https://pomie.jp/privacy-policy",
+  "privacyPolicyEstablished": "2026年10月18日"
+}

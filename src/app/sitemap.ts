@@ -3,6 +3,7 @@ import { SITE_URL } from "@/lib/site";
 import { getAllArticles } from "@/lib/data/articles";
 import { getAllPublishedStylists } from "@/lib/data/stylists";
 import { getAllStores } from "@/lib/data/stores";
+import { OPERATOR } from "@/lib/data/operator";
 import { AREAS } from "@/lib/areas";
 
 // 美容師は DB から取るので、ビルド時ではなくリクエスト時に生成する
@@ -20,6 +21,12 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     { url: `${SITE_URL}/stylists`, lastModified: now, changeFrequency: "daily", priority: 0.9 },
     { url: `${SITE_URL}/articles`, lastModified: now, changeFrequency: "daily", priority: 0.8 },
     { url: `${SITE_URL}/match`, lastModified: now, changeFrequency: "monthly", priority: 0.6 },
+    ...(OPERATOR.confirmed
+      ? ([
+          { url: `${SITE_URL}/about`, lastModified: now, changeFrequency: "yearly", priority: 0.3 },
+          { url: `${SITE_URL}/privacy`, lastModified: now, changeFrequency: "yearly", priority: 0.2 },
+        ] as MetadataRoute.Sitemap)
+      : []),
   ];
 
   const storePages: MetadataRoute.Sitemap = getAllStores().map((s) => ({
