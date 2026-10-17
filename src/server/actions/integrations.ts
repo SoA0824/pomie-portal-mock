@@ -16,7 +16,10 @@ export async function connectIntegration(provider: IntegrationProvider, token: s
   try {
     const s = await saveIntegrationToken(provider, token);
     revalidatePath("/admin/social/settings");
-    return { ok: true, message: `@${s.accountName || s.accountId} として接続しました` };
+    return {
+      ok: true,
+      message: `@${s.accountName || s.accountId} として接続しました${s.exchanged ? "（長期トークンに変換しました）" : ""}`,
+    };
   } catch (err) {
     return { ok: false, reason: err instanceof Error ? err.message : String(err) };
   }

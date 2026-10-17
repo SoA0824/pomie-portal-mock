@@ -6,7 +6,7 @@ import { getSupabase, type IntegrationTokenRow } from "@/lib/supabase/client";
 import type { IntegrationProvider, IntegrationStatus } from "@/lib/types";
 import { INTEGRATION_PROVIDERS } from "@/lib/types";
 import { decryptSecret, encryptSecret, integrationSecretConfigured } from "./secrets";
-import { refreshToken, verifyToken } from "./meta";
+import { exchangeToken, refreshToken, verifyToken } from "./meta";
 
 const LONG_LIVED_DAYS = 60;
 /** 前回の更新からこれだけたっていたら更新する（有効期限 60 日に対して余裕をもって） */
@@ -27,7 +27,11 @@ export async function getIntegrationRow(provider: IntegrationProvider): Promise<
 }
 
 /** 管理画面の表示用（トークン自体は返さない） */
-export async function listIntegrationStatus(): Promise<{ statuses: IntegrationStatus[]; secretConfigured: boolean; error: string | null }> {
+export function appSecretConfigured(): boolean {
+  return Boolean(process.env.META_APP_SECRET);
+}
+
+export async function listIntegrationStatus(): Promise<{ statuses: IntegrationStatus[]; secretConfigured: boolean; appSecretConfigured: boolean; error: string | null }> {
   const { data, error } = await getSupabase().from("integration_tokens").select("provider, account_id, account_name, expires_at, refreshed_at, last_error, updated_at");
   const rows = (data ?? []) as Array<Omit<IntegrationTokenRow, "token_enc" | "created_at">>;
   const statuses = INTEGRATION_PROVIDERS.map((provider) => {
@@ -42,20 +46,36 @@ export async function listIntegrationStatus(): Promise<{ statuses: IntegrationSt
       lastError: r?.last_error ?? null,
     };
   });
-  return { statuses, secretConfigured: integrationSecretConfigured(), error: error?.message ?? null };
+  return { statuses, secretConfigured: integrationSecretConfigured(), appSecretConfigured: appSecretConfigured(), error: error?.message ?? null };
 }
 
-/** トークンを確認して保存する（管理画面の「接続」） */
-export async function saveIntegrationToken(provider: IntegrationProvider, token: string): Promise<IntegrationStatus> {
-  const trimmed = token.trim();
+/**
+ * トークンを確認して保存する（管理画面の「接続」）。
+ * META_APP_SECRET があれば長期トークンへの交換を試す（短期トークンを貼られても 60 日もつようにする）。
+ */
+export async function saveIntegrationToken(provider: IntegrationProvider, token: string): Promise<IntegrationStatus & { exchanged: boolean }> {
+  let trimmed = token.trim();
   if (!trimmed) throw new Error("トークンを入力してください");
   const account = await verifyToken(provider, trimmed);
+  let expiresAt = addDays(LONG_LIVED_DAYS);
+  let exchanged = false;
+  const appSecret = process.env.META_APP_SECRET;
+  if (appSecret) {
+    try {
+      const ex = await exchangeToken(provider, trimmed, appSecret);
+      trimmed = ex.token;
+      expiresAt = new Date(Date.now() + ex.expiresIn * 1000).toISOString();
+      exchanged = true;
+    } catch {
+      // すでに長期トークン（交換不要）か、交換に対応していない。貼られたトークンをそのまま使う
+    }
+  }
   const row = {
     provider,
     token_enc: encryptSecret(trimmed),
     account_id: account.accountId,
     account_name: account.username,
-    expires_at: addDays(LONG_LIVED_DAYS),
+    expires_at: expiresAt,
     refreshed_at: now(),
     last_error: null,
     updated_at: now(),
@@ -70,6 +90,7 @@ export async function saveIntegrationToken(provider: IntegrationProvider, token:
     expiresAt: row.expires_at,
     refreshedAt: row.refreshed_at,
     lastError: null,
+    exchanged,
   };
 }
 

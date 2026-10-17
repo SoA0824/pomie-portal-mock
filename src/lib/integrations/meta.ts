@@ -59,6 +59,21 @@ export async function verifyToken(provider: IntegrationProvider, token: string):
   return { accountId, username: String(me.username ?? "") };
 }
 
+/**
+ * 短期トークン（数時間）を長期トークン（60 日）に交換する。アプリシークレットが必要。
+ * すでに長期トークンのときはエラーになるので、呼び出し側で握りつぶしてよい。
+ */
+export async function exchangeToken(provider: IntegrationProvider, token: string, appSecret: string): Promise<{ token: string; expiresIn: number }> {
+  const url = provider === "instagram" ? `${IG_BASE}/access_token` : `${TH_BASE}/access_token`;
+  const data = await call("GET", url, {
+    grant_type: provider === "instagram" ? "ig_exchange_token" : "th_exchange_token",
+    client_secret: appSecret,
+    access_token: token,
+  });
+  if (!data.access_token) throw new Error("長期トークンが返ってきませんでした");
+  return { token: String(data.access_token), expiresIn: Number(data.expires_in ?? 60 * 24 * 3600) };
+}
+
 /** 長期トークンを更新する（発行から 24 時間以上たっていて、期限切れでないもの） */
 export async function refreshToken(provider: IntegrationProvider, token: string): Promise<{ token: string; expiresIn: number }> {
   const url = provider === "instagram" ? `${IG_BASE}/refresh_access_token` : `${TH_BASE}/refresh_access_token`;

@@ -5,7 +5,7 @@ import { listIntegrationStatus } from "@/lib/integrations/tokens";
 export const dynamic = "force-dynamic";
 
 export default async function SocialSettingsPage() {
-  const { statuses, secretConfigured, error } = await listIntegrationStatus();
+  const { statuses, secretConfigured, appSecretConfigured, error } = await listIntegrationStatus();
   return (
     <div>
       <Link href="/admin/social" className="text-sm text-pomie-600 hover:underline">
@@ -16,7 +16,7 @@ export default async function SocialSettingsPage() {
         Instagram と Threads は、ここでトークンを登録すると管理画面から直接投稿できます（X は手動のまま）。
         トークンは暗号化して保存し、期限（60 日）が切れる前に自動で更新します。
       </p>
-      <IntegrationSettings statuses={statuses} secretConfigured={secretConfigured} loadError={error} />
+      <IntegrationSettings statuses={statuses} secretConfigured={secretConfigured} appSecretConfigured={appSecretConfigured} loadError={error} />
     </div>
   );
 }

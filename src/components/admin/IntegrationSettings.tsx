@@ -11,24 +11,34 @@ const GUIDE: Record<IntegrationProvider, { permissions: string; steps: string[] 
   instagram: {
     permissions: "instagram_business_basic / instagram_business_content_publish",
     steps: [
-      "https://developers.facebook.com でアプリを作成する（ユースケース「Instagram のコンテンツを管理」、種類「ビジネス」）",
-      "アプリのダッシュボード → Instagram →「Instagram ログインの API 設定」で、Instagram テスターに POMiE のアカウントを追加する",
-      "Instagram アプリ → 設定 →「アプリとウェブサイト」→「テスター招待」で承認する",
-      "ダッシュボードの「アクセストークンを生成」で出たトークンを下に貼る（60 日有効。以後は自動で更新）",
+      "Meta for Developers のアプリ → 左メニュー「アプリの役割」→「役割」→「ユーザーを追加」→ 役割「Instagram テスター」で POMiE の Instagram ユーザー名を追加する",
+      "Instagram アプリ（スマホ）→ 設定 →「ウェブサイトのアクセス許可」（または「アプリとウェブサイト」）→「テスター招待」で承認する。役割の一覧が「アクティブ」になれば OK",
+      "左メニュー「Instagram」→「Instagram ログインの API 設定」→ 1 番の「アクセストークンを生成」で、追加したアカウントの「トークンを生成」→ ログイン・許可 → 表示されたトークンをコピー",
+      "下に貼って「接続する」。アプリシークレットが設定されていれば自動で 60 日の長期トークンに変換される",
     ],
   },
   threads: {
     permissions: "threads_basic / threads_content_publish",
     steps: [
-      "同じアプリに「Threads API」の製品（ユースケース「Threads API にアクセス」）を追加する",
-      "Threads テスターに POMiE の Threads アカウントを追加する",
-      "Threads アプリ → 設定 → アカウント →「ウェブサイトのアクセス許可」→「招待」で承認する",
-      "「アクセストークンを生成」で出たトークンを下に貼る（60 日有効。以後は自動で更新）",
+      "同じアプリの左メニュー「ユースケース」→「ユースケースを追加」→「Threads API にアクセス」を追加し、「カスタマイズ」で threads_basic と threads_content_publish を追加する",
+      "「アプリの役割」→「役割」→「ユーザーを追加」→ 役割「Threads テスター」で POMiE の Threads ユーザー名を追加する",
+      "Threads アプリ（スマホ）→ 設定 → アカウント →「ウェブサイトのアクセス許可」→「招待」タブで承認する",
+      "「ユースケース」→「Threads API にアクセス」→「設定」タブ →「ユーザートークンジェネレーター」で「アクセストークンを生成」→ 表示されたトークンをコピーして下に貼る",
     ],
   },
 };
 
-export function IntegrationSettings({ statuses, secretConfigured, loadError }: { statuses: IntegrationStatus[]; secretConfigured: boolean; loadError: string | null }) {
+export function IntegrationSettings({
+  statuses,
+  secretConfigured,
+  appSecretConfigured,
+  loadError,
+}: {
+  statuses: IntegrationStatus[];
+  secretConfigured: boolean;
+  appSecretConfigured: boolean;
+  loadError: string | null;
+}) {
   const router = useRouter();
   const [pending, startTransition] = useTransition();
   const [tokens, setTokens] = useState<Partial<Record<IntegrationProvider, string>>>({});
@@ -54,6 +64,12 @@ export function IntegrationSettings({ statuses, secretConfigured, loadError }: {
           トークンを暗号化して保存するための <code className="rounded bg-white px-1">INTEGRATION_SECRET</code> が Vercel に設定されていません。
           Environment Variables に 32 文字以上のランダムな文字列を追加して再デプロイしてください（あわせて <code className="rounded bg-white px-1">CRON_SECRET</code>{" "}
           も設定すると、トークンの自動更新が毎日動きます）。
+        </div>
+      )}
+      {!appSecretConfigured && (
+        <div className="rounded-lg border border-ink-100 bg-white p-3 text-xs text-ink-700">
+          おすすめ: アプリの「設定 → ベーシック」にある <b>app secret（アプリシークレット）</b> を Vercel の{" "}
+          <code className="rounded bg-ink-100 px-1">META_APP_SECRET</code> に入れておくと、画面で発行されるトークンが短期（数時間）でも、接続時に自動で 60 日の長期トークンに変換します。
         </div>
       )}
       {loadError && (

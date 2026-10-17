@@ -28,6 +28,7 @@
 4. 自動投稿を使うなら `supabase/migration-014-social-publish.sql` を実行し、Vercel の Environment Variables に次を追加して再デプロイ:
    - `INTEGRATION_SECRET` … 32 文字以上のランダムな文字列（トークンの暗号化に使う）
    - `CRON_SECRET` … ランダムな文字列（毎日のトークン自動更新用。vercel.json の cron が使う）
+   - `META_APP_SECRET` … Meta のアプリの「設定 → ベーシック → app secret」（任意。あると短期トークンを自動で長期トークンに変換する）
 5. `/admin/social/settings` で Instagram / Threads のトークンを登録する（取り方は画面に書いてある。Meta for Developers のアプリは「開発モード」のままでよい）
 
 ## 決めごと
