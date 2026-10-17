@@ -219,16 +219,19 @@ POMiEポータル/
 ③ /write-article --approved   承認済みの候補を記事（下書き）にする
 ④ /admin/articles     プレビュー → 監修者（任意）を付けて「承認して公開」
 ⑤ リライト            編集画面で依頼 → /rewrite-article で提案 → 差分を見て「承認して反映」
+⑥ SNS 投稿            記事一覧で依頼 → /make-social-post で投稿文と画像 → /admin/social で確認・書き出し → 手動投稿
 ```
 
 - 運用手順・2 つの動かし方（Claude Code のコネクタ / GitHub Actions）: [docs/ARTICLE-PIPELINE.md](./docs/ARTICLE-PIPELINE.md)
 - 編集方針・表現のルール: [docs/ARTICLE-GUIDELINES.md](./docs/ARTICLE-GUIDELINES.md)
-- スキル: `.claude/skills/propose-keywords/`, `.claude/skills/write-article/`, `.claude/skills/rewrite-article/`
+- SNS 投稿（Instagram / X）の作成: [docs/SOCIAL-POSTS.md](./docs/SOCIAL-POSTS.md)
+- スキル: `.claude/skills/propose-keywords/`, `.claude/skills/write-article/`, `.claude/skills/rewrite-article/`, `.claude/skills/make-social-post/`
 - スクリプト（`scripts/articles/`）:
   - `context.mjs` … 美容師・既存記事・候補などの材料を JSON で出す
   - `candidates.mjs` … 候補の一覧・評価・登録（コネクタ経路）
   - `check.mjs` / `save.mjs` … 下書きの検品と保存
   - `rewrite.mjs` … リライトの依頼・分析・提案の保存
+  - `../social/social.mjs` … SNS 投稿の依頼・企画の保存・画像生成（`scripts/social/`）
   - `run.mjs propose|write|status` … サーバー経路（ラッコ API + Claude API）。GitHub Actions `.github/workflows/articles.yml` から定期実行
 
 初回だけ、`supabase/migration-009-keyword-pipeline.sql` の実行と、プロジェクト直下の `.env.production.local`

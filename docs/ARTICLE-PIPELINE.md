@@ -88,6 +88,12 @@
 - 提案を作った後に記事を手で編集していた場合、反映時に上書きしてよいか確認されます
 - 初回のみ `supabase/migration-012-article-revisions.sql` の実行が必要
 
+## 公開後の SNS 投稿
+
+公開した記事をもとに、Instagram / X 向けの投稿文とスライド画像を作れます（投稿は手動）。
+記事一覧の「SNS 投稿を作る」→ Claude Code で `/make-social-post` → `/admin/social` で確認・書き出し。
+詳しくは [SOCIAL-POSTS.md](./SOCIAL-POSTS.md)。
+
 ## 状態の意味
 
 | 候補の状態 | 意味 |

@@ -111,6 +111,36 @@ export type ArticleRevisionRow = {
   updated_at: string;
 };
 
+export type SocialPostRow = {
+  id: string;
+  article_id: string;
+  platforms: string[] | null;
+  format: string;
+  status: "requested" | "draft" | "ready" | "posted" | "rejected" | "failed";
+  brief: string | null;
+  template: string | null;
+  caption: string | null;
+  hashtags: string[] | null;
+  alt_text: string | null;
+  x_text: string | null;
+  x_reply: string | null;
+  slides: unknown;
+  image_provider: string | null;
+  image_model: string | null;
+  raw_image_urls: string[] | null;
+  rendered_urls: string[] | null;
+  rendered_at: string | null;
+  image_request: string | null;
+  photo_consent: string | null;
+  lint: { errors?: string[]; warnings?: string[] } | null;
+  generation_log: unknown;
+  error: string | null;
+  posted: Record<string, { at?: string; url?: string | null }> | null;
+  requested_at: string;
+  created_at: string;
+  updated_at: string;
+};
+
 export type KeywordSeedRow = {
   id: string;
   keyword: string;

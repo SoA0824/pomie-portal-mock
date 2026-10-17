@@ -16,3 +16,5 @@ content/drafts/*
 !content/drafts/.gitkeep
 content/rewrites/*
 !content/rewrites/.gitkeep
+content/social/*
+!content/social/.gitkeep

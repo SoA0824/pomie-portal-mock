@@ -214,6 +214,44 @@ alter table public.keyword_candidates disable row level security;
 alter table public.keyword_seeds disable row level security;
 alter table public.article_revisions disable row level security;
 
+-- ------------------------------------------------------------
+-- SNS 投稿（記事をもとにした Instagram / X 向けの投稿文と画像）
+-- migration-013-social-posts.sql と同じ内容（バケット social-images は migration-013 で作る）
+-- ------------------------------------------------------------
+create table if not exists public.social_posts (
+  id text primary key,
+  article_id text not null,
+  platforms text[] not null default '{instagram,x}',
+  format text not null default 'carousel' check (format in ('carousel', 'single', 'story')),
+  status text not null default 'requested'
+    check (status in ('requested', 'draft', 'ready', 'posted', 'rejected', 'failed')),
+  brief text not null default '',
+  template text not null default 'photo',
+  caption text,
+  hashtags text[] not null default '{}',
+  alt_text text,
+  x_text text,
+  x_reply text,
+  slides jsonb not null default '[]'::jsonb,
+  image_provider text,
+  image_model text,
+  raw_image_urls text[] not null default '{}',
+  rendered_urls text[] not null default '{}',
+  rendered_at timestamptz,
+  image_request text,
+  photo_consent text,
+  lint jsonb,
+  generation_log jsonb,
+  error text,
+  posted jsonb not null default '{}'::jsonb,
+  requested_at timestamptz not null default now(),
+  created_at timestamptz not null default now(),
+  updated_at timestamptz not null default now()
+);
+create index if not exists idx_social_posts_article on public.social_posts (article_id);
+create index if not exists idx_social_posts_status on public.social_posts (status);
+alter table public.social_posts disable row level security;
+
 -- anon / authenticated ロールへ権限を付与（RLS 無効でも GRANT は別途必要）
 grant select, insert, update, delete on public.reservations to anon, authenticated;
 grant select, insert, update, delete on public.salonboard_bookings to anon, authenticated;
@@ -223,6 +261,7 @@ grant select, insert, update, delete on public.articles to anon, authenticated;
 grant select, insert, update, delete on public.keyword_candidates to anon, authenticated;
 grant select, insert, update, delete on public.keyword_seeds to anon, authenticated;
 grant select, insert, update, delete on public.article_revisions to anon, authenticated;
+grant select, insert, update, delete on public.social_posts to anon, authenticated;
 
 -- PostgREST のスキーマキャッシュをリロード
 notify pgrst, 'reload schema';

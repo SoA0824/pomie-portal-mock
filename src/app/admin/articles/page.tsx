@@ -3,6 +3,8 @@ import { ApproveArticlePanel } from "@/components/admin/ApproveArticlePanel";
 import { getAllArticlesIncludingDrafts } from "@/lib/data/articles";
 import { getStylistOptions } from "@/lib/data/stylistOptions";
 import { getOpenRevisionStatusByArticle } from "@/lib/data/revisions";
+import { getSocialCountsByArticle } from "@/lib/data/social";
+import { RequestSocialPostButton } from "@/components/admin/RequestSocialPostButton";
 import { formatDateTime } from "@/lib/format";
 import type { Article } from "@/lib/types";
 import { AREAS } from "@/lib/areas";
@@ -20,7 +22,7 @@ export default async function AdminArticlesPage() {
   } catch (err) {
     loadError = err instanceof Error ? err.message : String(err);
   }
-  const [stylists, openRevisions] = await Promise.all([getStylistOptions(), getOpenRevisionStatusByArticle()]);
+  const [stylists, openRevisions, socialCounts] = await Promise.all([getStylistOptions(), getOpenRevisionStatusByArticle(), getSocialCountsByArticle()]);
   const activeStylistIds = new Set(stylists.filter((s) => s.active).map((s) => s.id));
   const stylistName = new Map(stylists.map((s) => [s.id, s.name]));
   const publishedCount = articles.filter((a) => a.status === "published").length;
@@ -160,6 +162,29 @@ export default async function AdminArticlesPage() {
                           </>
                         )}
                       </div>
+                      {a.status === "published" && (
+                        <div className="mt-2">
+                          <RequestSocialPostButton articleId={a.id} articleTitle={a.title} />
+                          {socialCounts.get(a.id) && (
+                            <p className="mt-1 text-[11px] text-ink-500">
+                              <Link href={`/admin/social?filter=all&article=${a.id}`} className="hover:underline">
+                                SNS:{" "}
+                                {(
+                                  [
+                                    ["requested", "作成待ち"],
+                                    ["draft", "下書き"],
+                                    ["ready", "投稿できます"],
+                                    ["posted", "投稿済み"],
+                                  ] as const
+                                )
+                                  .filter(([k]) => (socialCounts.get(a.id)?.[k] ?? 0) > 0)
+                                  .map(([k, label]) => `${label} ${socialCounts.get(a.id)?.[k]}`)
+                                  .join(" / ")}
+                              </Link>
+                            </p>
+                          )}
+                        </div>
+                      )}
                       {a.status !== "published" && (
                         <div className="mt-2">
                           <ApproveArticlePanel

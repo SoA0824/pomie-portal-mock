@@ -102,6 +102,65 @@ export type ArticleRevision = {
   decidedAt: string | null;
 };
 
+// ---------------------------------------------------------------------------
+// SNS 投稿（記事をもとにした Instagram / X 向けの投稿文と画像）
+// ---------------------------------------------------------------------------
+
+export type SocialPlatform = "instagram" | "x";
+export const SOCIAL_PLATFORMS: readonly SocialPlatform[] = ["instagram", "x"];
+export type SocialPostStatus = "requested" | "draft" | "ready" | "posted" | "rejected" | "failed";
+export type SocialFormat = "carousel" | "single" | "story";
+/** スライドの見た目。photo = 写真＋文字（濃いグラデーション）/ cream = クリーム地にブラウンの文字 */
+export type SocialTemplate = "photo" | "cream";
+export const SOCIAL_TEMPLATES: readonly SocialTemplate[] = ["photo", "cream"];
+export type SocialSlideKind = "cover" | "point" | "cta";
+/** スライドの背景画像の出どころ */
+export type SocialImageSource = "none" | "ai" | "store" | "upload";
+
+export type SocialSlide = {
+  kind: SocialSlideKind;
+  headline: string;
+  body: string;
+  imageSource: SocialImageSource;
+  /** AI 生成のときの指示文 */
+  imagePrompt: string | null;
+  /** 背景画像（公開 URL か、サイト内のパス） */
+  imageUrl: string | null;
+  /** null なら投稿の既定テンプレート（画像が無いスライドは自動で cream） */
+  template: SocialTemplate | null;
+};
+
+export type SocialPosted = Partial<Record<SocialPlatform, { at: string; url: string | null }>>;
+
+export type SocialPost = {
+  id: string;
+  articleId: string;
+  platforms: SocialPlatform[];
+  format: SocialFormat;
+  status: SocialPostStatus;
+  brief: string;
+  template: SocialTemplate;
+  caption: string | null;
+  hashtags: string[];
+  altText: string | null;
+  xText: string | null;
+  xReply: string | null;
+  slides: SocialSlide[];
+  imageProvider: string | null;
+  imageModel: string | null;
+  rawImageUrls: string[];
+  renderedUrls: string[];
+  renderedAt: string | null;
+  imageRequest: string | null;
+  photoConsent: string | null;
+  lint: { errors?: string[]; warnings?: string[] } | null;
+  error: string | null;
+  posted: SocialPosted;
+  requestedAt: string;
+  createdAt: string;
+  updatedAt: string;
+};
+
 export type KeywordIntent = "booking" | "compare" | "info";
 export type KeywordCandidateStatus =
   | "proposed"

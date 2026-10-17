@@ -68,7 +68,7 @@ export function parseArgs(argv) {
   return args;
 }
 
-function parseEnvFile(file) {
+export function parseEnvFile(file) {
   if (!fs.existsSync(file)) return {};
   const out = {};
   for (const line of fs.readFileSync(file, "utf8").split(/\r?\n/)) {
