@@ -5,6 +5,7 @@ import { getStylistOptions } from "@/lib/data/stylistOptions";
 import { getOpenRevisionStatusByArticle } from "@/lib/data/revisions";
 import { getSocialCountsByArticle } from "@/lib/data/social";
 import { RequestSocialPostButton } from "@/components/admin/RequestSocialPostButton";
+import { PinArticleButton } from "@/components/admin/PinArticleButton";
 import { formatDateTime } from "@/lib/format";
 import type { Article } from "@/lib/types";
 import { AREAS } from "@/lib/areas";
@@ -100,6 +101,11 @@ export default async function AdminArticlesPage() {
                             自動執筆
                           </span>
                         )}
+                        {a.pinnedAt && (
+                          <span className="whitespace-nowrap rounded-full bg-pomie-500 px-2 py-0.5 text-xs font-semibold text-white">
+                            トップ固定
+                          </span>
+                        )}
                       </div>
                       {openRevisions.get(a.id) && (
                         <Link
@@ -159,6 +165,8 @@ export default async function AdminArticlesPage() {
                             >
                               公開ページ ↗
                             </a>
+                            <span className="text-ink-300">|</span>
+                            <PinArticleButton articleId={a.id} pinned={Boolean(a.pinnedAt)} />
                           </>
                         )}
                       </div>

@@ -1,0 +1,8 @@
+{
+  "crons": [
+    {
+      "path": "/api/cron/refresh-social-tokens",
+      "schedule": "0 19 * * *"
+    }
+  ]
+}

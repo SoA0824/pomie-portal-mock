@@ -16,6 +16,8 @@ export const HASHTAG_MAX = 30;
 export const HASHTAG_RECOMMENDED = { min: 8, max: 20 };
 /** X の重み付き文字数の上限（日本語は 1 文字 2、URL は 23） */
 export const X_WEIGHT_LIMIT = 280;
+/** Threads の本文の上限 */
+export const THREADS_TEXT_LIMIT = 500;
 
 export function requiredHashtags(areaSlugs: string[]): string[] {
   const names = areaSlugs.map((s) => AREAS.find((a) => a.slug === s)?.name).filter((n): n is string => Boolean(n));
@@ -66,7 +68,12 @@ export function xRemainingJa(text: string): number {
   return Math.floor((X_WEIGHT_LIMIT - xWeightedLength(text)) / 2);
 }
 
-/** X の返信に載せる記事 URL（どの投稿から来たか GA で分かるように UTM を付ける） */
+/** 投稿に載せる記事 URL（どの媒体から来たか GA で分かるように UTM を付ける） */
+export function articleUrlFor(siteUrl: string, slug: string, source: "x" | "threads" | "instagram"): string {
+  return `${siteUrl}/articles/${slug}?utm_source=${source}&utm_medium=social&utm_campaign=${encodeURIComponent(slug)}`;
+}
+
+/** X の返信に載せる記事 URL */
 export function articleUrlForX(siteUrl: string, slug: string): string {
-  return `${siteUrl}/articles/${slug}?utm_source=x&utm_medium=social&utm_campaign=${encodeURIComponent(slug)}`;
+  return articleUrlFor(siteUrl, slug, "x");
 }

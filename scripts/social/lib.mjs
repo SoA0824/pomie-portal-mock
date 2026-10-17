@@ -19,6 +19,9 @@ export const HASHTAG_RECOMMENDED = { min: 8, max: 20 };
 export const INSTAGRAM_CAPTION_LIMIT = 2200;
 export const INSTAGRAM_CAPTION_RECOMMENDED = { min: 200, max: 800 };
 export const X_WEIGHT_LIMIT = 280;
+export const THREADS_TEXT_LIMIT = 500;
+export const THREADS_TEXT_RECOMMENDED = 300;
+export const DEFAULT_PLATFORMS = ["instagram", "threads", "x"];
 export const SLIDE_LIMITS = { min: 3, max: 8, headline: 28, headlineHard: 40, body: 70, bodyHard: 110 };
 export const KINDS = ["cover", "point", "cta"];
 export const SOURCES = ["none", "ai", "store", "upload"];
@@ -67,8 +70,12 @@ export function xWeightedLength(text) {
   return total;
 }
 
+export function articleUrlFor(slug, source) {
+  return `${SITE_URL}/articles/${slug}?utm_source=${source}&utm_medium=social&utm_campaign=${encodeURIComponent(slug)}`;
+}
+
 export function articleUrlForX(slug) {
-  return `${SITE_URL}/articles/${slug}?utm_source=x&utm_medium=social&utm_campaign=${encodeURIComponent(slug)}`;
+  return articleUrlFor(slug, "x");
 }
 
 export function adminUrl(postId) {
@@ -179,10 +186,12 @@ export function normalizePlan(raw, { article, post }) {
       template: TEMPLATES.includes(template) ? template : null,
     };
   });
-  const platforms = post.platforms ?? ["instagram", "x"];
+  const platforms = post.platforms ?? DEFAULT_PLATFORMS;
   let xReply = str(plan.x_reply ?? plan.xReply).trim();
   if (platforms.includes("x") && xReply && !/https?:\/\//.test(xReply)) xReply = `${xReply}\n${articleUrlForX(article.slug)}`;
   if (platforms.includes("x") && !xReply) xReply = `記事はこちら\n${articleUrlForX(article.slug)}`;
+  let threadsText = str(plan.threads_text ?? plan.threadsText).trim();
+  if (platforms.includes("threads") && threadsText && !/https?:\/\//.test(threadsText)) threadsText = `${threadsText}\n${articleUrlFor(article.slug, "threads")}`;
   const template = str(plan.template).trim();
   return {
     caption: str(plan.caption).trim(),
@@ -190,6 +199,7 @@ export function normalizePlan(raw, { article, post }) {
     alt_text: str(plan.alt_text ?? plan.altText).trim(),
     x_text: str(plan.x_text ?? plan.xText).trim(),
     x_reply: xReply,
+    threads_text: threadsText,
     template: TEMPLATES.includes(template) ? template : "photo",
     slides,
   };
@@ -203,7 +213,7 @@ export function lintPlan(plan, { article, post, lintCtx }) {
   const warnings = [];
   const err = (m) => errors.push(m);
   const warn = (m) => warnings.push(m);
-  const platforms = post.platforms ?? ["instagram", "x"];
+  const platforms = post.platforms ?? DEFAULT_PLATFORMS;
 
   // スライド
   if (plan.slides.length < 1) err("スライドがありません");
@@ -259,8 +269,15 @@ export function lintPlan(plan, { article, post, lintCtx }) {
     if (rlen > X_WEIGHT_LIMIT) err(`X の返信が長すぎます（日本語換算 ${Math.ceil(rlen / 2)} 文字）`);
   }
 
+  // Threads
+  if (platforms.includes("threads")) {
+    if (!plan.threads_text) err("Threads の本文（threads_text）がありません");
+    else if (plan.threads_text.length > THREADS_TEXT_LIMIT) err(`Threads の本文が ${plan.threads_text.length} 文字です（${THREADS_TEXT_LIMIT} 文字まで）`);
+    else if (plan.threads_text.length > THREADS_TEXT_RECOMMENDED) warn(`Threads の本文が ${plan.threads_text.length} 文字です（${THREADS_TEXT_RECOMMENDED} 文字以内が目安）`);
+  }
+
   // 表現（記事と同じ NG 表現）
-  const everything = [plan.caption, plan.x_text, plan.x_reply, plan.alt_text, ...plan.slides.flatMap((s) => [s.headline, s.body])].join("\n");
+  const everything = [plan.caption, plan.x_text, plan.x_reply, plan.threads_text, plan.alt_text, ...plan.slides.flatMap((s) => [s.headline, s.body])].join("\n");
   for (const ng of NG_EXPRESSIONS) {
     const hits = [...everything.matchAll(ng.pattern)].map((m) => m[0]);
     if (!hits.length) continue;

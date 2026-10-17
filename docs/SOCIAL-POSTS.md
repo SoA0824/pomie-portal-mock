@@ -11,8 +11,8 @@
           記事 → 投稿文・ハッシュタグ・スライドの文言・画像の指示を作る
           → Gemini で雰囲気画像を生成 → Storage に保存 → 「下書き」
 ③ 確認    /admin/social でプレビュー。文言を直す・画像を差し替える（店舗写真 / アップロード / 作り直し依頼）
-④ 書き出し 「書き出す」→ 文字を合成した最終画像（1080×1350 PNG）ができる
-⑤ 投稿    画像をダウンロード、本文をコピーして手動で投稿 →「投稿済みにする」
+④ 書き出し 「書き出す」→ 文字を合成した最終画像（1080×1350 JPEG）ができる
+⑤ 投稿    Instagram / Threads は管理画面の「投稿する」ボタン（API）。X は画像をダウンロード・本文をコピーして手動
 ```
 
 ## 初回の準備
@@ -24,15 +24,19 @@
    ```
    - Vercel には不要（画像生成はサーバーでは行わない）
    - OpenAI を使う場合は `OPENAI_API_KEY`（組織の本人確認が必要）。両方あるときは `SOCIAL_IMAGE_PROVIDER=openai` で切り替え
-3. Instagram のプロフィールのリンクをポータルのトップ（https://portal.pomie.jp/）にしておく
+3. Instagram のプロフィールのリンクをポータルのトップ（https://portal.pomie.jp/）にしておく。トップの一番上には新着記事（固定した記事 → 新しい順）が並ぶ
+4. 自動投稿を使うなら `supabase/migration-014-social-publish.sql` を実行し、Vercel の Environment Variables に次を追加して再デプロイ:
+   - `INTEGRATION_SECRET` … 32 文字以上のランダムな文字列（トークンの暗号化に使う）
+   - `CRON_SECRET` … ランダムな文字列（毎日のトークン自動更新用。vercel.json の cron が使う）
+5. `/admin/social/settings` で Instagram / Threads のトークンを登録する（取り方は画面に書いてある。Meta for Developers のアプリは「開発モード」のままでよい）
 
 ## 決めごと
 
 | 項目 | 内容 |
 |---|---|
-| 媒体 | Instagram（ビジネスアカウント）＋ X。文章は媒体ごと、画像は共通 |
+| 媒体 | Instagram（ビジネスアカウント）＋ Threads ＋ X。文章は媒体ごと、画像は共通。Instagram / Threads は API で投稿、X は手動 |
 | 形式 | Instagram はカルーセル 4〜5 枚（表紙 → ポイント × 2〜3 → まとめ・導線）。X は 1 枚目の画像を添付 |
-| リンク | Instagram: 本文に URL は書かず「プロフィールのリンクから」（リンク先はポータルのトップ）。X: 本文には入れず、**返信に記事 URL**（UTM 付き） |
+| リンク | Instagram: 本文に URL は書かず「プロフィールのリンクから」（リンク先はポータルのトップ。一番上に新着記事）。Threads: 本文に記事 URL（押せる）。X: 本文には入れず、**返信に記事 URL**（UTM 付き） |
 | トーン | 読みやすく、固すぎない。です・ます調をベースに話しかけるように |
 | ハッシュタグ | いつも付ける: `#pomie #ポミエ` ＋ エリア付き（`#pomie表参道 #ポミエ表参道` など）＋ `#シェアサロン #フリーランス美容師 #美容師独立`。これに記事に合うテーマのタグを足して合計 10〜15 個 |
 | 画像 | AI は「雰囲気」用に 1〜2 枚（サロンの空間・髪の質感・小物・光）。実在の店舗でなくてよい。**人の顔・施術例・ビフォーアフター風・文字は描かない**。他は店舗写真かクリーム地 |
@@ -74,8 +78,10 @@ AI 画像には見えない透かし（Gemini: SynthID）が入り、Instagram �
 - `/admin/social/<id>` … 詳細
   - スライド: プレビュー（保存した内容で描画）、見出し・本文・種類・見た目、背景画像（なし / AI / 店舗写真 / アップロード）、並べ替え・追加・削除
   - 投稿文: Instagram の本文・ハッシュタグ・alt、X の本文・返信（文字数の目安つき）、コピー
-  - 書き出し: 最終画像を作る → 1 枚ずつ開く / すべてダウンロード
-  - 投稿の記録: 媒体ごとに「投稿済みにする」（URL を控えられる）。全部投稿すると状態が「投稿済み」
+  - 書き出し: 最終画像（JPEG）を作る → 1 枚ずつ開く / すべてダウンロード
+  - 投稿: Instagram / Threads は「投稿する」ボタンで API 投稿（投稿 URL が記録される）。X は手動で投稿して「手動で投稿済みにする」。全部投稿すると状態が「投稿済み」
+- `/admin/social/settings` … Instagram / Threads の連携（トークンの登録・更新・解除、有効期限の表示）
+- `/admin/articles` の「トップに固定」… その記事をトップの一番上に固定（新着より前）。PICK UP の印が付く
   - 画像の作り直しを依頼: 指示を書いて依頼 → `/make-social-post` が作り直す
 
 ## スクリプト（`scripts/social/`）
@@ -96,11 +102,18 @@ AI 画像には見えない透かし（Gemini: SynthID）が入り、Instagram �
 - テーブル `social_posts`（`sns_posts` は美容師の Instagram 取得用なので別）
 - Storage バケット `social-images`（公開）: `social/<id>/raw-*.png` が AI の元画像、`social/<id>/slide-*.png` が書き出した最終画像。投稿を削除すると画像も消える
 
+## 自動投稿のしくみ
+
+- Instagram は「Instagram API with Instagram Login」、Threads は「Threads API」。どちらも Meta for Developers のアプリで、自分のアカウントをテスターに追加すれば開発モードのまま使える（審査不要）
+- トークン（60 日有効）は `integration_tokens` に暗号化して保存。投稿時と毎日の cron（`/api/cron/refresh-social-tokens`）で、前回更新から 7 日たっていれば更新する
+- 投稿の流れ: 画像ごとにコンテナ作成 → カルーセルにまとめる → 処理完了を待つ → 公開 → 投稿 URL を記録
+- できないこと: ストーリーズのリンクスタンプ、ハイライトへの保存、Instagram 本文のリンク（API の制限）
+- 接続先はテスト用に `INSTAGRAM_GRAPH_BASE` / `THREADS_GRAPH_BASE` で差し替えられる
+
 ## 今後（未実装）
 
+- 予約投稿（日時を指定して自動で投稿）
 - GitHub Actions で、記事の公開を検知して下書きを自動作成（サーバー経路）
-- Instagram Graph API / X API による予約投稿・自動投稿（Instagram はプロアカウント + Meta for Developers のアプリが必要）
-- 最新記事を並べたリンクページ（プロフィールのリンク先用）
 
 ## トラブルシューティング
 
@@ -110,5 +123,8 @@ AI 画像には見えない透かし（Gemini: SynthID）が入り、Instagram �
 | 「画像 API のキーがありません」 | `.env.production.local` に `GEMINI_API_KEY` を追加 |
 | 「画像の保存に失敗しました」 | migration-013 の Storage バケット部分が未実行 |
 | Gemini が HTTP 429 | 上限。しばらく待つか Google Cloud の課金設定を確認 |
+| 連携設定で「INTEGRATION_SECRET が未設定」 | Vercel の Environment Variables に追加して再デプロイ |
+| 投稿で「トークンが無効か期限切れ」 | 連携設定でトークンを入れ直す |
+| 投稿で「画像が古い形式（PNG）」 | もう一度「書き出す」（JPEG になる） |
 | 書き出しで「描画に失敗しました」 | フォントの取得（Google Fonts）に失敗した可能性。もう一度試す |
 | スライドの文字が一部消える | 絵文字は表示できない。文字から外す |

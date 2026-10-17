@@ -219,7 +219,7 @@ POMiEポータル/
 ③ /write-article --approved   承認済みの候補を記事（下書き）にする
 ④ /admin/articles     プレビュー → 監修者（任意）を付けて「承認して公開」
 ⑤ リライト            編集画面で依頼 → /rewrite-article で提案 → 差分を見て「承認して反映」
-⑥ SNS 投稿            記事一覧で依頼 → /make-social-post で投稿文と画像 → /admin/social で確認・書き出し → 手動投稿
+⑥ SNS 投稿            記事一覧で依頼 → /make-social-post で投稿文と画像 → /admin/social で確認・書き出し → Instagram / Threads は API で投稿（X は手動）
 ```
 
 - 運用手順・2 つの動かし方（Claude Code のコネクタ / GitHub Actions）: [docs/ARTICLE-PIPELINE.md](./docs/ARTICLE-PIPELINE.md)

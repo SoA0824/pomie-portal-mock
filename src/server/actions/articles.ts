@@ -191,3 +191,15 @@ export async function deleteArticle(id: string): Promise<{ ok: true } | { ok: fa
   revalidateArticlePages([existing.slug]);
   return { ok: true };
 }
+
+/** トップの一番上に固定する / 外す（固定した記事は新着より前に並ぶ） */
+export async function setArticlePinned(id: string, pinned: boolean): Promise<{ ok: true } | { ok: false; reason: string }> {
+  const { error } = await getSupabase()
+    .from("articles")
+    .update({ pinned_at: pinned ? new Date().toISOString() : null })
+    .eq("id", id);
+  if (error) return { ok: false, reason: error.message.includes("pinned_at") ? "migration-014 を実行してください" : error.message };
+  revalidatePath("/");
+  revalidatePath("/admin/articles");
+  return { ok: true };
+}

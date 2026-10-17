@@ -32,6 +32,8 @@ export type Article = {
   keywordCandidateId: string | null;
   /** 自動執筆の記録（モデル・トークン・検品結果） */
   generationLog: ArticleGenerationLog | null;
+  /** トップの一番上に固定した日時（固定した記事を新着より前に並べる） */
+  pinnedAt: string | null;
   createdAt: string;
   updatedAt: string;
 };
@@ -106,8 +108,20 @@ export type ArticleRevision = {
 // SNS 投稿（記事をもとにした Instagram / X 向けの投稿文と画像）
 // ---------------------------------------------------------------------------
 
-export type SocialPlatform = "instagram" | "x";
-export const SOCIAL_PLATFORMS: readonly SocialPlatform[] = ["instagram", "x"];
+export type SocialPlatform = "instagram" | "threads" | "x";
+export const SOCIAL_PLATFORMS: readonly SocialPlatform[] = ["instagram", "threads", "x"];
+/** API で自動投稿できる媒体（X は手動） */
+export type IntegrationProvider = "instagram" | "threads";
+export const INTEGRATION_PROVIDERS: readonly IntegrationProvider[] = ["instagram", "threads"];
+export type IntegrationStatus = {
+  provider: IntegrationProvider;
+  connected: boolean;
+  accountId: string | null;
+  accountName: string | null;
+  expiresAt: string | null;
+  refreshedAt: string | null;
+  lastError: string | null;
+};
 export type SocialPostStatus = "requested" | "draft" | "ready" | "posted" | "rejected" | "failed";
 export type SocialFormat = "carousel" | "single" | "story";
 /** スライドの見た目。photo = 写真＋文字（濃いグラデーション）/ cream = クリーム地にブラウンの文字 */
@@ -130,7 +144,7 @@ export type SocialSlide = {
   template: SocialTemplate | null;
 };
 
-export type SocialPosted = Partial<Record<SocialPlatform, { at: string; url: string | null }>>;
+export type SocialPosted = Partial<Record<SocialPlatform, { at: string; url: string | null; externalId?: string | null }>>;
 
 export type SocialPost = {
   id: string;
@@ -145,6 +159,8 @@ export type SocialPost = {
   altText: string | null;
   xText: string | null;
   xReply: string | null;
+  /** Threads 用の本文（リンクは押せるので記事 URL を含める） */
+  threadsText: string | null;
   slides: SocialSlide[];
   imageProvider: string | null;
   imageModel: string | null;

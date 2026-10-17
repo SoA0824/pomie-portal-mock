@@ -4,7 +4,8 @@ import { useState, useTransition } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { requestSocialPost } from "@/server/actions/social";
-import type { SocialPlatform } from "@/lib/types";
+import { SOCIAL_PLATFORMS, type SocialPlatform } from "@/lib/types";
+import { PLATFORM_LABEL } from "@/lib/social/labels";
 
 /**
  * 記事一覧の「SNS 投稿を作る」。
@@ -13,7 +14,7 @@ import type { SocialPlatform } from "@/lib/types";
 export function RequestSocialPostButton({ articleId, articleTitle }: { articleId: string; articleTitle: string }) {
   const router = useRouter();
   const [open, setOpen] = useState(false);
-  const [platforms, setPlatforms] = useState<SocialPlatform[]>(["instagram", "x"]);
+  const [platforms, setPlatforms] = useState<SocialPlatform[]>([...SOCIAL_PLATFORMS]);
   const [brief, setBrief] = useState("");
   const [pending, startTransition] = useTransition();
   const [error, setError] = useState<string | null>(null);
@@ -63,10 +64,10 @@ export function RequestSocialPostButton({ articleId, articleTitle }: { articleId
       <p className="font-semibold text-ink-900">SNS 投稿を作る</p>
       <p className="text-[11px] text-ink-500">「{articleTitle}」をもとに投稿文とスライドを作ります。</p>
       <div className="flex gap-3">
-        {(["instagram", "x"] as SocialPlatform[]).map((p) => (
+        {SOCIAL_PLATFORMS.map((p) => (
           <label key={p} className="flex items-center gap-1">
             <input type="checkbox" checked={platforms.includes(p)} onChange={() => toggle(p)} />
-            {p === "instagram" ? "Instagram" : "X"}
+            {PLATFORM_LABEL[p]}
           </label>
         ))}
       </div>

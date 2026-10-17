@@ -6,10 +6,25 @@ import { getArticleByIdIncludingDrafts } from "@/lib/data/articles";
 import { getSocialPostById, slideToRow } from "@/lib/data/social";
 import { buildSlideContext, renderSlide } from "@/lib/social/render";
 import { SOCIAL_BUCKET, socialStoragePath } from "@/lib/social/storage";
-import { HASHTAG_MAX, INSTAGRAM_CAPTION_LIMIT, X_WEIGHT_LIMIT, normalizeTag, xWeightedLength } from "@/lib/social/text";
+import sharp from "sharp";
+import { SITE_URL } from "@/lib/site";
+import { publishInstagram, publishThreads } from "@/lib/integrations/meta";
+import { getUsableToken } from "@/lib/integrations/tokens";
 import {
+  HASHTAG_MAX,
+  INSTAGRAM_CAPTION_LIMIT,
+  THREADS_TEXT_LIMIT,
+  X_WEIGHT_LIMIT,
+  articleUrlFor,
+  instagramCaptionFull,
+  normalizeTag,
+  xWeightedLength,
+} from "@/lib/social/text";
+import {
+  INTEGRATION_PROVIDERS,
   SOCIAL_PLATFORMS,
   SOCIAL_TEMPLATES,
+  type IntegrationProvider,
   type SocialFormat,
   type SocialPlatform,
   type SocialSlide,
@@ -83,6 +98,7 @@ export type SocialPostUpdate = {
   altText: string;
   xText: string;
   xReply: string;
+  threadsText: string;
   template: SocialTemplate;
   slides: SocialSlide[];
 };
@@ -119,6 +135,7 @@ export async function updateSocialPost(id: string, input: SocialPostUpdate): Pro
   ] as const) {
     if (xWeightedLength(text) > X_WEIGHT_LIMIT) return { ok: false, reason: `${label}が長すぎます（日本語換算 ${X_WEIGHT_LIMIT / 2} 文字まで）` };
   }
+  if (input.threadsText.length > THREADS_TEXT_LIMIT) return { ok: false, reason: `Threads の本文は ${THREADS_TEXT_LIMIT} 文字までです` };
   if (!SOCIAL_TEMPLATES.includes(input.template)) return { ok: false, reason: "テンプレートが不正です" };
 
   const wasReady = post.status === "ready";
@@ -128,6 +145,7 @@ export async function updateSocialPost(id: string, input: SocialPostUpdate): Pro
     alt_text: input.altText.trim() || null,
     x_text: input.xText.trim() || null,
     x_reply: input.xReply.trim() || null,
+    threads_text: input.threadsText.trim() || null,
     template: input.template,
     slides: slides.map(({ index: _i, ...s }) => slideToRow(s)),
     updated_at: now(),
@@ -155,8 +173,8 @@ export async function requestImageRegeneration(id: string, note: string): Promis
 }
 
 /**
- * 書き出す: 文字を合成した最終画像（PNG）を作って Storage に保存する。
- * これをダウンロードして投稿する。
+ * 書き出す: 文字を合成した最終画像（JPEG）を作って Storage に保存する。
+ * これをダウンロードして投稿するか、API で投稿する（Instagram の API は JPEG のみ）。
  */
 export async function exportSocialPost(id: string): Promise<Result> {
   const post = await getSocialPostById(id);
@@ -176,9 +194,10 @@ export async function exportSocialPost(id: string): Promise<Result> {
   try {
     for (let i = 0; i < post.slides.length; i++) {
       const res = await renderSlide(post, ctx, i);
-      const bytes = Buffer.from(await res.arrayBuffer());
-      const path = `social/${post.id}/slide-${String(i + 1).padStart(2, "0")}-${stamp}.png`;
-      const { error } = await sb.storage.from(SOCIAL_BUCKET).upload(path, bytes, { contentType: "image/png", upsert: true });
+      const png = Buffer.from(await res.arrayBuffer());
+      const bytes = await sharp(png).flatten({ background: "#ffffff" }).jpeg({ quality: 90, mozjpeg: true }).toBuffer();
+      const path = `social/${post.id}/slide-${String(i + 1).padStart(2, "0")}-${stamp}.jpg`;
+      const { error } = await sb.storage.from(SOCIAL_BUCKET).upload(path, bytes, { contentType: "image/jpeg", upsert: true });
       if (error) throw new Error(`画像の保存に失敗しました（${error.message}）。migration-013 で social-images バケットを作ってください`);
       urls.push(sb.storage.from(SOCIAL_BUCKET).getPublicUrl(path).data.publicUrl);
     }
@@ -260,4 +279,59 @@ export async function deleteSocialPost(id: string): Promise<Result> {
   if (error) return { ok: false, reason: error.message };
   revalidate();
   return { ok: true };
+}
+
+/**
+ * API で投稿する（Instagram / Threads）。連携設定でトークンを登録してあることが前提。
+ * 画像は書き出し済みの JPEG を公開 URL のまま渡す。
+ */
+export async function publishToPlatform(id: string, platform: IntegrationProvider): Promise<{ ok: true; url: string | null } | { ok: false; reason: string }> {
+  if (!INTEGRATION_PROVIDERS.includes(platform)) return { ok: false, reason: "この媒体は API で投稿できません" };
+  const post = await getSocialPostById(id);
+  if (!post) return { ok: false, reason: "投稿が見つかりません" };
+  if (!post.platforms.includes(platform)) return { ok: false, reason: "この投稿の媒体に含まれていません" };
+  if (post.status === "rejected") return { ok: false, reason: "却下した投稿は投稿できません" };
+  if (post.posted[platform]?.at) return { ok: false, reason: "すでに投稿済みです（やり直すなら先に取り消してください）" };
+  if (post.renderedUrls.length === 0) return { ok: false, reason: "先に「書き出す」で画像を作ってください" };
+  if (post.renderedUrls.some((u) => !/\.jpe?g(\?|$)/i.test(u))) {
+    return { ok: false, reason: "書き出した画像が古い形式（PNG）です。もう一度「書き出す」を押してください" };
+  }
+
+  let token: string;
+  try {
+    token = (await getUsableToken(platform)).token;
+  } catch (err) {
+    return { ok: false, reason: err instanceof Error ? err.message : String(err) };
+  }
+
+  try {
+    let result: { mediaId: string; permalink: string | null };
+    if (platform === "instagram") {
+      const caption = instagramCaptionFull(post);
+      if (!caption.trim()) return { ok: false, reason: "Instagram の本文がありません" };
+      result = await publishInstagram({ token, imageUrls: post.renderedUrls, caption, altText: post.altText });
+    } else {
+      let text = (post.threadsText ?? "").trim();
+      if (!text) return { ok: false, reason: "Threads の本文がありません" };
+      if (!/https?:\/\//.test(text)) {
+        const article = await getArticleByIdIncludingDrafts(post.articleId);
+        if (article) text = `${text}\n${articleUrlFor(SITE_URL, article.slug, "threads")}`;
+      }
+      result = await publishThreads({ token, imageUrls: post.renderedUrls, text });
+    }
+    const posted = { ...post.posted, [platform]: { at: now(), url: result.permalink, externalId: result.mediaId } };
+    const allDone = post.platforms.every((p) => posted[p]?.at);
+    const { error } = await getSupabase()
+      .from("social_posts")
+      .update({ posted, ...(allDone ? { status: "posted" } : {}), error: null, updated_at: now() })
+      .eq("id", id);
+    if (error) return { ok: false, reason: `投稿はできましたが記録に失敗しました: ${error.message}` };
+    revalidate(id);
+    return { ok: true, url: result.permalink };
+  } catch (err) {
+    const reason = err instanceof Error ? err.message : String(err);
+    await getSupabase().from("social_posts").update({ error: `${platform} への投稿に失敗: ${reason}`, updated_at: now() }).eq("id", id);
+    revalidate(id);
+    return { ok: false, reason };
+  }
 }

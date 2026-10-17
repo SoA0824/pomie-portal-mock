@@ -23,6 +23,7 @@ function rowToArticle(row: ArticleRow): Article {
     supervisorTitle: row.supervisor_title ?? null,
     keywordCandidateId: row.keyword_candidate_id ?? null,
     generationLog: (row.generation_log as ArticleGenerationLog | null) ?? null,
+    pinnedAt: row.pinned_at ?? null,
     createdAt: row.created_at,
     updatedAt: row.updated_at,
   };
@@ -114,6 +115,14 @@ export async function getArticleCategories(): Promise<ArticleCategory[]> {
 
 export async function getFeaturedArticles(limit = 3): Promise<Article[]> {
   return (await getAllArticles()).slice(0, limit);
+}
+
+/** トップの一番上に出す記事: 固定した記事（固定が新しい順）→ 新着順 */
+export async function getTopArticles(limit = 4): Promise<Article[]> {
+  const all = await getAllArticles();
+  const pinned = all.filter((a) => a.pinnedAt).sort((a, b) => ((b.pinnedAt ?? "") > (a.pinnedAt ?? "") ? 1 : -1));
+  const rest = all.filter((a) => !a.pinnedAt);
+  return [...pinned, ...rest].slice(0, limit);
 }
 
 // ===== 管理画面用（下書きを含む。エラーはそのまま投げて画面で知らせる） =====

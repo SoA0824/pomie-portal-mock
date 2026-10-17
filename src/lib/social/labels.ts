@@ -11,6 +11,7 @@ export const SOCIAL_STATUS_LABEL: Record<SocialPostStatus, { label: string; clas
 
 export const PLATFORM_LABEL: Record<SocialPlatform, string> = {
   instagram: "Instagram",
+  threads: "Threads",
   x: "X",
 };
 

@@ -55,6 +55,7 @@ export type ArticleRow = {
   supervisor_title: string | null;
   keyword_candidate_id: string | null;
   generation_log: Record<string, unknown> | null;
+  pinned_at: string | null;
   created_at: string;
   updated_at: string;
 };
@@ -124,6 +125,7 @@ export type SocialPostRow = {
   alt_text: string | null;
   x_text: string | null;
   x_reply: string | null;
+  threads_text: string | null;
   slides: unknown;
   image_provider: string | null;
   image_model: string | null;
@@ -135,8 +137,20 @@ export type SocialPostRow = {
   lint: { errors?: string[]; warnings?: string[] } | null;
   generation_log: unknown;
   error: string | null;
-  posted: Record<string, { at?: string; url?: string | null }> | null;
+  posted: Record<string, { at?: string; url?: string | null; externalId?: string | null }> | null;
   requested_at: string;
+  created_at: string;
+  updated_at: string;
+};
+
+export type IntegrationTokenRow = {
+  provider: "instagram" | "threads";
+  token_enc: string;
+  account_id: string | null;
+  account_name: string | null;
+  expires_at: string | null;
+  refreshed_at: string | null;
+  last_error: string | null;
   created_at: string;
   updated_at: string;
 };

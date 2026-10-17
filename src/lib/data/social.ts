@@ -60,7 +60,7 @@ export function rowToSocialPost(row: SocialPostRow): SocialPost {
   const posted: SocialPost["posted"] = {};
   for (const p of SOCIAL_PLATFORMS) {
     const v = row.posted?.[p];
-    if (v?.at) posted[p] = { at: v.at, url: v.url ?? null };
+    if (v?.at) posted[p] = { at: v.at, url: v.url ?? null, externalId: v.externalId ?? null };
   }
   return {
     id: row.id,
@@ -75,6 +75,7 @@ export function rowToSocialPost(row: SocialPostRow): SocialPost {
     altText: row.alt_text,
     xText: row.x_text,
     xReply: row.x_reply,
+    threadsText: row.threads_text,
     slides: slidesRaw.map((s, i) => normalizeSlide(s, i, slidesRaw.length)),
     imageProvider: row.image_provider,
     imageModel: row.image_model,

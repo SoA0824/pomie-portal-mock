@@ -19,15 +19,18 @@ import fs from "node:fs";
 import path from "node:path";
 import { fetchLintContext, loadDb, newId, parseArgs, rest } from "../articles/lib.mjs";
 import {
+  DEFAULT_PLATFORMS,
   HASHTAG_RECOMMENDED,
   INSTAGRAM_CAPTION_RECOMMENDED,
   PLANS_DIR,
   SITE_URL,
   SLIDE_LIMITS,
+  THREADS_TEXT_RECOMMENDED,
   X_WEIGHT_LIMIT,
   absoluteUrl,
   adminUrl,
   areaNames,
+  articleUrlFor,
   articleUrlForX,
   getArticle,
   getPost,
@@ -46,18 +49,19 @@ const args = parseArgs(process.argv.slice(2));
 const cmd = args._[0];
 
 function platformLabel(p) {
-  return p === "instagram" ? "Instagram" : p === "x" ? "X" : p;
+  return p === "instagram" ? "Instagram" : p === "threads" ? "Threads" : p === "x" ? "X" : p;
 }
 
 /** 企画ファイルの雛形（まだ中身が無い投稿用） */
 function skeletonPlan(article, post) {
-  const platforms = post.platforms ?? ["instagram", "x"];
+  const platforms = post.platforms ?? DEFAULT_PLATFORMS;
   return {
     caption: platforms.includes("instagram") ? "" : undefined,
     hashtags: requiredHashtags(article.areas ?? []),
     alt_text: "",
     x_text: platforms.includes("x") ? "" : undefined,
     x_reply: platforms.includes("x") ? "" : undefined,
+    threads_text: platforms.includes("threads") ? "" : undefined,
     template: "photo",
     slides: [
       { kind: "cover", headline: "", body: "", image: { source: "ai", prompt: "" } },
@@ -77,6 +81,7 @@ function planFromPost(post) {
     alt_text: post.alt_text ?? "",
     x_text: post.x_text ?? "",
     x_reply: post.x_reply ?? "",
+    threads_text: post.threads_text ?? "",
     template: post.template ?? "photo",
     slides: (post.slides ?? []).map((s) => ({
       kind: s.kind,
@@ -145,8 +150,8 @@ async function main() {
     if (typeof args.article !== "string") throw new Error("--article に記事の slug か ID を指定してください");
     const article = await getArticle(db, args.article);
     if (article.status !== "published") throw new Error("公開中の記事だけ SNS 投稿を作れます（先に記事を公開してください）");
-    const platforms = typeof args.platforms === "string" ? args.platforms.split(",").map((s) => s.trim()).filter((s) => ["instagram", "x"].includes(s)) : ["instagram", "x"];
-    if (!platforms.length) throw new Error("--platforms は instagram,x のいずれかを指定してください");
+    const platforms = typeof args.platforms === "string" ? args.platforms.split(",").map((s) => s.trim()).filter((s) => DEFAULT_PLATFORMS.includes(s)) : DEFAULT_PLATFORMS;
+    if (!platforms.length) throw new Error("--platforms は instagram,threads,x のいずれかを指定してください");
     const id = newId("sp");
     await rest(db, "POST", "social_posts", {
       body: {
@@ -167,7 +172,7 @@ async function main() {
     const article = await getArticle(db, post.article_id);
     const lintCtx = await fetchLintContext(db);
     const stylistNames = [...lintCtx.stylists.values()].map((s) => s.name).filter(Boolean);
-    const platforms = post.platforms ?? ["instagram", "x"];
+    const platforms = post.platforms ?? DEFAULT_PLATFORMS;
     const regenerate = (post.slides ?? []).length > 0;
     const stores = storePhotos(article.areas).map((s) => ({ ...s, photos: s.photos.map((p) => ({ path: p, url: absoluteUrl(p) })) }));
 
@@ -205,6 +210,8 @@ async function main() {
         instagram: "本文に URL は書かない（押せない）。『詳しくはプロフィールのリンクから』と案内する。プロフィールのリンク先はポータルのトップ",
         xReplyUrl: platforms.includes("x") ? articleUrlForX(article.slug) : null,
         xHint: "X は本文に URL を入れず、返信（x_reply）に記事の URL を載せる（URL が無ければ保存時に自動で付く）",
+        threadsUrl: platforms.includes("threads") ? articleUrlFor(article.slug, "threads") : null,
+        threadsHint: "Threads は本文のリンクが押せる。threads_text の最後に記事 URL を置く（無ければ保存時に自動で付く）",
       },
       rules: {
         tone: "読みやすく、固すぎない。です・ます調をベースに、話しかけるように。Instagram の本文は絵文字 2〜4 個まで、X は 0〜1 個、スライドの文字には絵文字を使わない",
@@ -214,6 +221,7 @@ async function main() {
         slides: `4〜5 枚（cover → point × 2〜3 → cta）。見出し ${SLIDE_LIMITS.headline} 文字以内、本文 ${SLIDE_LIMITS.body} 文字以内。記事の見出し・主張から作り、新しい主張や数字を足さない`,
         images: "AI 画像は表紙など 1〜2 枚まで。雰囲気（サロンの空間、髪の質感の寄り、小物、光）だけを描き、人の顔・施術例・ビフォーアフター風・文字は描かない。他のスライドは画像なし（クリーム地）か店舗写真",
         x: `本文は日本語換算 ${X_WEIGHT_LIMIT / 2} 文字まで。URL は入れない。最後に『詳しくは返信のリンクから』`,
+        threads: `${THREADS_TEXT_RECOMMENDED} 文字以内が目安（上限 500）。X より少し詳しく、要点 2〜3 つ＋最後に記事 URL。画像はスライドが全部付く`,
         facts: "料金・メニューなどの事実は記事にあるものだけ。発言・お客様の声・施術例を創作しない。断定できないことは書かないか [要確認: …]",
         promptSuffix: `画像の指示には自動で次が付く: ${PROMPT_SUFFIX}`,
       },
@@ -268,6 +276,7 @@ async function main() {
       alt_text: plan.alt_text || null,
       x_text: plan.x_text || null,
       x_reply: plan.x_reply || null,
+      threads_text: plan.threads_text || null,
       template: plan.template,
       slides,
       lint: { errors: [], warnings: lint.warnings },

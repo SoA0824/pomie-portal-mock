@@ -9,6 +9,7 @@ import {
   deleteSocialPost,
   exportSocialPost,
   markPosted,
+  publishToPlatform,
   rejectSocialPost,
   requestImageRegeneration,
   updateSocialPost,
@@ -17,6 +18,7 @@ import { PLATFORM_LABEL, SLIDE_KIND_LABEL, SOCIAL_STATUS_LABEL, TEMPLATE_LABEL }
 import {
   HASHTAG_MAX,
   HASHTAG_RECOMMENDED,
+  THREADS_TEXT_LIMIT,
   X_WEIGHT_LIMIT,
   hashtagsToText,
   instagramCaptionFull,
@@ -28,6 +30,8 @@ import { formatDateTime } from "@/lib/format";
 import {
   SOCIAL_TEMPLATES,
   type Article,
+  type IntegrationProvider,
+  type IntegrationStatus,
   type SocialImageSource,
   type SocialPlatform,
   type SocialPost,
@@ -54,7 +58,17 @@ const emptySlide = (kind: SocialSlideKind): SocialSlide => ({
  * SNS 投稿の詳細: プレビュー・文言と画像の編集・書き出し・投稿済みの記録。
  * プレビューは保存した内容で描かれる（編集中の内容は「保存」で反映）。
  */
-export function SocialPostEditor({ post, article, stores }: { post: SocialPost; article: Article | null; stores: Store[] }) {
+export function SocialPostEditor({
+  post,
+  article,
+  stores,
+  integrations,
+}: {
+  post: SocialPost;
+  article: Article | null;
+  stores: Store[];
+  integrations: IntegrationStatus[];
+}) {
   const router = useRouter();
   const [pending, startTransition] = useTransition();
   const [message, setMessage] = useState<string | null>(null);
@@ -63,6 +77,7 @@ export function SocialPostEditor({ post, article, stores }: { post: SocialPost; 
   const [altText, setAltText] = useState(post.altText ?? "");
   const [xText, setXText] = useState(post.xText ?? "");
   const [xReply, setXReply] = useState(post.xReply ?? "");
+  const [threadsText, setThreadsText] = useState(post.threadsText ?? "");
   const [template, setTemplate] = useState<SocialTemplate>(post.template);
   const [slides, setSlides] = useState<SocialSlide[]>(post.slides);
   const [dirty, setDirty] = useState(false);
@@ -100,7 +115,7 @@ export function SocialPostEditor({ post, article, stores }: { post: SocialPost; 
 
   const save = () =>
     run(
-      () => updateSocialPost(post.id, { caption, hashtags, altText, xText, xReply, template, slides }),
+      () => updateSocialPost(post.id, { caption, hashtags, altText, xText, xReply, threadsText, template, slides }),
       "保存しました（プレビューを更新しました）",
       () => setDirty(false)
     );
@@ -157,7 +172,7 @@ export function SocialPostEditor({ post, article, stores }: { post: SocialPost; 
         const blob = await fetch(url).then((r) => r.blob());
         const a = document.createElement("a");
         a.href = URL.createObjectURL(blob);
-        a.download = `${article?.slug ?? post.id}-${String(i + 1).padStart(2, "0")}.png`;
+        a.download = `${article?.slug ?? post.id}-${String(i + 1).padStart(2, "0")}.jpg`;
         a.click();
         URL.revokeObjectURL(a.href);
       }
@@ -173,6 +188,20 @@ export function SocialPostEditor({ post, article, stores }: { post: SocialPost; 
   const xReplyLen = xWeightedLength(xReply);
   const hasContent = post.slides.length > 0 || Boolean(post.caption);
   const editable = post.status !== "rejected";
+  const oldFormat = post.renderedUrls.some((u) => /\.png(\?|$)/i.test(u));
+
+  const publish = (p: IntegrationProvider) => {
+    setMessage(null);
+    startTransition(async () => {
+      const r = await publishToPlatform(post.id, p);
+      if (r.ok) {
+        setMessage(`${PLATFORM_LABEL[p]} に投稿しました${r.url ? `: ${r.url}` : ""}`);
+        router.refresh();
+      } else {
+        setMessage(`失敗しました: ${r.reason}`);
+      }
+    });
+  };
 
   return (
     <div className="mt-3 space-y-6">
@@ -369,7 +398,7 @@ export function SocialPostEditor({ post, article, stores }: { post: SocialPost; 
           {/* 投稿文 */}
           <section className="card p-5">
             <h2 className="font-semibold text-ink-900">投稿文</h2>
-            <div className="mt-3 grid gap-5 md:grid-cols-2">
+            <div className="mt-3 grid gap-5 md:grid-cols-2 xl:grid-cols-3">
               {post.platforms.includes("instagram") && (
                 <div className="space-y-2 text-xs">
                   <p className="font-semibold text-ink-700">Instagram</p>
@@ -445,6 +474,26 @@ export function SocialPostEditor({ post, article, stores }: { post: SocialPost; 
                   </div>
                 </div>
               )}
+              {post.platforms.includes("threads") && (
+                <div className="space-y-2 text-xs">
+                  <p className="font-semibold text-ink-700">Threads</p>
+                  <textarea
+                    className="input min-h-[160px]"
+                    placeholder="要点と記事の URL（URL が無ければ投稿時に自動で付きます）"
+                    value={threadsText}
+                    onChange={(e) => {
+                      setThreadsText(e.target.value);
+                      touch();
+                    }}
+                  />
+                  <p className={threadsText.length > THREADS_TEXT_LIMIT ? "text-red-700" : "text-ink-500"}>
+                    {threadsText.length} / {THREADS_TEXT_LIMIT} 文字 ・ 本文のリンクは押せます ・ 画像はスライドをすべて添付
+                  </p>
+                  <button type="button" onClick={() => copy(threadsText, "Threads の本文")} className="btn-secondary px-4 py-1.5 text-xs">
+                    本文をコピー
+                  </button>
+                </div>
+              )}
             </div>
             <div className="mt-4 flex flex-wrap items-center gap-2">
               <button type="button" onClick={save} disabled={pending} className="btn-primary px-5 py-2 text-xs disabled:opacity-50">
@@ -457,7 +506,7 @@ export function SocialPostEditor({ post, article, stores }: { post: SocialPost; 
           {/* 書き出し */}
           <section className="card p-5">
             <h2 className="font-semibold text-ink-900">書き出し（投稿用の画像）</h2>
-            <p className="mt-1 text-xs text-ink-500">文字を合成した最終画像（PNG）を作ります。文字や画像を変えたら、もう一度書き出してください。</p>
+            <p className="mt-1 text-xs text-ink-500">文字を合成した最終画像（JPEG・1080×1350）を作ります。文字や画像を変えたら、もう一度書き出してください。</p>
             <div className="mt-3 flex flex-wrap items-center gap-2">
               <button type="button" onClick={exportImages} disabled={pending} className="btn-primary px-5 py-2 text-xs disabled:opacity-50">
                 {pending ? "処理中…" : post.renderedUrls.length ? "もう一度書き出す" : "書き出す"}
@@ -484,15 +533,21 @@ export function SocialPostEditor({ post, article, stores }: { post: SocialPost; 
             )}
           </section>
 
-          {/* 投稿の記録 */}
+          {/* 投稿 */}
           <section className="card p-5">
-            <h2 className="font-semibold text-ink-900">投稿の記録</h2>
-            <p className="mt-1 text-xs text-ink-500">投稿したら媒体ごとに「投稿済みにする」。投稿の URL を控えておくと、あとで見返せます。</p>
-            <div className="mt-3 space-y-2 text-xs">
+            <h2 className="font-semibold text-ink-900">投稿</h2>
+            <p className="mt-1 text-xs text-ink-500">
+              Instagram と Threads は、連携していればここから直接投稿できます。X は書き出した画像と本文で手動投稿してください。投稿したら媒体ごとに記録されます。
+            </p>
+            {post.renderedUrls.length === 0 && <p className="mt-2 text-xs text-amber-800">先に「書き出す」で画像を作ってください。</p>}
+            {oldFormat && <p className="mt-2 text-xs text-amber-800">書き出した画像が古い形式（PNG）です。API で投稿するには、もう一度「書き出す」を押してください。</p>}
+            <div className="mt-3 space-y-3 text-xs">
               {post.platforms.map((p) => {
                 const done = post.posted[p];
+                const integ = integrations.find((s) => s.provider === p);
+                const canApi = p !== "x";
                 return (
-                  <div key={p} className="flex flex-wrap items-center gap-2">
+                  <div key={p} className="flex flex-wrap items-center gap-2 border-t border-ink-100 pt-3 first:border-t-0 first:pt-0">
                     <span className="w-20 font-semibold text-ink-700">{PLATFORM_LABEL[p]}</span>
                     {done ? (
                       <>
@@ -503,14 +558,32 @@ export function SocialPostEditor({ post, article, stores }: { post: SocialPost; 
                           </a>
                         )}
                         <button type="button" onClick={() => run(() => clearPosted(post.id, p), "取り消しました")} className="text-ink-500 hover:underline">
-                          取り消す
+                          記録を取り消す
                         </button>
                       </>
                     ) : (
                       <>
+                        {canApi && integ?.connected && (
+                          <button
+                            type="button"
+                            disabled={pending || post.renderedUrls.length === 0 || oldFormat}
+                            onClick={() =>
+                              window.confirm(`${PLATFORM_LABEL[p]}（@${integ.accountName ?? integ.accountId ?? ""}）に今すぐ投稿します。よろしいですか？`) &&
+                              publish(p as IntegrationProvider)
+                            }
+                            className="btn-primary px-4 py-1.5 text-xs disabled:opacity-50"
+                          >
+                            {pending ? "処理中…" : `${PLATFORM_LABEL[p]} に投稿する`}
+                          </button>
+                        )}
+                        {canApi && !integ?.connected && (
+                          <Link href="/admin/social/settings" className="text-pomie-600 hover:underline">
+                            連携設定で接続すると、ここから投稿できます
+                          </Link>
+                        )}
                         <input
-                          className="input w-72"
-                          placeholder="投稿の URL（任意）"
+                          className="input w-64"
+                          placeholder="手動で投稿した URL（任意）"
                           value={postUrls[p] ?? ""}
                           onChange={(e) => setPostUrls((cur) => ({ ...cur, [p]: e.target.value }))}
                         />
@@ -520,7 +593,7 @@ export function SocialPostEditor({ post, article, stores }: { post: SocialPost; 
                           disabled={pending}
                           className="btn-secondary px-4 py-1.5 text-xs disabled:opacity-50"
                         >
-                          投稿済みにする
+                          手動で投稿済みにする
                         </button>
                       </>
                     )}

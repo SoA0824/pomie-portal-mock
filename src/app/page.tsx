@@ -1,8 +1,8 @@
 import Link from "next/link";
-import { ArticleCard } from "@/components/article/ArticleCard";
+import { TopArticles } from "@/components/article/TopArticles";
 import { StylistCard } from "@/components/stylist/StylistCard";
 import { StoreCard } from "@/components/store/StoreCard";
-import { getFeaturedArticles } from "@/lib/data/articles";
+import { getTopArticles } from "@/lib/data/articles";
 import { getFeaturedStylists } from "@/lib/data/stylists";
 import { getAllStores } from "@/lib/data/stores";
 import { JsonLd } from "@/components/seo/JsonLd";
@@ -15,7 +15,7 @@ export const metadata = {
 };
 
 export default async function Home() {
-  const articles = await getFeaturedArticles(3);
+  const articles = await getTopArticles(4);
   const stylists = await getFeaturedStylists(4);
   const stores = getAllStores();
   const structuredData = [
@@ -101,6 +101,9 @@ export default async function Home() {
         </div>
       </section>
 
+      {/* 新着記事（固定した記事 → 新しい順）。SNS のプロフィールから来た人の受け皿なので一番上に置く */}
+      <TopArticles articles={articles} />
+
       {/* マッチング診断 CTA */}
       <section className="container-page pt-14">
         <Link
@@ -127,21 +130,6 @@ export default async function Home() {
           </div>
         </Link>
       </section>
-
-      {articles.length > 0 && (
-      <section className="container-page py-14">
-        <SectionHeader
-          title="髪・美容師選びのヒント"
-          subtitle="まずは気になる記事を読んで、自分に合う美容師像を見つけてみてください。"
-          link={{ href: "/articles", label: "すべての記事を見る" }}
-        />
-        <div className="mt-6 grid gap-6 md:grid-cols-3">
-          {articles.map((a) => (
-            <ArticleCard key={a.id} article={a} />
-          ))}
-        </div>
-      </section>
-      )}
 
       <section className="container-page py-14">
         <SectionHeader
