@@ -6,7 +6,6 @@
  * - 背景画像は公開 URL（Storage）か、サイト内のパス（店舗写真）を絶対 URL にして渡す
  */
 import { ImageResponse } from "next/og";
-import { AREAS } from "@/lib/areas";
 import { SITE_URL } from "@/lib/site";
 import type { SocialPost } from "@/lib/types";
 import { SLIDE_HEIGHT, SLIDE_WIDTH, collectSlideText, createSlideElement, type SlideContext } from "./templates";
@@ -44,13 +43,9 @@ export function resolveImageUrl(url: string | null | undefined): string | null {
   return `${SITE_URL}${url.startsWith("/") ? "" : "/"}${url}`;
 }
 
-/** 右上のラベルとサイト表記を記事のエリアから決める */
-export function buildSlideContext(article: { areas: string[] } | null | undefined): SlideContext {
-  const names = (article?.areas ?? []).map((s) => AREAS.find((a) => a.slug === s)?.name).filter(Boolean) as string[];
-  return {
-    label: names.length ? `ポミエ ${names.join("・")}` : "POMiE シェアサロン",
-    siteLabel: SITE_URL.replace(/^https?:\/\//, ""),
-  };
+/** スライドに出す共通の文字（店舗名・エリアは出さない） */
+export function buildSlideContext(_article?: { areas: string[] } | null): SlideContext {
+  return { siteLabel: SITE_URL.replace(/^https?:\/\//, "") };
 }
 
 /**

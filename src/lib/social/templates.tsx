@@ -1,18 +1,22 @@
 /**
  * SNS 投稿のスライドのテンプレート（satori で画像にするための JSX）。
  *
+ * - photo: 背景写真（AI 生成 / 店舗写真 / アップロード）＋ 下からの濃いグラデーション ＋ 白い文字
+ * - cream: クリーム地 ＋ ロゴアイコンの透かし ＋ ブラウンの文字（画像の無いスライドの既定）
+ *
+ * 店舗名やエリアはスライドに出さない（美容師のポータルとしての発信であって、店舗の発信ではない）。
+ *
  * satori の制約: 子要素が 2 つ以上の要素には display: flex が必要。
  * 文字は 1 つの文字列にまとめて渡す（`${a} / ${b}` のように）。
  */
 import type { SocialPost, SocialSlide, SocialTemplate } from "@/lib/types";
+import { pomieIconDataUri } from "./brandIcon";
 
 export const SLIDE_WIDTH = 1080;
 export const SLIDE_HEIGHT = 1350;
 
 export type SlideContext = {
-  /** 右上のラベル（例: ポミエ 表参道） */
-  label: string;
-  /** 左下のサイト表記 */
+  /** 左下のサイト表記（portal.pomie.jp） */
   siteLabel: string;
 };
 
@@ -28,7 +32,7 @@ const COLORS = {
 const FONT = "Noto Sans JP";
 
 /** public/logo/pomie-logo.svg と同じ形（色を変えられるように埋め込み） */
-function Logo({ color, width }: { color: string; width: number }) {
+function Wordmark({ color, width }: { color: string; width: number }) {
   const height = (width * 28) / 146;
   return (
     <svg width={width} height={height} viewBox="0 0 146 28" fill="none" xmlns="http://www.w3.org/2000/svg">
@@ -64,6 +68,12 @@ function Logo({ color, width }: { color: string; width: number }) {
   );
 }
 
+/** ロゴアイコン（丸いマーク） */
+function Icon({ color, size, opacity = 1 }: { color: string; size: number; opacity?: number }) {
+  // eslint-disable-next-line @next/next/no-img-element
+  return <img src={pomieIconDataUri(color)} width={size} height={size} alt="" style={{ width: size, height: size, opacity }} />;
+}
+
 /**
  * 見出しの文字サイズ。長い見出しは少し小さくして、変な位置で折り返しにくくする。
  * 見出しに改行を入れると、その位置で折り返す（whiteSpace: pre-wrap）。
@@ -84,21 +94,19 @@ export function resolveTemplate(post: Pick<SocialPost, "template">, slide: Socia
   return post.template;
 }
 
-/** 見出しの上に出す小さな文字 */
+/** 見出しの上に出す小さな文字（ポイントの番号だけ。表紙・まとめには出さない） */
 export function kickerFor(post: Pick<SocialPost, "slides">, index: number): string {
   const slide = post.slides[index];
-  if (!slide) return "";
-  if (slide.kind === "cover") return "ポミエの記事から";
-  if (slide.kind === "cta") return "まとめ";
+  if (!slide || slide.kind !== "point") return "";
   const n = post.slides.slice(0, index + 1).filter((s) => s.kind === "point").length;
-  return `POINT ${n}`;
+  return `POINT ${String(n).padStart(2, "0")}`;
 }
 
 /** フォントの部分取得のため、スライドに出るすべての文字を集める */
 export function collectSlideText(post: Pick<SocialPost, "slides">, index: number, ctx: SlideContext): string {
   const slide = post.slides[index];
   if (!slide) return "";
-  return [slide.headline, slide.body, kickerFor(post, index), ctx.label, ctx.siteLabel, `${index + 1} / ${post.slides.length}`, "POINT0123456789"].join("");
+  return [slide.headline, slide.body, kickerFor(post, index), ctx.siteLabel, `${index + 1} / ${post.slides.length}`, "POINT0123456789"].join("");
 }
 
 type Props = {
@@ -117,23 +125,54 @@ export function createSlideElement(props: Props) {
   return template === "photo" && props.imageUrl ? <PhotoSlide {...props} slide={slide} /> : <CreamSlide {...props} slide={slide} />;
 }
 
-function PhotoSlide({ post, index, ctx, scale: s, imageUrl, slide }: Props & { slide: SocialSlide }) {
-  const W = SLIDE_WIDTH * s;
-  const H = SLIDE_HEIGHT * s;
-  const total = post.slides.length;
-  const isCover = slide.kind === "cover";
+function Header({ color, s, showIcon = true }: { color: string; s: number; showIcon?: boolean }) {
   return (
     <div
       style={{
-        width: W,
-        height: H,
+        position: "absolute",
+        top: 60 * s,
+        left: 72 * s,
+        width: SLIDE_WIDTH * s - 144 * s,
         display: "flex",
-        flexDirection: "column",
-        position: "relative",
-        backgroundColor: COLORS.brown,
-        fontFamily: FONT,
+        alignItems: "center",
+        justifyContent: "space-between",
       }}
     >
+      <Wordmark color={color} width={168 * s} />
+      {showIcon ? <Icon color={color} size={60 * s} /> : <div style={{ display: "flex" }} />}
+    </div>
+  );
+}
+
+function Footer({ color, s, ctx, index, total }: { color: string; s: number; ctx: SlideContext; index: number; total: number }) {
+  return (
+    <div
+      style={{
+        position: "absolute",
+        left: 72 * s,
+        width: SLIDE_WIDTH * s - 144 * s,
+        bottom: 60 * s,
+        display: "flex",
+        alignItems: "center",
+        justifyContent: "space-between",
+        color,
+        fontSize: 22 * s,
+        letterSpacing: 1 * s,
+      }}
+    >
+      <div style={{ display: "flex" }}>{ctx.siteLabel}</div>
+      <div style={{ display: "flex" }}>{`${index + 1} / ${total}`}</div>
+    </div>
+  );
+}
+
+function PhotoSlide({ post, index, ctx, scale: s, imageUrl, slide }: Props & { slide: SocialSlide }) {
+  const W = SLIDE_WIDTH * s;
+  const H = SLIDE_HEIGHT * s;
+  const isCover = slide.kind === "cover";
+  const kicker = kickerFor(post, index);
+  return (
+    <div style={{ width: W, height: H, display: "flex", flexDirection: "column", position: "relative", backgroundColor: COLORS.brown, fontFamily: FONT }}>
       {imageUrl && (
         // eslint-disable-next-line @next/next/no-img-element
         <img src={imageUrl} width={W} height={H} alt="" style={{ position: "absolute", top: 0, left: 0, width: W, height: H, objectFit: "cover" }} />
@@ -146,60 +185,30 @@ function PhotoSlide({ post, index, ctx, scale: s, imageUrl, slide }: Props & { s
           width: W,
           height: H,
           display: "flex",
-          backgroundImage: "linear-gradient(to top, rgba(26,15,6,0.90) 0%, rgba(26,15,6,0.55) 40%, rgba(26,15,6,0.12) 100%)",
+          backgroundImage: "linear-gradient(to top, rgba(26,15,6,0.92) 0%, rgba(26,15,6,0.60) 38%, rgba(26,15,6,0.18) 70%, rgba(26,15,6,0.10) 100%)",
         }}
       />
-      <div
-        style={{
-          position: "absolute",
-          top: 56 * s,
-          left: 64 * s,
-          width: W - 128 * s,
-          display: "flex",
-          alignItems: "center",
-          justifyContent: "space-between",
-        }}
-      >
-        <Logo color={COLORS.white} width={176 * s} />
+      <Header color={COLORS.white} s={s} />
+      <div style={{ position: "absolute", left: 72 * s, width: W - 144 * s, bottom: 160 * s, display: "flex", flexDirection: "column" }}>
+        {kicker && <div style={{ display: "flex", color: COLORS.peach, fontSize: 26 * s, fontWeight: 700, letterSpacing: 4 * s }}>{kicker}</div>}
         <div
           style={{
             display: "flex",
-            padding: `${10 * s}px ${24 * s}px`,
-            borderRadius: 999,
-            backgroundColor: "rgba(255,255,255,0.20)",
+            marginTop: kicker ? 20 * s : 0,
             color: COLORS.white,
-            fontSize: 26 * s,
+            fontSize: headlineSize(slide.headline, isCover) * s,
             fontWeight: 700,
+            lineHeight: 1.28,
+            whiteSpace: "pre-wrap",
           }}
         >
-          {ctx.label}
-        </div>
-      </div>
-      <div style={{ position: "absolute", left: 64 * s, width: W - 128 * s, bottom: 150 * s, display: "flex", flexDirection: "column" }}>
-        <div style={{ display: "flex", color: COLORS.peach, fontSize: 28 * s, fontWeight: 700, letterSpacing: 2 * s }}>{kickerFor(post, index)}</div>
-        <div style={{ display: "flex", marginTop: 18 * s, color: COLORS.white, fontSize: headlineSize(slide.headline, isCover) * s, fontWeight: 700, lineHeight: 1.25, whiteSpace: "pre-wrap" }}>
           {slide.headline}
         </div>
         {slide.body && (
-          <div style={{ display: "flex", marginTop: 28 * s, color: "rgba(255,255,255,0.92)", fontSize: 34 * s, lineHeight: 1.6, whiteSpace: "pre-wrap" }}>{slide.body}</div>
+          <div style={{ display: "flex", marginTop: 30 * s, color: "rgba(255,255,255,0.90)", fontSize: 33 * s, lineHeight: 1.65, whiteSpace: "pre-wrap" }}>{slide.body}</div>
         )}
       </div>
-      <div
-        style={{
-          position: "absolute",
-          left: 64 * s,
-          width: W - 128 * s,
-          bottom: 56 * s,
-          display: "flex",
-          alignItems: "center",
-          justifyContent: "space-between",
-          color: "rgba(255,255,255,0.82)",
-          fontSize: 24 * s,
-        }}
-      >
-        <div style={{ display: "flex" }}>{ctx.siteLabel}</div>
-        <div style={{ display: "flex" }}>{`${index + 1} / ${total}`}</div>
-      </div>
+      <Footer color="rgba(255,255,255,0.75)" s={s} ctx={ctx} index={index} total={post.slides.length} />
     </div>
   );
 }
@@ -207,11 +216,12 @@ function PhotoSlide({ post, index, ctx, scale: s, imageUrl, slide }: Props & { s
 function CreamSlide({ post, index, ctx, scale: s, imageUrl, slide }: Props & { slide: SocialSlide }) {
   const W = SLIDE_WIDTH * s;
   const H = SLIDE_HEIGHT * s;
-  const total = post.slides.length;
   const isCover = slide.kind === "cover";
-  const imageTop = 180 * s;
-  const imageHeight = 500 * s;
-  const contentTop = imageUrl ? imageTop + imageHeight + 56 * s : 180 * s;
+  const isCta = slide.kind === "cta" && !imageUrl;
+  const kicker = kickerFor(post, index);
+  const imageTop = 190 * s;
+  const imageHeight = 480 * s;
+  const contentTop = imageUrl ? imageTop + imageHeight + 64 * s : 190 * s;
   return (
     <div
       style={{
@@ -225,103 +235,106 @@ function CreamSlide({ post, index, ctx, scale: s, imageUrl, slide }: Props & { s
         overflow: "hidden",
       }}
     >
-      <div
-        style={{
-          position: "absolute",
-          right: -240 * s,
-          top: -260 * s,
-          width: 640 * s,
-          height: 640 * s,
-          borderRadius: 9999,
-          backgroundColor: COLORS.peach,
-          opacity: 0.5,
-          display: "flex",
-        }}
-      />
-      <div
-        style={{
-          position: "absolute",
-          left: -200 * s,
-          bottom: -260 * s,
-          width: 520 * s,
-          height: 520 * s,
-          borderRadius: 9999,
-          backgroundColor: COLORS.peach,
-          opacity: 0.35,
-          display: "flex",
-        }}
-      />
-      <div
-        style={{
-          position: "absolute",
-          top: 56 * s,
-          left: 64 * s,
-          width: W - 128 * s,
-          display: "flex",
-          alignItems: "center",
-          justifyContent: "space-between",
-        }}
-      >
-        <Logo color={COLORS.brown} width={176 * s} />
-        <div
-          style={{
-            display: "flex",
-            padding: `${10 * s}px ${24 * s}px`,
-            borderRadius: 999,
-            border: `${2 * s}px solid ${COLORS.orange}`,
-            color: COLORS.orange,
-            fontSize: 26 * s,
-            fontWeight: 700,
-          }}
-        >
-          {ctx.label}
+      {/* ロゴアイコンの透かし（右下に大きく、はみ出させる） */}
+      {!isCta && (
+        <div style={{ position: "absolute", right: -300 * s, bottom: -260 * s, display: "flex" }}>
+          <Icon color={COLORS.orange} size={980 * s} opacity={0.08} />
         </div>
-      </div>
+      )}
+      {/* 細い枠 */}
+      <div
+        style={{
+          position: "absolute",
+          top: 36 * s,
+          left: 36 * s,
+          width: W - 72 * s,
+          height: H - 72 * s,
+          border: `${1.5 * s}px solid ${COLORS.peach}`,
+          display: "flex",
+        }}
+      />
+      <Header color={COLORS.brown} s={s} showIcon={!isCta} />
       {imageUrl && (
         // eslint-disable-next-line @next/next/no-img-element
         <img
           src={imageUrl}
-          width={W - 128 * s}
+          width={W - 144 * s}
           height={imageHeight}
           alt=""
-          style={{ position: "absolute", left: 64 * s, top: imageTop, width: W - 128 * s, height: imageHeight, objectFit: "cover", borderRadius: 32 * s }}
+          style={{ position: "absolute", left: 72 * s, top: imageTop, width: W - 144 * s, height: imageHeight, objectFit: "cover", borderRadius: 8 * s }}
         />
       )}
-      <div
-        style={{
-          position: "absolute",
-          left: 64 * s,
-          top: contentTop,
-          width: W - 128 * s,
-          height: H - contentTop - 150 * s,
-          display: "flex",
-          flexDirection: "column",
-          justifyContent: imageUrl ? "flex-start" : "center",
-        }}
-      >
-        <div style={{ display: "flex", width: 96 * s, height: 10 * s, borderRadius: 999, backgroundColor: COLORS.orange }} />
-        <div style={{ display: "flex", marginTop: 28 * s, color: COLORS.orange, fontSize: 28 * s, fontWeight: 700, letterSpacing: 2 * s }}>{kickerFor(post, index)}</div>
-        <div style={{ display: "flex", marginTop: 16 * s, color: COLORS.brown, fontSize: (headlineSize(slide.headline, isCover) - 4) * s, fontWeight: 700, lineHeight: 1.3, whiteSpace: "pre-wrap" }}>
-          {slide.headline}
+      {isCta ? (
+        <div
+          style={{
+            position: "absolute",
+            left: 72 * s,
+            top: 190 * s,
+            width: W - 144 * s,
+            height: H - 190 * s - 160 * s,
+            display: "flex",
+            flexDirection: "column",
+            alignItems: "center",
+            justifyContent: "center",
+            textAlign: "center",
+          }}
+        >
+          <Icon color={COLORS.brown} size={220 * s} />
+          <div
+            style={{
+              display: "flex",
+              justifyContent: "center",
+              marginTop: 56 * s,
+              color: COLORS.brown,
+              fontSize: (headlineSize(slide.headline, false) - 6) * s,
+              fontWeight: 700,
+              lineHeight: 1.35,
+              whiteSpace: "pre-wrap",
+            }}
+          >
+            {slide.headline}
+          </div>
+          {slide.body && (
+            <div style={{ display: "flex", justifyContent: "center", marginTop: 28 * s, color: COLORS.ink700, fontSize: 30 * s, lineHeight: 1.7, whiteSpace: "pre-wrap" }}>
+              {slide.body}
+            </div>
+          )}
         </div>
-        {slide.body && <div style={{ display: "flex", marginTop: 28 * s, color: COLORS.ink700, fontSize: 33 * s, lineHeight: 1.7, whiteSpace: "pre-wrap" }}>{slide.body}</div>}
-      </div>
-      <div
-        style={{
-          position: "absolute",
-          left: 64 * s,
-          width: W - 128 * s,
-          bottom: 56 * s,
-          display: "flex",
-          alignItems: "center",
-          justifyContent: "space-between",
-          color: COLORS.brown,
-          fontSize: 24 * s,
-        }}
-      >
-        <div style={{ display: "flex" }}>{ctx.siteLabel}</div>
-        <div style={{ display: "flex" }}>{`${index + 1} / ${total}`}</div>
-      </div>
+      ) : (
+        <div
+          style={{
+            position: "absolute",
+            left: 72 * s,
+            top: contentTop,
+            width: W - 144 * s,
+            height: H - contentTop - 160 * s,
+            display: "flex",
+            flexDirection: "column",
+            justifyContent: imageUrl ? "flex-start" : "center",
+          }}
+        >
+          {kicker ? (
+            <div style={{ display: "flex", color: COLORS.orange, fontSize: 26 * s, fontWeight: 700, letterSpacing: 4 * s }}>{kicker}</div>
+          ) : (
+            <div style={{ display: "flex", width: 56 * s, height: 3 * s, backgroundColor: COLORS.orange }} />
+          )}
+          <div
+            style={{
+              display: "flex",
+              marginTop: 24 * s,
+              color: COLORS.brown,
+              fontSize: (headlineSize(slide.headline, isCover) - 4) * s,
+              fontWeight: 700,
+              lineHeight: 1.32,
+              whiteSpace: "pre-wrap",
+            }}
+          >
+            {slide.headline}
+          </div>
+          {slide.body && <div style={{ display: "flex", marginTop: 30 * s, color: COLORS.ink700, fontSize: 32 * s, lineHeight: 1.75, whiteSpace: "pre-wrap" }}>{slide.body}</div>}
+        </div>
+      )}
+      <Footer color="rgba(58,31,12,0.65)" s={s} ctx={ctx} index={index} total={post.slides.length} />
     </div>
   );
 }
