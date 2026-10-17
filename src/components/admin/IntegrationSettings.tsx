@@ -11,10 +11,11 @@ const GUIDE: Record<IntegrationProvider, { permissions: string; steps: string[] 
   instagram: {
     permissions: "instagram_business_basic / instagram_business_content_publish",
     steps: [
-      "Meta for Developers のアプリ → 左メニュー「アプリの役割」→「役割」→「ユーザーを追加」→ 役割「Instagram テスター」で POMiE の Instagram ユーザー名を追加する",
+      "「Instagram ログインによる API 設定」の 1 番で「Go to permissions and features」→ instagram_business_content_publish を追加する（投稿に必要。初期状態では入っていない）",
+      "左メニュー「アプリの役割」→「役割」→「ユーザーを追加」→ 役割「Instagram テスター」で POMiE の Instagram ユーザー名を追加する",
       "Instagram アプリ（スマホ）→ 設定 →「ウェブサイトのアクセス許可」（または「アプリとウェブサイト」）→「テスター招待」で承認する。役割の一覧が「アクティブ」になれば OK",
-      "左メニュー「Instagram」→「Instagram ログインの API 設定」→ 1 番の「アクセストークンを生成」で、追加したアカウントの「トークンを生成」→ ログイン・許可 → 表示されたトークンをコピー",
-      "下に貼って「接続する」。アプリシークレットが設定されていれば自動で 60 日の長期トークンに変換される",
+      "「Instagram ログインによる API 設定」の 2 番「アクセストークンを生成する」→「アカウントを追加」→ ログイン・許可 → 出てきたアカウントの「トークンを生成」→ 表示されたトークンをコピー",
+      "下に貼って「接続する」。INSTAGRAM_APP_SECRET が設定されていれば自動で 60 日の長期トークンに変換される",
     ],
   },
   threads: {
@@ -36,7 +37,7 @@ export function IntegrationSettings({
 }: {
   statuses: IntegrationStatus[];
   secretConfigured: boolean;
-  appSecretConfigured: boolean;
+  appSecretConfigured: Record<IntegrationProvider, boolean>;
   loadError: string | null;
 }) {
   const router = useRouter();
@@ -64,12 +65,6 @@ export function IntegrationSettings({
           トークンを暗号化して保存するための <code className="rounded bg-white px-1">INTEGRATION_SECRET</code> が Vercel に設定されていません。
           Environment Variables に 32 文字以上のランダムな文字列を追加して再デプロイしてください（あわせて <code className="rounded bg-white px-1">CRON_SECRET</code>{" "}
           も設定すると、トークンの自動更新が毎日動きます）。
-        </div>
-      )}
-      {!appSecretConfigured && (
-        <div className="rounded-lg border border-ink-100 bg-white p-3 text-xs text-ink-700">
-          おすすめ: アプリの「設定 → ベーシック」にある <b>app secret（アプリシークレット）</b> を Vercel の{" "}
-          <code className="rounded bg-ink-100 px-1">META_APP_SECRET</code> に入れておくと、画面で発行されるトークンが短期（数時間）でも、接続時に自動で 60 日の長期トークンに変換します。
         </div>
       )}
       {loadError && (
@@ -100,6 +95,13 @@ export function IntegrationSettings({
               </p>
             )}
             {s.lastError && <p className="mt-1 text-xs text-red-700">{s.lastError}</p>}
+            {!appSecretConfigured[s.provider] && (
+              <p className="mt-2 rounded-lg bg-ink-100/60 p-2 text-[11px] text-ink-700">
+                おすすめ: {s.provider === "instagram" ? "「Instagram ログインによる API 設定」画面の上部にある Instagram app secret" : "Threads ユースケースの設定にある Threads App Secret"} を Vercel の{" "}
+                <code className="rounded bg-white px-1">{s.provider === "instagram" ? "INSTAGRAM_APP_SECRET" : "THREADS_APP_SECRET"}</code>{" "}
+                に入れておくと、発行されたトークンが短期（数時間）でも接続時に 60 日の長期トークンへ自動で変換します。
+              </p>
+            )}
 
             <details className="mt-3 text-xs text-ink-700">
               <summary className="cursor-pointer text-pomie-600">トークンの取り方（Meta for Developers。画面の名称は変わることがあります）</summary>

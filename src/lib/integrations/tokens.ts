@@ -27,11 +27,24 @@ export async function getIntegrationRow(provider: IntegrationProvider): Promise<
 }
 
 /** 管理画面の表示用（トークン自体は返さない） */
-export function appSecretConfigured(): boolean {
-  return Boolean(process.env.META_APP_SECRET);
+/**
+ * 長期トークンへの交換に使うシークレット。Instagram は「Instagram ログインによる API 設定」画面の
+ * Instagram app secret、Threads は Threads ユースケースの Threads App Secret（アプリ全体のシークレットとは別）。
+ */
+export function appSecretFor(provider: IntegrationProvider): string | undefined {
+  return (provider === "instagram" ? process.env.INSTAGRAM_APP_SECRET : process.env.THREADS_APP_SECRET) || process.env.META_APP_SECRET || undefined;
 }
 
-export async function listIntegrationStatus(): Promise<{ statuses: IntegrationStatus[]; secretConfigured: boolean; appSecretConfigured: boolean; error: string | null }> {
+export function appSecretConfigured(): Record<IntegrationProvider, boolean> {
+  return { instagram: Boolean(appSecretFor("instagram")), threads: Boolean(appSecretFor("threads")) };
+}
+
+export async function listIntegrationStatus(): Promise<{
+  statuses: IntegrationStatus[];
+  secretConfigured: boolean;
+  appSecretConfigured: Record<IntegrationProvider, boolean>;
+  error: string | null;
+}> {
   const { data, error } = await getSupabase().from("integration_tokens").select("provider, account_id, account_name, expires_at, refreshed_at, last_error, updated_at");
   const rows = (data ?? []) as Array<Omit<IntegrationTokenRow, "token_enc" | "created_at">>;
   const statuses = INTEGRATION_PROVIDERS.map((provider) => {
@@ -59,7 +72,7 @@ export async function saveIntegrationToken(provider: IntegrationProvider, token:
   const account = await verifyToken(provider, trimmed);
   let expiresAt = addDays(LONG_LIVED_DAYS);
   let exchanged = false;
-  const appSecret = process.env.META_APP_SECRET;
+  const appSecret = appSecretFor(provider);
   if (appSecret) {
     try {
       const ex = await exchangeToken(provider, trimmed, appSecret);
