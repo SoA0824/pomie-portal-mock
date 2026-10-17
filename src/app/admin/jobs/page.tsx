@@ -5,6 +5,22 @@ import { dispatchConfigured } from "@/lib/integrations/github";
 export const dynamic = "force-dynamic";
 export const metadata = { title: "自動実行 | 管理 | POMiE Portal" };
 
+/** 定期実行（.github/workflows/jobs.yml の cron は UTC）の次回時刻 */
+function nextRuns(now = new Date()) {
+  const next15 = new Date(now);
+  next15.setUTCSeconds(0, 0);
+  next15.setUTCMinutes(Math.floor(next15.getUTCMinutes() / 15) * 15 + 15);
+  const daily = new Date(now);
+  daily.setUTCHours(18, 0, 0, 0); // 03:00 JST
+  if (daily <= now) daily.setUTCDate(daily.getUTCDate() + 1);
+  const weekly = new Date(now);
+  weekly.setUTCHours(20, 0, 0, 0); // 月曜 05:00 JST = 日曜 20:00 UTC
+  weekly.setUTCDate(weekly.getUTCDate() + ((7 - weekly.getUTCDay()) % 7));
+  if (weekly <= now) weekly.setUTCDate(weekly.getUTCDate() + 7);
+  const fmt = (d: Date) => d.toLocaleString("ja-JP", { timeZone: "Asia/Tokyo", month: "numeric", day: "numeric", weekday: "short", hour: "2-digit", minute: "2-digit" });
+  return { next15: fmt(next15), daily: fmt(daily), weekly: fmt(weekly) };
+}
+
 export default async function AdminJobsPage() {
   const { jobs, error } = await listJobs(60);
   return (
@@ -19,7 +35,34 @@ export default async function AdminJobsPage() {
           ジョブを読み込めませんでした（{error}）。<code className="rounded bg-white px-1">supabase/migration-015-jobs.sql</code> を実行してください。
         </div>
       )}
+      <ScheduleBox />
       <JobsList jobs={jobs} dispatchConfigured={dispatchConfigured()} />
     </div>
+  );
+}
+
+function ScheduleBox() {
+  const n = nextRuns();
+  return (
+    <section className="mt-4 rounded-xl bg-white p-4 text-xs ring-1 ring-ink-100">
+      <p className="font-semibold text-ink-900">定期実行の予定（GitHub Actions。数分〜十数分遅れることがあります）</p>
+      <ul className="mt-2 grid gap-1 sm:grid-cols-3">
+        <li>
+          <span className="text-ink-500">待ちジョブの実行</span>
+          <br />
+          15 分ごと（次回 {n.next15}）
+        </li>
+        <li>
+          <span className="text-ink-500">承認済み候補の記事化（2 本まで）</span>
+          <br />
+          毎日 03:00（次回 {n.daily}）
+        </li>
+        <li>
+          <span className="text-ink-500">キーワード候補の提案（8 件）</span>
+          <br />
+          毎週月曜 05:00（次回 {n.weekly}）・ラッコの API キーが必要
+        </li>
+      </ul>
+    </section>
   );
 }

@@ -1,5 +1,6 @@
 import Link from "next/link";
-import { KeywordCandidateList } from "@/components/admin/KeywordCandidateList";
+import { KeywordCandidateList, type CandidateArticleInfo } from "@/components/admin/KeywordCandidateList";
+import { getAllArticlesIncludingDrafts } from "@/lib/data/articles";
 import { RunJobButton } from "@/components/admin/RunJobButton";
 import { KeywordSeeds } from "@/components/admin/KeywordSeeds";
 import { listKeywordCandidates, listKeywordSeeds } from "@/lib/data/keywords";
@@ -19,16 +20,26 @@ export default async function AdminKeywordsPage() {
     loadError = err instanceof Error ? err.message : String(err);
   }
   const stylists = await getStylistOptions();
+  // 記事化済みの候補に「下書き / 公開済み」を付けるため、記事の状態を引く
+  const articleInfo: Record<string, CandidateArticleInfo> = {};
+  try {
+    for (const a of await getAllArticlesIncludingDrafts()) articleInfo[a.id] = { status: a.status, title: a.title, slug: a.slug };
+  } catch {
+    // 記事が読めなくても候補の一覧は出す
+  }
 
   const count = (s: KeywordCandidate["status"]) => candidates.filter((c) => c.status === s).length;
+  const written = candidates.filter((c) => c.status === "written");
+  const writtenPublished = written.filter((c) => c.articleId && articleInfo[c.articleId]?.status === "published").length;
+  const writtenDraft = written.length - writtenPublished;
 
   return (
     <div>
       <header>
         <h1 className="text-2xl font-bold">キーワード候補</h1>
         <p className="mt-1 text-sm text-ink-500">
-          自動で集めた記事のキーワード候補です。<strong>承認</strong>した候補は次回の自動実行で記事（下書き）になり、
-          記事一覧で内容を確認してから公開します。
+          自動で集めた記事のキーワード候補です。<strong>承認</strong>した候補は<strong>毎日 03:00</strong> の定期実行で記事（下書き）になり（2 本まで）、
+          記事一覧で内容を確認してから公開します。候補の提案は<strong>毎週月曜 05:00</strong>（ラッコの API キーがある場合）。すぐ欲しいときは下のボタンか Claude Code のスキルで。
         </p>
         <div className="mt-4 flex flex-wrap items-center gap-2 text-xs">
           <RunJobButton
@@ -57,16 +68,17 @@ export default async function AdminKeywordsPage() {
 
       {!loadError && (
         <>
-          <div className="mt-6 grid gap-3 sm:grid-cols-5">
+          <div className="mt-6 grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-6">
             <Stat label="提案中" value={count("proposed")} accent />
             <Stat label="承認済み（記事化待ち）" value={count("approved") + count("writing")} />
-            <Stat label="記事化済み" value={count("written")} />
+            <Stat label="記事化済み（下書き・公開待ち）" value={writtenDraft} />
+            <Stat label="公開済み" value={writtenPublished} />
             <Stat label="失敗" value={count("failed")} warn={count("failed") > 0} />
             <Stat label="却下" value={count("rejected")} />
           </div>
 
           <div className="mt-8">
-            <KeywordCandidateList candidates={candidates} stylists={stylists} />
+            <KeywordCandidateList candidates={candidates} stylists={stylists} articles={articleInfo} />
           </div>
 
           <div className="mt-10">
@@ -77,15 +89,16 @@ export default async function AdminKeywordsPage() {
             <h2 className="font-bold">動き方</h2>
             <ol className="mt-2 list-decimal space-y-1 pl-5 text-ink-700">
               <li>
-                週 1 回、種キーワードをもとにラッコキーワードで調査し、候補を<strong>提案中</strong>として追加します
-                （手動で実行する場合は <code>node scripts/articles/run.mjs propose</code>）。
+                <strong>毎週月曜 05:00</strong>、種キーワードをもとにラッコキーワードで調査し、候補を<strong>提案中</strong>として追加します
+                （ラッコの API キーが無い間は Claude Code の <code>/propose-keywords</code>、または上の「候補を提案する」ボタン）。
               </li>
               <li>管理者が候補を見て<strong>承認</strong>または<strong>却下</strong>します。承認時のメモは執筆に渡されます。</li>
               <li>
-                毎日、承認済みの候補から順に記事を自動執筆し、<strong>下書き</strong>として記事一覧に追加します
-                （手動: <code>node scripts/articles/run.mjs write</code>）。
+                <strong>毎日 03:00</strong>、承認済みの候補から順に記事を自動執筆し（2 本まで）、<strong>下書き</strong>として記事一覧に追加します
+                （すぐ欲しいときは候補の「いま記事にする」ボタン、または Claude Code の <code>/write-article --approved</code>）。
               </li>
-              <li>記事一覧で内容を確認し、必要なら監修者を付けて<strong>承認して公開</strong>します。</li>
+              <li>記事一覧で内容を確認し、必要なら監修者を付けて<strong>承認して公開</strong>します。公開した候補はこの一覧から隠れます。</li>
+              <li>進み具合と定期実行の予定は「自動実行」の画面で見られます。</li>
             </ol>
           </section>
         </>

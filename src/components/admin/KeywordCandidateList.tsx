@@ -12,10 +12,13 @@ import type { KeywordCandidate, KeywordCandidateStatus } from "@/lib/types";
 import type { StylistOption } from "@/components/admin/ArticleForm";
 import { RunJobButton } from "@/components/admin/RunJobButton";
 
+/** 記事化済みの候補に付ける、記事側の状態 */
+export type CandidateArticleInfo = { status: "draft" | "published"; title: string; slug: string };
+
 const TABS: Array<{ key: KeywordCandidateStatus | "all"; label: string }> = [
   { key: "proposed", label: "提案中" },
   { key: "approved", label: "承認済み" },
-  { key: "written", label: "記事化済み" },
+  { key: "written", label: "記事化済み（下書き）" },
   { key: "failed", label: "失敗" },
   { key: "rejected", label: "却下" },
   { key: "all", label: "すべて" },
@@ -46,12 +49,19 @@ function difficultyLabel(d: number | null) {
 export function KeywordCandidateList({
   candidates,
   stylists,
+  articles = {},
 }: {
   candidates: KeywordCandidate[];
   stylists: StylistOption[];
+  /** 記事 ID → 記事の状態（記事化済みの候補の表示に使う） */
+  articles?: Record<string, CandidateArticleInfo>;
 }) {
   const router = useRouter();
   const [tab, setTab] = useState<KeywordCandidateStatus | "all">("proposed");
+  const [showPublished, setShowPublished] = useState(false);
+  // 公開まで済んだ候補は役目を終えているので、既定では一覧に出さない
+  const isPublished = (c: KeywordCandidate) => c.status === "written" && Boolean(c.articleId && articles[c.articleId]?.status === "published");
+  const publishedCount = candidates.filter(isPublished).length;
   const [selected, setSelected] = useState<Set<string>>(new Set());
   const [notes, setNotes] = useState<Record<string, string>>({});
   const [pending, startTransition] = useTransition();
@@ -59,8 +69,9 @@ export function KeywordCandidateList({
 
   const stylistName = useMemo(() => new Map(stylists.map((s) => [s.id, s.name])), [stylists]);
 
+  const inTab = (c: KeywordCandidate) => (tab === "all" ? true : tab === "approved" ? c.status === "approved" || c.status === "writing" : c.status === tab);
   const visible = candidates
-    .filter((c) => (tab === "all" ? true : tab === "approved" ? c.status === "approved" || c.status === "writing" : c.status === tab))
+    .filter((c) => inTab(c) && (showPublished || !isPublished(c)))
     .sort((a, b) => (b.score ?? 0) - (a.score ?? 0));
 
   const run = (fn: () => Promise<{ ok: boolean; reason?: string }>, done: string) => {
@@ -95,12 +106,10 @@ export function KeywordCandidateList({
     <div>
       <div className="flex flex-wrap items-center gap-2">
         {TABS.map((t) => {
-          const n =
-            t.key === "all"
-              ? candidates.length
-              : t.key === "approved"
-                ? candidates.filter((c) => c.status === "approved" || c.status === "writing").length
-                : candidates.filter((c) => c.status === t.key).length;
+          const n = candidates.filter((c) => {
+            const matches = t.key === "all" ? true : t.key === "approved" ? c.status === "approved" || c.status === "writing" : c.status === t.key;
+            return matches && (showPublished || !isPublished(c));
+          }).length;
           return (
             <button
               key={t.key}
@@ -117,6 +126,11 @@ export function KeywordCandidateList({
             </button>
           );
         })}
+        {publishedCount > 0 && (
+          <button type="button" onClick={() => setShowPublished((v) => !v)} className="text-xs text-ink-500 hover:text-pomie-600">
+            {showPublished ? "公開済みの候補を隠す" : `公開済みの候補も表示（${publishedCount}）`}
+          </button>
+        )}
         {feedback && <span className="ml-auto text-xs text-ink-700">{feedback}</span>}
       </div>
 
@@ -190,7 +204,7 @@ export function KeywordCandidateList({
                     </div>
 
                     <dl className="mt-2 flex flex-wrap gap-x-5 gap-y-1 text-xs text-ink-700">
-                      <Metric k="月間検索数" v={c.searchVolume === null ? "不明" : c.searchVolume.toLocaleString()} />
+                      <Metric k="月間検索数" v={c.searchVolume == null ? "不明" : c.searchVolume.toLocaleString()} />
                       <Metric k="SEO 難易度" v={difficultyLabel(c.seoDifficulty)} />
                       <Metric k="広告競合" v={c.competition === null ? "不明" : String(c.competition)} />
                       {c.seed && <Metric k="種" v={c.seed} />}
@@ -303,19 +317,41 @@ export function KeywordCandidateList({
                         </button>
                       </div>
                     )}
-                    {c.status === "written" && c.articleId && (
+                    {c.status === "written" && (
                       <div className="mt-3 flex flex-wrap items-center gap-3 text-xs">
-                        <Link href={`/admin/articles/${c.articleId}/edit`} className="font-semibold text-pomie-600 hover:underline">
-                          記事を確認・承認する →
-                        </Link>
-                        <a
-                          href={`/admin/articles/${c.articleId}/preview`}
-                          target="_blank"
-                          rel="noreferrer"
-                          className="text-pomie-600 hover:underline"
-                        >
-                          プレビュー ↗
-                        </a>
+                        {c.articleId && articles[c.articleId] ? (
+                          <>
+                            <span
+                              className={`rounded-full px-2 py-0.5 font-semibold ${
+                                articles[c.articleId].status === "published" ? "bg-green-100 text-green-800" : "bg-amber-100 text-amber-800"
+                              }`}
+                            >
+                              {articles[c.articleId].status === "published" ? "記事: 公開済み" : "記事: 下書き（公開待ち）"}
+                            </span>
+                            <span className="text-ink-700">{articles[c.articleId].title}</span>
+                            {articles[c.articleId].status === "published" ? (
+                              <>
+                                <a href={`/articles/${articles[c.articleId].slug}`} target="_blank" rel="noreferrer" className="text-pomie-600 hover:underline">
+                                  公開ページ ↗
+                                </a>
+                                <Link href={`/admin/articles/${c.articleId}/edit`} className="text-pomie-600 hover:underline">
+                                  編集・リライト
+                                </Link>
+                              </>
+                            ) : (
+                              <>
+                                <Link href={`/admin/articles/${c.articleId}/edit`} className="font-semibold text-pomie-600 hover:underline">
+                                  記事を確認・承認する →
+                                </Link>
+                                <a href={`/admin/articles/${c.articleId}/preview`} target="_blank" rel="noreferrer" className="text-pomie-600 hover:underline">
+                                  プレビュー ↗
+                                </a>
+                              </>
+                            )}
+                          </>
+                        ) : (
+                          <span className="rounded-full bg-ink-100 px-2 py-0.5 font-semibold text-ink-500">記事: 見つかりません（削除された可能性）</span>
+                        )}
                       </div>
                     )}
                   </div>
