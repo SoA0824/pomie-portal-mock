@@ -65,7 +65,7 @@ export default async function StylistDetailPage({ params }: { params: { id: stri
 
   const pageUrl = `${SITE_URL}/stylists/${stylist.id}`;
   // 構造化データ: 美容師（人物）とその所属サロン、パンくず
-  // ※ 店舗の住所は正確性を確認できるまで載せない
+  // ※ 店舗の住所は addressVerified が true のときだけ載せる
   const structuredData = [
     {
       "@context": "https://schema.org",
@@ -89,6 +89,15 @@ export default async function StylistDetailPage({ params }: { params: { id: stri
               name: store.name,
               url: `${SITE_URL}/stores/${store.id}`,
               areaServed: store.area,
+              ...(store.addressVerified && store.address
+                ? {
+                    address: {
+                      "@type": "PostalAddress",
+                      streetAddress: store.address,
+                      addressCountry: "JP",
+                    },
+                  }
+                : {}),
               ...(store.image ? { image: absoluteUrl(store.image) } : {}),
             },
           }

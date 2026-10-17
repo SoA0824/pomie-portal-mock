@@ -23,8 +23,10 @@ export function generateMetadata({ params }: { params: { id: string } }): Metada
   if (!store) return { title: `店舗が見つかりません | ${SITE_NAME}` };
 
   const title = `${store.name}｜${store.area}のシェアサロン | ${SITE_NAME}`;
+  // 紹介文の 1 段落目を優先（キャッチコピーと内容が重なりやすいので連結しない）
   const description = truncate(
-    [store.catchphrase, paragraphsOf(store)[0]].filter(Boolean).join(" ") ||
+    paragraphsOf(store)[0] ||
+      store.catchphrase ||
       `${store.area}にあるポミエのシェアサロン「${store.name}」。店内の様子と在籍する美容師をご紹介します。`,
     120
   );
