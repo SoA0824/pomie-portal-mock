@@ -266,13 +266,22 @@ export type BookingLink = {
   url: string;
 };
 
+export type StylistAffiliation = "pomie" | "external";
+
 export type Stylist = {
   id: string;
   name: string;
   nameKana: string;
   avatar: string;
   profile: string;
-  storeId: string;
+  /** 所属: pomie = POMiE の店舗に在籍 / external = 他サロンで活動するフリーランス */
+  affiliation: StylistAffiliation;
+  /** POMiE の店舗 ID。外部美容師は null */
+  storeId: string | null;
+  /** 外部美容師の所属サロン名（店名のみ表示） */
+  externalSalonName: string | null;
+  /** 外部美容師に予約ボタンを表示するか（オプション）。POMiE の美容師は常に表示 */
+  externalBookingEnabled: boolean;
   area: string;
   /** 強み（表示用キャッチフレーズ） */
   strengths: string[];
@@ -302,7 +311,12 @@ export type CreateStylistInput = {
   nameKana?: string;
   avatar?: string;
   profile: string;
-  storeId: string;
+  affiliation?: StylistAffiliation;
+  /** POMiE の美容師のときに必須 */
+  storeId?: string | null;
+  /** 外部美容師のときに必須 */
+  externalSalonName?: string;
+  externalBookingEnabled?: boolean;
   strengths?: string[];
   specialtyMenus?: string[];
   menus: StylistMenu[];

@@ -212,7 +212,6 @@ export function AdminStylistList({
 
       <section className="mt-3 space-y-3">
         {sorted.map((s) => {
-          const store = storesById[s.storeId];
           const dirty = Boolean(edits[s.id]);
           const currentContract = valueOf(s, "contractStatus") as
             | "active"
@@ -252,7 +251,21 @@ export function AdminStylistList({
                   </div>
                   <p className="mt-0.5 font-mono text-xs text-ink-500">{s.id}</p>
                   <div className="mt-2 grid gap-2 text-xs md:grid-cols-4">
-                    <Field label="店舗">{store?.name ?? "-"}</Field>
+                    <Field label="所属">
+                      {s.affiliation === "external" ? (
+                        <>
+                          <span className="mr-1 rounded bg-ink-100 px-1.5 py-0.5 text-[10px] font-semibold text-ink-700">
+                            外部
+                          </span>
+                          {s.externalSalonName}
+                          {s.externalBookingEnabled && (
+                            <span className="ml-1 text-[10px] text-pomie-700">（予約ボタンあり）</span>
+                          )}
+                        </>
+                      ) : (
+                        storesById[s.storeId ?? ""]?.name ?? "-"
+                      )}
+                    </Field>
                     <Field label="エリア">{s.area || "—"}</Field>
                     <Field label="評価 / 施術数">
                       ★ {s.rating.toFixed(1)} / {s.worksCount} 件

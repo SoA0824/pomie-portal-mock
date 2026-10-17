@@ -102,7 +102,7 @@ POMiE ポータル（https://portal.pomie.jp）の記事を、キーワード選
 title: 表参道で髪質改善。くせ・広がりに合うメニューと美容師の選び方
 slug: omotesando-kamishitsu-kaizen
 category: ケア
-summary: 表参道で髪質改善を考えている方へ。縮毛矯正・酸熱トリートメントなどメニューの違いと料金の目安、失敗しない美容師の選び方を、ポミエの美容師情報とあわせて紹介します。
+summary: 表参道で髪質改善を考えている方へ。縮毛矯正・酸熱トリートメントなどメニューの違いと料金の目安、失敗しない美容師の選び方を、掲載美容師の情報とあわせて紹介します。
 target_keyword: 表参道 髪質改善
 related_stylist_ids: [st-47e9gf]
 cover_image: /images/stores/s1.jpg
@@ -160,6 +160,8 @@ node scripts/articles/save.mjs content/drafts/<slug>.md
 - 記事を公開状態で保存する（`save.mjs` は常に下書きにする。管理画面の API を直接叩かない）
 - 他サイトの文章を写す（構成と論点の参考にとどめる）
 - 美容師の発言・施術例・口コミを創作する
+- 所属が外部サロンの美容師（`affiliation: "external"`）を、ポミエ（POMiE）の美容師・ポミエ在籍と書く（外部美容師は所属サロン名で紹介する）
+- 予約ボタンがない美容師（`hasBookingLink: false`）について「予約できる」「予約はこちら」と書く
 - `context.mjs` に無い美容師・店舗・料金を書く
 - ラッコキーワードのクレジットを 1 記事 15 を超えて使う（候補出しは 25 まで）
 - `search-volume-history` を呼ぶ（ユーザーが明示的に頼んだときだけ）

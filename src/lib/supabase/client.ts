@@ -218,7 +218,7 @@ export type StylistRow = {
   name_kana: string | null;
   avatar: string | null;
   profile: string;
-  store_id: string;
+  store_id: string | null;
   area: string | null;
   strengths: string[];
   specialty_menus: string[];
@@ -235,6 +235,9 @@ export type StylistRow = {
   background_image: string | null;
   booking_mode: "pomie" | "external" | null;
   booking_links: Array<{ label: string; url: string }> | null;
+  affiliation: "pomie" | "external" | null;
+  external_salon_name: string | null;
+  external_booking_enabled: boolean | null;
   created_at: string;
   updated_at: string;
 };

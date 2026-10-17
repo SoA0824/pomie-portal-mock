@@ -44,7 +44,8 @@ create table if not exists public.stylists (
   name_kana text,
   avatar text,
   profile text not null,
-  store_id text not null,
+  -- POMiE の美容師は店舗 ID（data/stores.json）、外部美容師は null
+  store_id text,
   area text,
   strengths text[] not null default '{}',
   specialty_menus text[] not null default '{}',
@@ -61,6 +62,14 @@ create table if not exists public.stylists (
   background_image text,
   booking_mode text not null default 'external' check (booking_mode in ('pomie', 'external')),
   booking_links jsonb not null default '[]'::jsonb,
+  -- pomie = POMiE の店舗に在籍 / external = 他サロンで活動するフリーランス
+  affiliation text not null default 'pomie' check (affiliation in ('pomie', 'external')),
+  external_salon_name text,
+  external_booking_enabled boolean not null default false,
+  check (
+    (affiliation = 'pomie' and store_id is not null)
+    or (affiliation = 'external' and coalesce(btrim(external_salon_name), '') <> '')
+  ),
   created_at timestamptz default now(),
   updated_at timestamptz default now()
 );

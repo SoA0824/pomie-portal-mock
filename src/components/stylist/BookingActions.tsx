@@ -1,5 +1,6 @@
 import Link from "next/link";
 import type { Stylist } from "@/lib/types";
+import { canShowBooking } from "@/lib/stylistAffiliation";
 
 /**
  * 美容師ごとの予約導線。
@@ -25,6 +26,9 @@ export function BookingActions({
   const secondaryClass = isSmall
     ? "rounded-full border border-ink-100 bg-white px-4 py-1.5 text-xs font-semibold text-ink-700 transition hover:bg-pomie-100"
     : "btn-secondary";
+
+  // 外部美容師は「予約ボタンを表示する」オプションを付けた場合のみ
+  if (!canShowBooking(stylist)) return null;
 
   if (stylist.bookingMode === "pomie") {
     return (

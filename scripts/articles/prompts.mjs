@@ -29,7 +29,8 @@ cover_image: （店舗写真のパス、または空）
 
 function stylistSummary(s) {
   return [
-    `- id: ${s.id} / 名前: ${s.name} / 所属: ${s.store?.name ?? ""}（${s.store?.area ?? ""}）`,
+    `- id: ${s.id} / 名前: ${s.name} / 所属: ${s.affiliationLabel ?? `${s.store?.name ?? ""}（${s.store?.area ?? ""}）`}`,
+    `  予約ボタン: ${s.hasBookingLink ? "あり" : "なし（予約を促さず、美容師ページへの案内にとどめる）"}`,
     `  強み: ${s.strengths.join("、") || "（未入力）"}`,
     `  得意メニュー: ${s.specialtyMenus.join("、") || "（未入力）"}`,
     `  予約可能メニュー: ${s.menus.map((m) => `${m.name}（${m.duration}分）`).join("、") || "（未入力）"}`,
@@ -41,7 +42,7 @@ function stylistSummary(s) {
 
 /** 執筆用 system プロンプト（固定。キャッシュされる） */
 export function writerSystem(guidelines) {
-  return `あなたは美容室のポータルサイト「POMiE Portal」の編集者です。検索で見つけてもらい、読んだ人の悩みを解決し、ポミエ契約美容師のページへ自然に送客する記事を書きます。
+  return `あなたは美容室のポータルサイト「POMiE Portal」の編集者です。検索で見つけてもらい、読んだ人の悩みを解決し、掲載している美容師（POMiE の美容師と、外部サロンのフリーランス美容師）のページへ自然に送客する記事を書きます。
 
 以下の「記事ガイドライン」を必ず守ります。特に次の点は絶対です。
 - 美容師について書いてよいのは、ユーザーメッセージで渡された公開情報だけ。発言・施術例・お客様の声・経歴を創作しない
@@ -49,6 +50,8 @@ export function writerSystem(guidelines) {
 - 表（| 区切り）と画像は使わない。見出しは ## から
 - 事実として断定できないことは [要確認: 内容] と書く
 - 送客セクションと「よくある質問」を必ず入れる
+- 所属が「外部サロン」の美容師を、ポミエ（POMiE）の美容師・ポミエ在籍・ポミエの店舗の美容師と書かない。外部美容師は所属サロン名で紹介する
+- 予約ボタンが「なし」の美容師について「予約できる」「予約はこちら」と書かない
 
 ====== 記事ガイドライン ======
 ${guidelines}
@@ -102,7 +105,7 @@ export function writerUser({ candidate, context, research }) {
 
   lines.push(``, `# サイト内リンク`);
   lines.push(`- 美容師ページ: /stylists/{id}`);
-  lines.push(`- 店舗で絞った一覧: /stylists?storeId=s1（表参道）/ /stylists?storeId=s2（恵比寿）`);
+  lines.push(`- 店舗で絞った一覧: /stylists?storeId=s1（表参道）/ /stylists?storeId=s2（恵比寿）/ /stylists?storeId=external（POMiE 以外のサロン）`);
   lines.push(`- メニューで絞った一覧: /stylists?menu={メニュー名を URL エンコード}`);
   lines.push(`- 診断: /match`);
   if (published.length) {
@@ -189,6 +192,7 @@ export function rewriterSystem(guidelines) {
 - 料金・施術時間・メニューは、渡された今の値に合わせる
 - 美容師の発言・施術例・お客様の声を創作しない。断定できないことは [要確認: 内容]
 - 使ってはいけない表現（治る・修復・永久・絶対・No.1 など）を使わない。表と画像は使わない
+- 所属が「外部サロン」の美容師を、ポミエ（POMiE）の美容師・ポミエ在籍と書かない。予約ボタンが「なし」の美容師について「予約できる」と書かない
 
 ====== 記事ガイドライン ======
 ${guidelines}

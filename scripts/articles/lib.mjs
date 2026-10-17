@@ -172,14 +172,48 @@ export async function rest(db, method, pathAndQuery, { body, prefer } = {}) {
   return data;
 }
 
+const AFFILIATION_COLS = "affiliation,external_salon_name,external_booking_enabled";
+
+/**
+ * 美容師の行を取る。所属（POMiE / 外部）の列も一緒に取るが、
+ * migration-016 を流す前の DB でも動くよう、列が無ければ所属なしで取り直す。
+ */
+async function getStylistRows(db, cols) {
+  try {
+    return await rest(db, "GET", `stylists?select=${cols},${AFFILIATION_COLS}&order=id`);
+  } catch (err) {
+    if (/HTTP 400/.test(err.message) && /affiliation|external_/.test(err.message)) {
+      return rest(db, "GET", `stylists?select=${cols}&order=id`);
+    }
+    throw err;
+  }
+}
+
+/**
+ * 記事に書く所属の表記。
+ * - POMiE の美容師: 「POMiE 表参道店（ポミエ 表参道）」
+ * - 外部美容師: 「外部サロン「○○」所属のフリーランス美容師（POMiE の美容師ではない）」
+ */
+export function affiliationLabel(s) {
+  if ((s.affiliation ?? "pomie") === "external") {
+    return `外部サロン「${s.salonName || s.external_salon_name || ""}」所属のフリーランス美容師（POMiE の美容師ではない）`;
+  }
+  return s.store?.name ? `POMiE ${s.store.area}店（${s.store.name}）` : "POMiE";
+}
+
 /** 記事の検品・保存に使う最小限の文脈（美容師 / 記事一覧）を取る */
 export async function fetchLintContext(db) {
   const [stylists, articles] = await Promise.all([
-    rest(db, "GET", "stylists?select=id,name,contract_status,store_id&order=id"),
+    getStylistRows(db, "id,name,contract_status,store_id"),
     rest(db, "GET", "articles?select=id,slug,title,status,target_keyword"),
   ]);
   return {
-    stylists: new Map(stylists.map((s) => [s.id, { name: s.name, active: s.contract_status === "active", storeId: s.store_id }])),
+    stylists: new Map(
+      stylists.map((s) => [
+        s.id,
+        { name: s.name, active: s.contract_status === "active", storeId: s.store_id, affiliation: s.affiliation ?? "pomie" },
+      ])
+    ),
     articles: new Map(articles.map((a) => [a.slug, a])),
   };
 }
@@ -517,10 +551,9 @@ export async function buildContext(db) {
   const stores = loadStores();
   const storeById = Object.fromEntries(stores.map((s) => [s.id, s]));
   const [stylistRows, articleRows] = await Promise.all([
-    rest(
+    getStylistRows(
       db,
-      "GET",
-      "stylists?select=id,name,name_kana,profile,store_id,strengths,specialty_menus,menus,price_range,instagram_handle,booking_mode,booking_links,contract_status,featured_flag&order=id"
+      "id,name,name_kana,profile,store_id,strengths,specialty_menus,menus,price_range,instagram_handle,booking_mode,booking_links,contract_status,featured_flag"
     ),
     rest(
       db,
@@ -533,11 +566,15 @@ export async function buildContext(db) {
     .filter((s) => s.contract_status === "active")
     .map((s) => {
       const store = storeById[s.store_id];
-      return {
+      const affiliation = s.affiliation ?? "pomie";
+      const stylist = {
         id: s.id,
         name: s.name,
         nameKana: s.name_kana ?? "",
         url: `${SITE_URL}/stylists/${s.id}`,
+        // 所属: pomie = POMiE の店舗に在籍 / external = 他サロンで活動するフリーランス（POMiE の美容師ではない）
+        affiliation,
+        salonName: s.external_salon_name ?? "",
         store: store ? { id: store.id, name: store.name, area: store.area } : { id: s.store_id, name: "", area: "" },
         profile: s.profile ?? "",
         strengths: s.strengths ?? [],
@@ -547,9 +584,14 @@ export async function buildContext(db) {
         priceRange: { min: Number(s.price_range?.min ?? 0), max: Number(s.price_range?.max ?? 0) },
         instagram: s.instagram_handle ? `https://www.instagram.com/${s.instagram_handle}/` : null,
         bookingMode: s.booking_mode ?? "external",
-        hasBookingLink: (s.booking_mode ?? "external") === "pomie" || (s.booking_links ?? []).length > 0,
+        // 予約ボタンが出るか。外部美容師は「予約ボタンを表示する」オプションがあるときだけ
+        hasBookingLink:
+          affiliation === "external"
+            ? Boolean(s.external_booking_enabled) && (s.booking_links ?? []).length > 0
+            : (s.booking_mode ?? "external") === "pomie" || (s.booking_links ?? []).length > 0,
         featured: Boolean(s.featured_flag),
       };
+      return { ...stylist, affiliationLabel: affiliationLabel(stylist) };
     });
 
   const articles = articleRows.map((a) => ({
@@ -580,7 +622,13 @@ export async function buildContext(db) {
     },
     stores: stores.map((s) => ({ id: s.id, name: s.name, area: s.area, catchphrase: s.catchphrase ?? "", image: s.image, gallery: s.gallery ?? [] })),
     stylists,
-    allStylists: stylistRows.map((s) => ({ id: s.id, name: s.name, active: s.contract_status === "active", storeId: s.store_id })),
+    allStylists: stylistRows.map((s) => ({
+      id: s.id,
+      name: s.name,
+      active: s.contract_status === "active",
+      storeId: s.store_id,
+      affiliation: s.affiliation ?? "pomie",
+    })),
     articles,
     taxonomy: {
       areas: uniq(stores.map((s) => s.area)),

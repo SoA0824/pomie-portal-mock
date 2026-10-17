@@ -70,7 +70,7 @@ async function areaMetadata(area: Area): Promise<Metadata> {
 async function AreaPage({ area }: { area: Area }) {
   const [articles, allStylists] = await Promise.all([loadAreaArticles(area.slug), getAllPublishedStylists()]);
   const stores = getAllStores().filter((s) => area.storeIds.includes(s.id));
-  const stylists = allStylists.filter((s) => area.storeIds.includes(s.storeId));
+  const stylists = allStylists.filter((s) => s.storeId !== null && area.storeIds.includes(s.storeId));
   const pageUrl = `${SITE_URL}/articles/${area.slug}`;
   const structuredData = [
     {

@@ -45,7 +45,7 @@ export function StylistFilters({
         </select>
       </div>
       <div>
-        <label className="text-xs font-semibold text-ink-700">店舗</label>
+        <label className="text-xs font-semibold text-ink-700">所属</label>
         <select
           name="storeId"
           defaultValue={current.storeId ?? ""}
@@ -57,6 +57,7 @@ export function StylistFilters({
               {s.name}
             </option>
           ))}
+          <option value="external">POMiE 以外のサロン</option>
         </select>
       </div>
       <div>

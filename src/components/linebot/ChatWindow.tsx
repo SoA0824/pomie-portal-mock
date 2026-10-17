@@ -95,7 +95,7 @@ export function ChatWindow({
     setMessages((m) => [...m, { from: "user", kind: "text", text }]);
   }
   function appendCard(s: Stylist) {
-    const store = storeById[s.storeId];
+    const store = storeById[s.storeId ?? ""];
     setMessages((m) => [
       ...m,
       {
@@ -232,7 +232,7 @@ export function ChatWindow({
 
       if (result.ok) {
         const stylist = stylistById[step.stylistId];
-        const store = storeById[stylist.storeId];
+        const store = storeById[stylist.storeId ?? ""];
         appendBot(
           `予約が確定しました 🎉\n` +
             `予約番号: ${result.reservation.id}\n` +
@@ -285,7 +285,7 @@ export function ChatWindow({
             {stylists.map((s) => (
               <Quick
                 key={s.id}
-                label={`${s.name}（${storeById[s.storeId]?.name ?? ""}）`}
+                label={`${s.name}（${storeById[s.storeId ?? ""]?.name ?? ""}）`}
                 onClick={() => pickStylist(s)}
                 disabled={pending}
               />

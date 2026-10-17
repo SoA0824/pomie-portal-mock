@@ -4,9 +4,9 @@ import { listAllMenus, searchStylists, type StylistSort } from "@/lib/data/styli
 import { getAllStores } from "@/lib/data/stores";
 
 export const metadata = {
-  title: "美容師を探す｜表参道・恵比寿のポミエ契約美容師 | POMiE Portal",
+  title: "美容師を探す｜得意メニュー・所属から選べる | POMiE Portal",
   description:
-    "表参道・恵比寿のポミエ契約美容師を、得意メニュー・エリア・料金から探せます。髪質改善、似合わせカット、カラーなど、あなたに合う美容師が見つかります。",
+    "シェアサロン POMiE（表参道・恵比寿）の美容師と、フリーランスの美容師を、得意メニュー・所属・料金から探せます。髪質改善、似合わせカット、カラーなど、あなたに合う美容師が見つかります。",
   // 絞り込み（?menu= / ?storeId= / ?sort=）の URL は一覧本体に集約する
   alternates: { canonical: "/stylists" },
 };
@@ -46,7 +46,7 @@ export default async function StylistsPage({
       <header>
         <h1 className="text-2xl font-bold md:text-3xl">美容師を探す</h1>
         <p className="mt-2 text-sm text-ink-500">
-          ポミエ契約美容師のみを掲載。気になる方の詳細ページから予約に進めます。
+          シェアサロン POMiE の美容師と、フリーランスの美容師を掲載しています。気になる方の詳細ページから予約に進めます。
         </p>
       </header>
 

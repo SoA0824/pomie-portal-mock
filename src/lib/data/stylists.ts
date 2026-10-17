@@ -1,7 +1,7 @@
 import type { Stylist, SnsPlatform, StylistMenu } from "../types";
 import { getSupabase, type StylistRow } from "@/lib/supabase/client";
 
-function rowToStylist(row: StylistRow): Stylist {
+export function rowToStylist(row: StylistRow): Stylist {
   const rawMenus = (row.menus ?? []) as unknown;
   // 旧形式 (text[]) と新形式 (jsonb [{name,duration}]) の両方を吸収
   let menus: StylistMenu[];
@@ -16,7 +16,10 @@ function rowToStylist(row: StylistRow): Stylist {
     nameKana: row.name_kana ?? "",
     avatar: row.avatar ?? "",
     profile: row.profile,
-    storeId: row.store_id,
+    affiliation: row.affiliation ?? "pomie",
+    storeId: row.store_id ?? null,
+    externalSalonName: row.external_salon_name ?? null,
+    externalBookingEnabled: row.external_booking_enabled ?? false,
     area: row.area ?? "",
     strengths: row.strengths ?? [],
     specialtyMenus: row.specialty_menus ?? [],
@@ -45,6 +48,9 @@ export type StylistFilter = {
 };
 
 export type StylistSort = "recommended" | "rating" | "works";
+
+/** 絞り込みの「所属店舗」で外部美容師（POMiE 以外のサロン）を選ぶときの値 */
+export const EXTERNAL_FILTER = "external";
 
 async function fetchAll(): Promise<Stylist[]> {
   const sb = getSupabase();
@@ -92,7 +98,10 @@ export async function searchStylists(
   if (filter.menu) {
     list = list.filter((s) => s.menus.some((m) => m.name === filter.menu));
   }
-  if (filter.storeId) {
+  if (filter.storeId === EXTERNAL_FILTER) {
+    // 「POMiE 以外のサロン」= 外部美容師
+    list = list.filter((s) => s.affiliation === "external");
+  } else if (filter.storeId) {
     list = list.filter((s) => s.storeId === filter.storeId);
   }
   if (filter.hasSns) {
@@ -108,6 +117,7 @@ export async function searchStylists(
         s.name.toLowerCase().includes(k) ||
         s.nameKana.toLowerCase().includes(k) ||
         s.profile.toLowerCase().includes(k) ||
+        (s.externalSalonName ?? "").toLowerCase().includes(k) ||
         s.strengths.some((x) => x.toLowerCase().includes(k)) ||
         s.specialtyMenus.some((x) => x.toLowerCase().includes(k)) ||
         s.menus.some((m) => m.name.toLowerCase().includes(k))

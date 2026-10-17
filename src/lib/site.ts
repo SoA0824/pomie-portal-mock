@@ -10,7 +10,7 @@ export const SITE_URL = (process.env.NEXT_PUBLIC_SITE_URL ?? "https://portal.pom
 export const SITE_NAME = "POMiE Portal";
 
 export const SITE_DESCRIPTION =
-  "ポミエ契約美容師に出会えるポータル。記事や診断から、あなたに合う美容師を見つけて予約できます。";
+  "あなたに合う美容師に出会えるポータル。シェアサロン POMiE の美容師と、フリーランスの美容師を掲載しています。記事や診断から、相性のいい美容師を見つけて予約できます。";
 
 /** Google アナリティクス 4 の測定 ID（公開情報。環境変数で上書き可） */
 export const GA_MEASUREMENT_ID = process.env.NEXT_PUBLIC_GA_MEASUREMENT_ID ?? "G-B7M5FQX839";

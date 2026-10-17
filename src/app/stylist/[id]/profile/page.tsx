@@ -29,7 +29,7 @@ export default async function StylistProfileEditPage({
           stores={stores}
           mode="edit"
           initialValues={stylist}
-          lockedFields={["storeId", "contractStatus", "featuredFlag"]}
+          lockedFields={["storeId", "externalBookingEnabled", "contractStatus", "featuredFlag"]}
           cancelHref={`/stylist/${stylist.id}`}
           successHref={`/stylist/${stylist.id}`}
         />

@@ -2,7 +2,8 @@
 
 import { revalidatePath } from "next/cache";
 import { getSupabase } from "@/lib/supabase/client";
-import { getStoreById } from "@/lib/data/stores";
+import { rowToStylist } from "@/lib/data/stylists";
+import { resolveAffiliationFields } from "@/server/stylistAffiliationFields";
 import type { UpdateStylistInput, Stylist } from "@/lib/types";
 
 export type UpdateStylistResult =
@@ -26,8 +27,6 @@ export async function updateStylist(
   // ===== バリデーション =====
   if (!input.id?.trim()) return { ok: false, reason: "missing_id" };
   if (!input.name?.trim()) return { ok: false, reason: "missing_name", field: "name" };
-  if (!input.storeId?.trim())
-    return { ok: false, reason: "missing_store", field: "storeId" };
   if (!input.profile?.trim())
     return { ok: false, reason: "missing_profile", field: "profile" };
   if (!input.menus || input.menus.length === 0)
@@ -47,10 +46,9 @@ export async function updateStylist(
 
   const handle = normalizeHandle(input.instagramHandle);
 
-  // ===== エリアは店舗から自動派生 =====
-  const store = getStoreById(input.storeId);
-  if (!store) return { ok: false, reason: "invalid_store", field: "storeId" };
-  const area = store.area;
+  // ===== 所属（POMiE の店舗 / 外部サロン）。エリアは POMiE の店舗から自動で決まる =====
+  const aff = resolveAffiliationFields(input);
+  if (!aff.ok) return { ok: false, reason: aff.reason, field: aff.field };
 
   // ===== 既存レコード取得（前後比較に使用）=====
   const sb = getSupabase();
@@ -88,8 +86,7 @@ export async function updateStylist(
       name_kana: input.nameKana?.trim() || null,
       avatar,
       profile: input.profile.trim(),
-      store_id: input.storeId,
-      area,
+      ...aff.fields,
       strengths: (input.strengths ?? []).map((s) => s.trim()).filter(Boolean),
       specialty_menus: (input.specialtyMenus ?? []).map((s) => s.trim()).filter(Boolean),
       menus: input.menus.map((m) => ({ name: m.name.trim(), duration: m.duration })),
@@ -97,7 +94,6 @@ export async function updateStylist(
       available_time_slots: refreshedSlots,
       instagram_handle: handle,
       background_image: input.backgroundImage?.trim() || null,
-      booking_mode: input.bookingMode ?? "external",
       booking_links: (input.bookingLinks ?? [])
         .map((l) => ({ label: l.label.trim(), url: l.url.trim() }))
         .filter((l) => l.label && l.url),
@@ -114,30 +110,7 @@ export async function updateStylist(
     return { ok: false, reason: updateError?.message ?? "update_failed" };
   }
 
-  const stylist: Stylist = {
-    id: data.id,
-    name: data.name,
-    nameKana: data.name_kana ?? "",
-    avatar: data.avatar ?? "",
-    profile: data.profile,
-    storeId: data.store_id,
-    area: data.area ?? "",
-    strengths: data.strengths ?? [],
-    specialtyMenus: data.specialty_menus ?? [],
-    menus: data.menus ?? [],
-    priceRange: data.price_range,
-    availableTimeSlots: data.available_time_slots ?? [],
-    instagramHandle: data.instagram_handle,
-    snsLinks: data.sns_links,
-    contractStatus: data.contract_status,
-    featuredFlag: data.featured_flag,
-    rating: Number(data.rating),
-    worksCount: data.works_count,
-    instagramSyncedAt: data.instagram_synced_at,
-    backgroundImage: data.background_image ?? null,
-    bookingMode: data.booking_mode ?? "external",
-    bookingLinks: data.booking_links ?? [],
-  };
+  const stylist: Stylist = rowToStylist(data);
 
   // ===== IG ハンドルが変わったら「未取得」に戻す =====
   // ここで取得まで行うと保存完了まで 5〜30 秒待たされるため、

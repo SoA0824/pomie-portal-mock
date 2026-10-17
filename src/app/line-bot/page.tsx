@@ -14,7 +14,8 @@ export default async function LineBotPage({
 }: {
   searchParams: { stylistId?: string };
 }) {
-  const stylists = await getAllPublishedStylists();
+  // LINE 予約は POMiE の予約システムを使うので、POMiE の店舗に在籍する美容師だけ
+  const stylists = (await getAllPublishedStylists()).filter((s) => s.affiliation === "pomie");
   const stores = getAllStores();
 
   return (

@@ -5,6 +5,7 @@ import { useMemo, useState } from "react";
 import type { Stylist, Store } from "@/lib/types";
 import { StylistAvatar } from "@/components/common/StylistAvatar";
 import { BookingActions } from "@/components/stylist/BookingActions";
+import { AffiliationBadge } from "@/components/stylist/AffiliationBadge";
 import { formatPriceRange } from "@/lib/format";
 import {
   AREA_OPTIONS,
@@ -78,7 +79,7 @@ export function MatchQuiz({
         </h1>
         <p className="mt-3 text-sm text-ink-700">
           髪のお悩み・希望スタイル・店舗エリア・予算をお選びいただくと、
-          ポミエの契約美容師の中から相性のいい 3 人を提案します。
+          掲載中の美容師の中から相性のいい 3 人を提案します。
         </p>
         <ul className="mx-auto mt-4 max-w-sm space-y-1 text-left text-xs text-ink-500">
           <li>✓ 所要時間 約 30 秒</li>
@@ -128,13 +129,11 @@ export function MatchQuiz({
           <>
             <ol className="mt-6 space-y-3">
               {top.map((r, i) => {
-                const store = storesById[r.stylist.storeId];
                 return (
                   <li key={r.stylist.id}>
                     <ResultCard
                       rank={i + 1}
                       stylist={r.stylist}
-                      storeName={store?.name}
                       matchedStrengths={r.matchedStrengths}
                       reasons={r.reasons}
                     />
@@ -343,13 +342,11 @@ function RadioGroup<T extends string | number | null>({
 function ResultCard({
   rank,
   stylist,
-  storeName,
   matchedStrengths,
   reasons,
 }: {
   rank: number;
   stylist: Stylist;
-  storeName?: string;
   matchedStrengths: string[];
   reasons: string[];
 }) {
@@ -374,7 +371,7 @@ function ResultCard({
             <span className="text-xs text-pomie-600">★ {stylist.rating.toFixed(1)}</span>
           </div>
           <p className="text-xs text-ink-500">
-            {storeName ?? "-"} ・ {formatPriceRange(stylist.priceRange.min, stylist.priceRange.max)}
+            <AffiliationBadge stylist={stylist} /> ・ {formatPriceRange(stylist.priceRange.min, stylist.priceRange.max)}
           </p>
           <div className="mt-2 flex flex-wrap gap-1.5">
             {reasons.map((r) => (

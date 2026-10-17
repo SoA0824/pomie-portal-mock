@@ -8,6 +8,7 @@ import { SnsFeed } from "@/components/stylist/SnsFeed";
 import { StylistAvatar } from "@/components/common/StylistAvatar";
 import { BookingActions } from "@/components/stylist/BookingActions";
 import { StoreCard } from "@/components/store/StoreCard";
+import { AffiliationBadge } from "@/components/stylist/AffiliationBadge";
 import { getStylistById } from "@/lib/data/stylists";
 import { getStoreById } from "@/lib/data/stores";
 import { getSnsPostsByStylistId } from "@/lib/data/snsPosts";
@@ -27,16 +28,16 @@ export async function generateMetadata({
   if (!stylist) return { title: `美容師が見つかりません | ${SITE_NAME}` };
 
   const store = getStoreById(stylist.storeId);
-  // 店舗名にエリア名が含まれる（例: ポミエ 表参道）ので店舗名だけを使う
-  const place = store ? store.name : "ポミエ";
-  const title = `${stylist.name}｜${place}の美容師 | ${SITE_NAME}`;
+  // 店舗名にエリア名が含まれる（例: ポミエ 表参道）ので店舗名だけを使う。外部美容師はサロン名
+  const place = store ? store.name : stylist.externalSalonName || "";
+  const title = `${stylist.name}｜${place ? `${place}の美容師` : "美容師"} | ${SITE_NAME}`;
   const lead = [
     stylist.strengths.length > 0 ? `強み: ${stylist.strengths.slice(0, 3).join("・")}。` : "",
     stylist.specialtyMenus.length > 0
       ? `得意メニュー: ${stylist.specialtyMenus.slice(0, 4).join("・")}。`
       : "",
   ].join("");
-  const description = truncate(`${place}の美容師 ${stylist.name}。${lead}${stylist.profile}`, 120);
+  const description = truncate(`${place ? `${place}の` : ""}美容師 ${stylist.name}。${lead}${stylist.profile}`, 120);
   const image = stylist.avatar || store?.image || DEFAULT_OG_IMAGE;
   const url = `/stylists/${stylist.id}`;
 
@@ -80,6 +81,9 @@ export default async function StylistDetailPage({ params }: { params: { id: stri
       ...(stylist.specialtyMenus.length > 0 ? { knowsAbout: stylist.specialtyMenus } : {}),
       ...(stylist.instagramHandle
         ? { sameAs: [`https://www.instagram.com/${stylist.instagramHandle}/`] }
+        : {}),
+      ...(stylist.affiliation === "external" && stylist.externalSalonName
+        ? { worksFor: { "@type": "HairSalon", name: stylist.externalSalonName } }
         : {}),
       ...(store
         ? {
@@ -146,8 +150,8 @@ export default async function StylistDetailPage({ params }: { params: { id: stri
               </div>
             </div>
             <dl className="mt-4 space-y-2 rounded-2xl bg-white/75 p-4 text-sm shadow-sm ring-1 ring-white/60 backdrop-blur-sm">
-              <Row k="所属店舗" v={store?.name ?? "-"} />
-              <Row k="エリア" v={stylist.area} />
+              <Row k="所属" v={store?.name ?? stylist.externalSalonName ?? "-"} />
+              {stylist.area && <Row k="エリア" v={stylist.area} />}
               <Row
                 k="評価"
                 v={
@@ -162,6 +166,11 @@ export default async function StylistDetailPage({ params }: { params: { id: stri
 
           <div>
           <header>
+            {stylist.affiliation === "pomie" && (
+              <div className="mb-2">
+                <AffiliationBadge stylist={stylist} size="md" />
+              </div>
+            )}
             <p className="text-sm text-ink-500">{stylist.nameKana}</p>
             <h1 className="mt-1 text-3xl font-bold">{stylist.name}</h1>
             {stylist.strengths.length > 0 && (

@@ -2,7 +2,8 @@
 
 import { revalidatePath } from "next/cache";
 import { getSupabase } from "@/lib/supabase/client";
-import { getStoreById } from "@/lib/data/stores";
+import { rowToStylist } from "@/lib/data/stylists";
+import { resolveAffiliationFields } from "@/server/stylistAffiliationFields";
 import type { CreateStylistInput, Stylist } from "@/lib/types";
 
 export type CreateStylistResult =
@@ -34,7 +35,6 @@ export async function createStylist(
 ): Promise<CreateStylistResult> {
   // ===== バリデーション =====
   if (!input.name?.trim()) return { ok: false, reason: "missing_name", field: "name" };
-  if (!input.storeId?.trim()) return { ok: false, reason: "missing_store", field: "storeId" };
   if (!input.profile?.trim()) return { ok: false, reason: "missing_profile", field: "profile" };
   if (!input.menus || input.menus.length === 0)
     return { ok: false, reason: "missing_menus", field: "menus" };
@@ -53,10 +53,9 @@ export async function createStylist(
 
   const handle = normalizeHandle(input.instagramHandle);
 
-  // ===== エリアは店舗から自動派生 =====
-  const store = getStoreById(input.storeId);
-  if (!store) return { ok: false, reason: "invalid_store", field: "storeId" };
-  const area = store.area;
+  // ===== 所属（POMiE の店舗 / 外部サロン）。エリアは POMiE の店舗から自動で決まる =====
+  const aff = resolveAffiliationFields(input);
+  if (!aff.ok) return { ok: false, reason: aff.reason, field: aff.field };
 
   // アバターは入力された URL のみ採用。
   // 空欄なら表示側（StylistAvatar）が名前のイニシャルを描画する。
@@ -76,8 +75,7 @@ export async function createStylist(
       name_kana: input.nameKana?.trim() || null,
       avatar,
       profile: input.profile.trim(),
-      store_id: input.storeId,
-      area,
+      ...aff.fields,
       strengths: (input.strengths ?? []).map((s) => s.trim()).filter(Boolean),
       specialty_menus: (input.specialtyMenus ?? []).map((s) => s.trim()).filter(Boolean),
       menus: input.menus.map((m) => ({ name: m.name.trim(), duration: m.duration })),
@@ -86,7 +84,6 @@ export async function createStylist(
       available_time_slots: input.availableTimeSlots ?? [],
       instagram_handle: handle,
       background_image: input.backgroundImage?.trim() || null,
-      booking_mode: input.bookingMode ?? "external",
       booking_links: (input.bookingLinks ?? [])
         .map((l) => ({ label: l.label.trim(), url: l.url.trim() }))
         .filter((l) => l.label && l.url),
@@ -103,30 +100,7 @@ export async function createStylist(
     return { ok: false, reason: error?.message ?? "insert_failed" };
   }
 
-  const stylist: Stylist = {
-    id: data.id,
-    name: data.name,
-    nameKana: data.name_kana ?? "",
-    avatar: data.avatar ?? "",
-    profile: data.profile,
-    storeId: data.store_id,
-    area: data.area ?? "",
-    strengths: data.strengths ?? [],
-    specialtyMenus: data.specialty_menus ?? [],
-    menus: data.menus ?? [],
-    priceRange: data.price_range,
-    availableTimeSlots: [],
-    instagramHandle: data.instagram_handle,
-    snsLinks,
-    contractStatus: data.contract_status,
-    featuredFlag: data.featured_flag,
-    rating: Number(data.rating),
-    worksCount: data.works_count,
-    instagramSyncedAt: null,
-    backgroundImage: data.background_image ?? null,
-    bookingMode: data.booking_mode ?? "external",
-    bookingLinks: data.booking_links ?? [],
-  };
+  const stylist: Stylist = rowToStylist(data);
 
   // Instagram の投稿取得はここでは行わない。
   // Apify の取得に 5〜30 秒かかり、登録完了まで待たされてしまうため。

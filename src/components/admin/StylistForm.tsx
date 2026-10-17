@@ -8,6 +8,7 @@ import type {
   Store,
   Stylist,
   StylistMenu,
+  StylistAffiliation,
 } from "@/lib/types";
 import { createStylist } from "@/server/actions/createStylist";
 import { updateStylist } from "@/server/actions/updateStylist";
@@ -27,6 +28,7 @@ import {
 const REASON_LABELS: Record<string, string> = {
   missing_name: "名前を入力してください",
   missing_store: "店舗を選んでください",
+  missing_salon_name: "外部美容師の所属サロン名を入力してください",
   missing_profile: "プロフィールを入力してください",
   missing_booking_links:
     "「美容師独自受付」を選んだ場合は、予約リンクを 1 つ以上（表示テキストと URL の両方）入力してください",
@@ -41,7 +43,10 @@ type MenuRow = { name: string; duration: number };
 const MENU_SUGGESTIONS = Object.keys(DEFAULT_MENU_DURATIONS);
 
 export type LockedStylistField =
+  /** 所属（POMiE の店舗 / 外部サロン）をまとめてロック */
   | "storeId"
+  /** 外部美容師の「予約ボタンを表示する」オプション */
+  | "externalBookingEnabled"
   | "contractStatus"
   | "featuredFlag";
 
@@ -75,7 +80,10 @@ export function StylistForm({
     name: initialValues?.name ?? "",
     nameKana: initialValues?.nameKana ?? "",
     avatar: initialValues?.avatar ?? "",
+    affiliation: (initialValues?.affiliation ?? "pomie") as StylistAffiliation,
     storeId: initialValues?.storeId ?? stores[0]?.id ?? "",
+    externalSalonName: initialValues?.externalSalonName ?? "",
+    externalBookingEnabled: initialValues?.externalBookingEnabled ?? false,
     profile: initialValues?.profile ?? "",
     priceMin: initialValues?.priceRange.min.toString() ?? "7000",
     priceMax: initialValues?.priceRange.max.toString() ?? "20000",
@@ -123,6 +131,12 @@ export function StylistForm({
     setBookingLinks((prev) => [...prev, { label: "", url: "" }]);
   const removeBookingLink = (i: number) =>
     setBookingLinks((prev) => prev.filter((_, idx) => idx !== i));
+
+  // 予約リンクの入力欄を出すか
+  // - POMiE の美容師: 「美容師独自受付」を選んだとき
+  // - 外部美容師: 「予約ボタンを表示する」オプションが付いているとき
+  const showBookingLinks =
+    form.affiliation === "pomie" ? bookingMode === "external" : form.externalBookingEnabled;
 
   // 予約可能メニュー欄でエラーが起きているか（赤枠表示に使う）
   const menuError =
@@ -189,7 +203,7 @@ export function StylistForm({
       .map((l) => ({ label: l.label.trim(), url: l.url.trim() }))
       .filter((l) => l.label && l.url);
 
-    if (bookingMode === "external" && cleanedBookingLinks.length === 0) {
+    if (showBookingLinks && cleanedBookingLinks.length === 0) {
       setError(REASON_LABELS.missing_booking_links);
       return;
     }
@@ -198,7 +212,10 @@ export function StylistForm({
       name: form.name,
       nameKana: form.nameKana,
       avatar: form.avatar,
-      storeId: form.storeId,
+      affiliation: form.affiliation,
+      storeId: form.affiliation === "pomie" ? form.storeId : null,
+      externalSalonName: form.externalSalonName,
+      externalBookingEnabled: form.externalBookingEnabled,
       profile: form.profile,
       strengths,
       specialtyMenus,
@@ -207,7 +224,8 @@ export function StylistForm({
       availableTimeSlots,
       instagramHandle: form.instagramHandle,
       backgroundImage: form.backgroundImage,
-      bookingMode,
+      // 外部美容師は POMiE の予約システムを使えないので美容師独自受付に固定
+      bookingMode: form.affiliation === "external" ? ("external" as const) : bookingMode,
       bookingLinks: cleanedBookingLinks,
       contractStatus: form.contractStatus,
       featuredFlag: form.featuredFlag,
@@ -262,33 +280,79 @@ export function StylistForm({
         </Field>
       </div>
 
-      <Field label="所属店舗" required>
+      <fieldset>
+        <legend className="text-xs font-semibold text-ink-700">
+          所属<span className="ml-1 text-pomie-600">*</span>
+        </legend>
         {isLocked("storeId") ? (
-          <div className="flex items-center gap-2 rounded-lg border border-ink-100 bg-ink-100/40 px-3 py-2 text-sm">
+          <div className="mt-1 flex items-center gap-2 rounded-lg border border-ink-100 bg-ink-100/40 px-3 py-2 text-sm">
             <span>
-              {stores.find((s) => s.id === form.storeId)?.name ?? "-"}
-              <span className="ml-1 text-ink-500">
-                （{stores.find((s) => s.id === form.storeId)?.area ?? ""}）
-              </span>
+              {form.affiliation === "external" ? (
+                <>
+                  {form.externalSalonName || "-"}
+                  <span className="ml-1 text-ink-500">（外部サロン）</span>
+                </>
+              ) : (
+                <>
+                  {stores.find((s) => s.id === form.storeId)?.name ?? "-"}
+                  <span className="ml-1 text-ink-500">
+                    （{stores.find((s) => s.id === form.storeId)?.area ?? ""}）
+                  </span>
+                </>
+              )}
             </span>
-            <span className="ml-auto text-[10px] text-ink-500">
-              変更は POMiE 担当者まで
-            </span>
+            <span className="ml-auto text-[10px] text-ink-500">変更は POMiE 担当者まで</span>
           </div>
         ) : (
-          <select
-            value={form.storeId}
-            onChange={(e) => update("storeId", e.target.value)}
-            className="input"
-          >
-            {stores.map((s) => (
-              <option key={s.id} value={s.id}>
-                {s.name}（{s.area}）
-              </option>
-            ))}
-          </select>
+          <div className="mt-1 space-y-2">
+            <div className="flex flex-wrap gap-4 text-sm">
+              <label className="inline-flex cursor-pointer items-center gap-1.5">
+                <input
+                  type="radio"
+                  name="affiliation"
+                  checked={form.affiliation === "pomie"}
+                  onChange={() => update("affiliation", "pomie")}
+                />
+                POMiE の店舗に在籍
+              </label>
+              <label className="inline-flex cursor-pointer items-center gap-1.5">
+                <input
+                  type="radio"
+                  name="affiliation"
+                  checked={form.affiliation === "external"}
+                  onChange={() => update("affiliation", "external")}
+                />
+                外部サロン（フリーランス）
+              </label>
+            </div>
+            {form.affiliation === "pomie" ? (
+              <select
+                value={form.storeId}
+                onChange={(e) => update("storeId", e.target.value)}
+                className="input"
+              >
+                {stores.map((s) => (
+                  <option key={s.id} value={s.id}>
+                    {s.name}（{s.area}）
+                  </option>
+                ))}
+              </select>
+            ) : (
+              <>
+                <input
+                  value={form.externalSalonName}
+                  onChange={(e) => update("externalSalonName", e.target.value)}
+                  placeholder="所属サロン名（例: hair salon ○○）"
+                  className="input"
+                />
+                <p className="text-[11px] text-ink-500">
+                  公開ページには店名のみを表示します。POMiE の美容師に付く「POMiE ○○店」のバッジは表示されません。
+                </p>
+              </>
+            )}
+          </div>
         )}
-      </Field>
+      </fieldset>
 
       <Field label="プロフィール" required>
         <textarea
@@ -345,11 +409,41 @@ export function StylistForm({
       <fieldset className="space-y-3 rounded-lg bg-pomie-50/60 p-4">
         <legend className="text-xs font-semibold text-ink-700">
           予約受け付け導線
-          <span className="ml-1.5 rounded bg-pomie-500 px-1.5 py-0.5 text-[10px] font-semibold text-white">
-            必須
-          </span>
+          {form.affiliation === "pomie" && (
+            <span className="ml-1.5 rounded bg-pomie-500 px-1.5 py-0.5 text-[10px] font-semibold text-white">
+              必須
+            </span>
+          )}
         </legend>
 
+        {form.affiliation === "external" && (
+          <div className="space-y-1">
+            {isLocked("externalBookingEnabled") ? (
+              <p className="text-sm">
+                予約ボタン：
+                <span className="font-semibold">
+                  {form.externalBookingEnabled ? "表示する" : "表示しない"}
+                </span>
+                <span className="ml-2 text-[10px] text-ink-500">（変更は POMiE 担当者まで）</span>
+              </p>
+            ) : (
+              <label className="inline-flex cursor-pointer items-center gap-2 text-sm">
+                <input
+                  type="checkbox"
+                  checked={form.externalBookingEnabled}
+                  onChange={(e) => update("externalBookingEnabled", e.target.checked)}
+                />
+                <span className="font-semibold">予約ボタンを表示する</span>
+                <span className="rounded bg-ink-100 px-1.5 py-0.5 text-[10px] text-ink-500">オプション</span>
+              </label>
+            )}
+            <p className="text-[11px] text-ink-500">
+              外部美容師は、オプションを付けた場合だけ美容師ページに予約ボタンを表示します（美容師自身の予約フォーム・SNS へのリンク）。
+            </p>
+          </div>
+        )}
+
+        {form.affiliation === "pomie" && (
         <div className="space-y-2">
           <label className="flex cursor-pointer items-start gap-2 text-sm">
             <input
@@ -393,8 +487,9 @@ export function StylistForm({
             </span>
           </label>
         </div>
+        )}
 
-        {bookingMode === "external" && (
+        {showBookingLinks && (
           <div className="space-y-2 border-t border-pomie-200/60 pt-3">
             <p className="text-xs font-semibold text-ink-700">
               予約リンク
@@ -437,7 +532,7 @@ export function StylistForm({
             </button>
             <p className="text-[11px] text-ink-500">
               1 つ目のリンクが目立つボタン、2 つ目以降は補助ボタンとして表示されます。
-              Instagram DM は <code>https://www.instagram.com/ユーザー名/</code> などを指定してください。
+              Instagram の DM で受け付ける場合は <code>https://ig.me/m/ユーザー名</code> を指定してください（プロフィールの URL では DM が開きません）。
             </p>
           </div>
         )}

@@ -65,10 +65,10 @@ export default async function Home() {
             </span>
             <h1 className="mt-4 text-3xl font-bold leading-tight tracking-tight text-white drop-shadow-lg md:text-5xl">
               あなたの髪を任せられる、<br />
-              ポミエの専属美容師に出会う。
+              専属美容師に出会う。
             </h1>
             <p className="mt-5 text-base text-white/90 drop-shadow md:text-lg">
-              気になるテーマの記事から、ポミエ契約美容師を見つけて、
+              気になるテーマの記事から、あなたに合う美容師を見つけて、
               そのまま予約へ。<br />
               あなたに合う美容師がきっと見つかります。
             </p>
@@ -121,7 +121,7 @@ export default async function Home() {
               </h2>
               <p className="mt-3 text-sm text-pomie-50 md:text-base">
                 髪のお悩み・希望スタイル・店舗エリア・予算を選ぶだけ。<br className="hidden md:block" />
-                ポミエ契約美容師から相性のいい 3 人を提案します。
+                掲載中の美容師から相性のいい 3 人を提案します。
               </p>
             </div>
             <div className="rounded-full bg-white px-6 py-3 text-sm font-bold text-pomie-600 shadow-md transition group-hover:scale-105">
@@ -134,7 +134,7 @@ export default async function Home() {
       <section className="container-page py-14">
         <SectionHeader
           title="注目のポミエ美容師"
-          subtitle="今月とくに予約が集まっている、ポミエ契約美容師を厳選。"
+          subtitle="編集部がおすすめする美容師をピックアップしました。"
           link={{ href: "/stylists", label: "美容師一覧を見る" }}
         />
         <div className="mt-6 grid gap-6 sm:grid-cols-2 lg:grid-cols-4">

@@ -9,7 +9,10 @@ export async function getStylistOptions(): Promise<StylistOption[]> {
     .map((s) => ({
       id: s.id,
       name: s.name,
-      storeName: getStoreById(s.storeId)?.name ?? "",
+      storeName:
+        s.affiliation === "external"
+          ? `${s.externalSalonName ?? ""}（外部）`
+          : getStoreById(s.storeId)?.name ?? "",
       active: s.contractStatus === "active",
     }))
     .sort((a, b) => Number(b.active) - Number(a.active) || a.name.localeCompare(b.name, "ja"));

@@ -270,7 +270,9 @@ export async function buildRewriteContext(db, rev, article, { gscFile } = {}) {
   for (const id of swap.add ?? []) {
     const s = context.stylists.find((x) => x.id === id);
     if (!s) analysis.issues.push(`加える美容師 ${id} は掲載中ではありません（記事には表示されません）`);
-    else if (areaNames.length && !areaNames.includes(s.store?.area)) {
+    else if (s.affiliation === "external") {
+      analysis.issues.push(`加える美容師 ${s.name} は外部サロン「${s.salonName}」のフリーランス美容師です。ポミエ（POMiE）の美容師として書かないでください`);
+    } else if (areaNames.length && !areaNames.includes(s.store?.area)) {
       analysis.issues.push(`加える美容師 ${s.name} は${s.store?.area || "別"}の店舗です（記事のエリア: ${areaNames.join("・")}）。エリアの書き方を合わせてください`);
     }
   }

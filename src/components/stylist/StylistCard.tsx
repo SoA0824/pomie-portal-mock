@@ -1,11 +1,10 @@
 import Link from "next/link";
 import type { Stylist } from "@/lib/types";
 import { formatPriceRange } from "@/lib/format";
-import { getStoreById } from "@/lib/data/stores";
 import { StylistAvatar } from "@/components/common/StylistAvatar";
+import { AffiliationBadge } from "@/components/stylist/AffiliationBadge";
 
 export function StylistCard({ stylist }: { stylist: Stylist }) {
-  const store = getStoreById(stylist.storeId);
   const sns = Object.keys(stylist.snsLinks);
   return (
     <Link href={`/stylists/${stylist.id}`} className="card group block overflow-hidden transition hover:-translate-y-0.5 hover:shadow-md">
@@ -24,8 +23,8 @@ export function StylistCard({ stylist }: { stylist: Stylist }) {
             <span className="font-semibold">{stylist.rating.toFixed(1)}</span>
           </div>
         </div>
-        <p className="mt-1 text-xs text-ink-500">
-          {store?.name} ・ {stylist.area}
+        <p className="mt-1.5">
+          <AffiliationBadge stylist={stylist} />
         </p>
         {stylist.strengths.length > 0 && (
           <p className="mt-1 line-clamp-1 text-xs text-pomie-700">

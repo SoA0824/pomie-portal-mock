@@ -7,7 +7,7 @@ import { AREAS } from "@/lib/areas";
 export const metadata = {
   title: "髪・美容師選びのヒント｜記事一覧 | POMiE Portal",
   description:
-    "髪の悩みやスタイル選び、美容師の選び方など、ポミエ契約美容師の知見をもとにした記事をお届けします。",
+    "髪の悩みやスタイル選び、美容師の選び方など、美容師の知見をもとにした記事をお届けします。",
   alternates: { canonical: "/articles" },
 };
 
@@ -32,7 +32,7 @@ export default async function ArticlesPage({
       <header>
         <h1 className="text-2xl font-bold md:text-3xl">記事一覧</h1>
         <p className="mt-2 text-sm text-ink-500">
-          髪・美容師選びのヒント。気になる記事から、ポミエ契約美容師を見つけてみてください。
+          髪・美容師選びのヒント。気になる記事から、あなたに合う美容師を見つけてみてください。
         </p>
       </header>
 

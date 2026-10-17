@@ -60,7 +60,7 @@ function mockDraft(candidate, context) {
 title: ${candidate.keyword}｜失敗しない選び方
 slug: ${candidate.keyword.replace(/[^a-z0-9]+/gi, "-").toLowerCase().replace(/^-|-$/g, "") || "article"}-${Date.now().toString(36)}
 category: ${candidate.category ?? "ケア"}
-summary: ${candidate.keyword}で迷っている方へ。メニューの違いと料金の目安、失敗しない美容師の選び方を、ポミエの美容師情報とあわせて紹介します。
+summary: ${candidate.keyword}で迷っている方へ。メニューの違いと料金の目安、失敗しない美容師の選び方を、掲載美容師の情報とあわせて紹介します。
 target_keyword: ${candidate.keyword}
 related_stylist_ids: [${stylist ? stylist.id : ""}]
 cover_image:
@@ -68,9 +68,9 @@ cover_image:
 
 ${candidate.keyword}を考えている方に向けて、メニューの違いと美容師の選び方を整理します。${para}
 ${section(`${candidate.keyword}のメニューの違い`)}${section("料金と通う頻度の目安")}${section("失敗しない美容師の選び方")}
-## ポミエの美容師に相談するなら
+## 美容師に相談するなら
 
-${stylist ? `${stylist.store.name}の [${stylist.name}](/stylists/${stylist.id}) さんは、${stylist.specialtyMenus[0] ?? stylist.menus[0]?.name ?? "カット"}を得意メニューに挙げています。` : ""}
+${stylist ? `${stylist.affiliation === "external" ? stylist.salonName : stylist.store.name}の [${stylist.name}](/stylists/${stylist.id}) さんは、${stylist.specialtyMenus[0] ?? stylist.menus[0]?.name ?? "カット"}を得意メニューに挙げています。` : ""}
 
 - [美容師一覧を見る](/stylists)
 - [相性のいい美容師を診断する](/match)
